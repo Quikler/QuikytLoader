@@ -62,12 +62,12 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
     /// <summary>
     /// Generates the output file path template for yt-dlp
+    /// Uses %(title)s to get the actual video title
     /// </summary>
     private string GenerateOutputPath()
     {
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var fileName = $"youtube_{timestamp}";
-        return Path.Combine(_downloadDirectory, fileName);
+        // yt-dlp will automatically sanitize the title for filesystem
+        return Path.Combine(_downloadDirectory, "%(title)s");
     }
 
     /// <summary>
@@ -185,27 +185,21 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
     /// <summary>
     /// Finds the downloaded MP3 file in the download directory
+    /// Since we use %(title)s template, we find the most recently created MP3
     /// </summary>
     private string FindDownloadedFile(string outputPath)
     {
-        var expectedFile = $"{outputPath}.mp3";
-
-        if (File.Exists(expectedFile))
-        {
-            return expectedFile;
-        }
-
-        // Fallback: search for any recently created MP3 file
-        var mp3Files = Directory.GetFiles(_downloadDirectory, "*.mp3")
+        // Get the most recently created MP3 file in the download directory
+        var mp3File = Directory.GetFiles(_downloadDirectory, "*.mp3")
             .OrderByDescending(f => File.GetCreationTime(f))
             .FirstOrDefault();
 
-        if (mp3Files != null)
+        if (mp3File != null)
         {
-            return mp3Files;
+            return mp3File;
         }
 
-        throw new FileNotFoundException("Downloaded MP3 file not found", expectedFile);
+        throw new FileNotFoundException("Downloaded MP3 file not found in download directory", _downloadDirectory);
     }
 
     /// <summary>
