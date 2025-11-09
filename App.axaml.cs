@@ -24,11 +24,11 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var mainViewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
+            var appViewModel = _host.Services.GetRequiredService<AppViewModel>();
 
             desktop.MainWindow = new MainWindow
             {
-                DataContext = mainViewModel
+                DataContext = appViewModel
             };
         }
 
@@ -41,6 +41,9 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 // Register ViewModels
+                services.AddTransient<AppViewModel>();
+                services.AddTransient<HomeViewModel>();
+                services.AddTransient<SettingsViewModel>();
                 services.AddTransient<MainWindowViewModel>();
 
                 // Register Services
