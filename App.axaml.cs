@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using QuikytLoader.Services;
 using QuikytLoader.ViewModels;
 using QuikytLoader.Views;
 
@@ -41,9 +42,9 @@ public partial class App : Application
             {
                 // Register ViewModels
                 services.AddTransient<MainWindowViewModel>();
-                
-                // Register Services (to be added later)
-                // services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
+
+                // Register Services
+                services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
                 // services.AddSingleton<ITelegramBotService, TelegramBotService>();
             });
     }

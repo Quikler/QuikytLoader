@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuikytLoader.Services;
+using System;
 using System.Threading.Tasks;
 
 namespace QuikytLoader.ViewModels;
@@ -25,13 +27,14 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isProgressVisible = false;
 
-    // Services will be injected here later
-    // private readonly IYouTubeDownloadService _youtubeService;
+    private readonly IYouTubeDownloadService _youtubeService;
     // private readonly ITelegramBotService _telegramService;
 
-    public MainWindowViewModel()
+    private string? _downloadedFilePath;
+
+    public MainWindowViewModel(IYouTubeDownloadService youtubeService)
     {
-        // Constructor - services will be injected via DI
+        _youtubeService = youtubeService;
     }
 
     /// <summary>
@@ -119,12 +122,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task DownloadFromYouTubeAsync()
     {
         UpdateStatus("Downloading from YouTube...");
-        UpdateProgress(30);
 
-        // TODO: Call YouTube download service
-        await Task.Delay(1000); // Simulated delay
-
-        UpdateProgress(60);
+        var progress = new Progress<double>(UpdateProgress);
+        _downloadedFilePath = await _youtubeService.DownloadAsync(YoutubeUrl, progress);
     }
 
     /// <summary>
