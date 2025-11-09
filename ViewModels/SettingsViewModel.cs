@@ -1,4 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using QuikytLoader.Models;
+using QuikytLoader.Services;
 
 namespace QuikytLoader.ViewModels;
 
@@ -8,14 +11,20 @@ namespace QuikytLoader.ViewModels;
 /// </summary>
 public partial class SettingsViewModel : ViewModelBase
 {
+    private readonly ISettingsManager _settingsManager;
+
     [ObservableProperty]
     private string _botToken = string.Empty;
 
     [ObservableProperty]
     private string _chatId = string.Empty;
 
-    public SettingsViewModel()
+    [ObservableProperty]
+    private string _statusMessage = string.Empty;
+
+    public SettingsViewModel(ISettingsManager settingsManager)
     {
+        _settingsManager = settingsManager;
         LoadSettings();
     }
 
@@ -24,14 +33,24 @@ public partial class SettingsViewModel : ViewModelBase
     /// </summary>
     private void LoadSettings()
     {
-        // TODO: Load from persistent storage
+        var settings = _settingsManager.Load();
+        BotToken = settings.BotToken;
+        ChatId = settings.ChatId;
     }
 
     /// <summary>
     /// Saves settings to storage
     /// </summary>
-    public void SaveSettings()
+    [RelayCommand]
+    private void SaveSettings()
     {
-        // TODO: Save to persistent storage
+        var settings = new AppSettings
+        {
+            BotToken = BotToken,
+            ChatId = ChatId
+        };
+
+        _settingsManager.Save(settings);
+        StatusMessage = "Settings saved successfully!";
     }
 }
