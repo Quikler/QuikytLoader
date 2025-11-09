@@ -47,6 +47,7 @@ public partial class App : Application
                 services.AddTransient<MainWindowViewModel>();
 
                 // Register Services
+                services.AddSingleton<ISettingsManager, SettingsManager>();
                 services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
                 // services.AddSingleton<ITelegramBotService, TelegramBotService>();
             });

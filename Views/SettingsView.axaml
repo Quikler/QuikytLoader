@@ -86,18 +86,23 @@
                         </TextBlock>
                     </StackPanel>
 
-                    <!-- Save Button -->
-                    <Button Content="Save Settings"
-                            HorizontalAlignment="Left"
-                            Height="40"
-                            Padding="24,0"
-                            FontSize="14"
-                            FontWeight="SemiBold"
-                            Classes="accent">
-                        <Button.CommandParameter>
-                            <Binding Path="."/>
-                        </Button.CommandParameter>
-                    </Button>
+                    <!-- Save Button and Status -->
+                    <StackPanel Spacing="12">
+                        <Button Content="Save Settings"
+                                Command="{Binding SaveSettingsCommand}"
+                                HorizontalAlignment="Left"
+                                Height="40"
+                                Padding="24,0"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Classes="accent"/>
+
+                        <!-- Status Message -->
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                   IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
 
                 </StackPanel>
             </Border>
