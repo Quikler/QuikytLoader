@@ -1,132 +1,176 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:QuikytLoader.ViewModels"
+        xmlns:views="using:QuikytLoader.Views"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
-        xmlns:i="using:Avalonia.Xaml.Interactivity"
-        xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
         x:Class="QuikytLoader.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        x:DataType="vm:AppViewModel"
         Icon="/Assets/icon.ico"
         Title="QuikytLoader"
-        Width="700"
-        Height="400"
-        MinWidth="600"
-        MinHeight="350"
+        Width="900"
+        Height="600"
+        MinWidth="800"
+        MinHeight="500"
         WindowStartupLocation="CenterScreen"
         CanResize="True">
 
     <Design.DataContext>
-        <vm:MainWindowViewModel/>
+        <vm:AppViewModel/>
     </Design.DataContext>
 
-    <Grid Margin="20" RowDefinitions="Auto,*,Auto,Auto,Auto">
-        
-        <!-- Title Section -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,30">
-            <TextBlock Text="YouTube to Telegram"
-                       FontSize="28"
-                       FontWeight="Bold"
-                       Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
-            <TextBlock Text="Download YouTube videos and send them directly to your Telegram"
-                       FontSize="14"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Margin="0,8,0,0"/>
-        </StackPanel>
+    <!-- Firefox/Zen-style layout with side navigation -->
+    <Grid ColumnDefinitions="Auto,*">
 
-        <!-- Main Content -->
-        <Border Grid.Row="1"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+        <!-- Left Navigation Bar (Firefox-style vertical tabs) -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource LayerFillColorDefaultBrush}"
                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="24">
-            <StackPanel Spacing="20">
-                
-                <!-- URL Input Section -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="YouTube URL"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                    
-                    <TextBox Text="{Binding YoutubeUrl, Mode=TwoWay}"
-                             Watermark="https://www.youtube.com/watch?v=..."
-                             FontSize="14"
-                             Height="40"
-                             VerticalContentAlignment="Center"
-                             IsEnabled="{Binding !IsProcessing}">
-                        <i:Interaction.Behaviors>
-                            <ia:EventTriggerBehavior EventName="KeyDown">
-                                <ia:InvokeCommandAction Command="{Binding DownloadAndSendCommand}"/>
-                            </ia:EventTriggerBehavior>
-                        </i:Interaction.Behaviors>
-                    </TextBox>
-                    
-                    <TextBlock Text="Paste a YouTube video or music URL"
-                               FontSize="12"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                BorderThickness="0,0,1,0">
+
+            <Grid RowDefinitions="Auto,*,Auto">
+
+                <!-- App Logo/Title -->
+                <Border Grid.Row="0"
+                        Padding="16,20"
+                        BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Spacing="8">
+                        <ui:SymbolIcon Symbol="Globe"
+                                       FontSize="32"
+                                       Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
+                        <TextBlock Text="QuikytLoader"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Navigation Buttons -->
+                <StackPanel Grid.Row="1"
+                            Spacing="4"
+                            Margin="8,12">
+                    <StackPanel.Styles>
+                        <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{Binding $parent[Button].Background} "/>
+                        </Style>
+                    </StackPanel.Styles>
+
+                    <!-- Home Tab -->
+                    <Button Command="{Binding NavigateToHomeCommand}"
+                            Width="64"
+                            Height="64"
+                            Padding="0"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            CornerRadius="8"
+                            Classes.selected="{Binding IsHomeSelected}">
+                        <Button.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                            <Style Selector="Button.selected">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                            <Style Selector="Button.selected:pointerover">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                            <Style Selector="Button.selected:pressed">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                            <Style Selector="Button.selected ui|SymbolIcon">
+                                <Setter Property="Foreground" Value="White"/>
+                            </Style>
+                            <Style Selector="Button.selected TextBlock">
+                                <Setter Property="Foreground" Value="White"/>
+                            </Style>
+                        </Button.Styles>
+
+                        <StackPanel Spacing="4">
+                            <ui:SymbolIcon Symbol="Home"
+                                           FontSize="24"/>
+                            <TextBlock Text="Home"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Settings Tab -->
+                    <Button Command="{Binding NavigateToSettingsCommand}"
+                            Width="64"
+                            Height="64"
+                            Padding="0"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            CornerRadius="8"
+                            Classes.selected="{Binding IsSettingsSelected}">
+                        <Button.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                            <Style Selector="Button.selected">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                            <Style Selector="Button.selected:pointerover">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                            <Style Selector="Button.selected:pressed">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                            <Style Selector="Button.selected ui|SymbolIcon">
+                                <Setter Property="Foreground" Value="White"/>
+                            </Style>
+                            <Style Selector="Button.selected TextBlock">
+                                <Setter Property="Foreground" Value="White"/>
+                            </Style>
+                        </Button.Styles>
+
+                        <StackPanel Spacing="4">
+                            <ui:SymbolIcon Symbol="Setting"
+                                           FontSize="24"/>
+                            <TextBlock Text="Settings"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
                 </StackPanel>
 
-                <!-- Download Button -->
-                <Button Command="{Binding DownloadAndSendCommand}"
-                        HorizontalAlignment="Stretch"
-                        Height="48"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Classes="accent">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ui:SymbolIcon Symbol="Download" FontSize="20"/>
-                        <TextBlock Text="Download &amp; Send to Telegram"
-                                   VerticalAlignment="Center"/>
+                <!-- Footer Info -->
+                <Border Grid.Row="2"
+                        Padding="8,12"
+                        BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                        BorderThickness="0,1,0,0">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Made with ♥"
+                                   FontSize="9"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                        <TextBlock Text="for Arch"
+                                   FontSize="9"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
                     </StackPanel>
-                </Button>
+                </Border>
 
-            </StackPanel>
+            </Grid>
         </Border>
 
-        <!-- Progress Bar -->
-        <ProgressBar Grid.Row="2"
-                     Value="{Binding ProgressValue}"
-                     Maximum="100"
-                     Height="6"
-                     Margin="0,20,0,0"
-                     IsVisible="{Binding IsProgressVisible}"
-                     ShowProgressText="False"/>
-
-        <!-- Status Message -->
-        <Border Grid.Row="3"
-                Margin="0,16,0,0"
-                Padding="12,8"
-                Background="{DynamicResource LayerFillColorDefaultBrush}"
-                CornerRadius="6"
-                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <ui:SymbolIcon Symbol="Alert" 
-                               FontSize="16"
-                               Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
-                <TextBlock Text="{Binding StatusMessage}"
-                           FontSize="13"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Footer -->
-        <StackPanel Grid.Row="4"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    Margin="0,20,0,0"
-                    Spacing="8">
-            <TextBlock Text="Made with"
-                       FontSize="11"
-                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-            <TextBlock Text="♥"
-                       FontSize="11"
-                       Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
-            <TextBlock Text="for Arch users"
-                       FontSize="11"
-                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-        </StackPanel>
+        <!-- Main Content Area -->
+        <ContentControl Grid.Column="1"
+                        Content="{Binding CurrentView}">
+            <ContentControl.DataTemplates>
+                <DataTemplate DataType="vm:HomeViewModel">
+                    <views:HomeView/>
+                </DataTemplate>
+                <DataTemplate DataType="vm:SettingsViewModel">
+                    <views:SettingsView/>
+                </DataTemplate>
+            </ContentControl.DataTemplates>
+        </ContentControl>
 
     </Grid>
+
 </Window>
