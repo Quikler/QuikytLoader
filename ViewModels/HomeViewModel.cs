@@ -9,7 +9,7 @@ namespace QuikytLoader.ViewModels;
 /// <summary>
 /// ViewModel for the Home page (YouTube download functionality)
 /// </summary>
-public partial class HomeViewModel : ViewModelBase
+public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITelegramBotService telegramService) : ViewModelBase
 {
     [ObservableProperty]
     private string _youtubeUrl = string.Empty;
@@ -26,15 +26,7 @@ public partial class HomeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isProgressVisible = false;
 
-    private readonly IYouTubeDownloadService _youtubeService;
-    // private readonly ITelegramBotService _telegramService;
-
     private string? _downloadedFilePath;
-
-    public HomeViewModel(IYouTubeDownloadService youtubeService)
-    {
-        _youtubeService = youtubeService;
-    }
 
     /// <summary>
     /// Command to download YouTube video and send to Telegram
@@ -123,7 +115,7 @@ public partial class HomeViewModel : ViewModelBase
         UpdateStatus("Downloading from YouTube...");
 
         var progress = new Progress<double>(UpdateProgress);
-        _downloadedFilePath = await _youtubeService.DownloadAsync(YoutubeUrl, progress);
+        _downloadedFilePath = await youtubeService.DownloadAsync(YoutubeUrl, progress);
     }
 
     /// <summary>
@@ -132,11 +124,14 @@ public partial class HomeViewModel : ViewModelBase
     private async Task SendToTelegramAsync()
     {
         UpdateStatus("Sending to Telegram...");
-        UpdateProgress(80);
+        UpdateProgress(Random.Shared.Next(50, 80));
 
-        // TODO: Call Telegram bot service
-        await Task.Delay(1000); // Simulated delay
+        if (_downloadedFilePath is null)
+        {
+            throw new InvalidOperationException("No file to send. Download failed.");
+        }
 
+        await telegramService.SendAudioAsync(_downloadedFilePath);
         UpdateProgress(100);
     }
 

@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -30,6 +31,16 @@ public partial class App : Application
             {
                 DataContext = appViewModel
             };
+
+            // Cleanup on application exit - DI container will dispose all services
+            desktop.ShutdownRequested += async (s, e) =>
+            {
+                if (_host != null)
+                {
+                    await _host.StopAsync(); // Disposes async disposable services
+                    _host.Dispose();
+                }
+            };
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -49,7 +60,7 @@ public partial class App : Application
                 // Register Services
                 services.AddSingleton<ISettingsManager, SettingsManager>();
                 services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
-                // services.AddSingleton<ITelegramBotService, TelegramBotService>();
+                services.AddSingleton<ITelegramBotService, TelegramBotService>();
             });
     }
 }
