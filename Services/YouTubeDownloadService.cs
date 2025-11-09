@@ -13,6 +13,7 @@ namespace QuikytLoader.Services;
 public partial class YouTubeDownloadService : IYouTubeDownloadService
 {
     private readonly string _downloadDirectory;
+    private readonly string _tempDirectory;
 
     public YouTubeDownloadService()
     {
@@ -20,7 +21,8 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         _downloadDirectory = Path.Combine(homeDir, "Downloads", "QuikytLoader");
 
-        EnsureDownloadDirectoryExists();
+        // Use system temp directory for temporary files (thumbnails)
+        _tempDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
     }
 
     /// <summary>
@@ -28,14 +30,20 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     /// </summary>
     public async Task<string> DownloadAsync(string url, IProgress<double>? progress = null)
     {
+        EnsureDownloadDirectoryExists();
+        EnsureTempDirectoryExists();
+
         ValidateUrl(url);
 
-        var outputPath = GenerateOutputPath();
-        var arguments = BuildYtDlpArguments(url, outputPath);
+        var tempOutputPath = GenerateTempOutputPath();
+        var arguments = BuildYtDlpArguments(url, tempOutputPath);
 
         await RunYtDlpAsync(arguments, progress);
 
-        return FindDownloadedFile(outputPath);
+        var downloadedFile = FindDownloadedFile();
+        CleanupTempFiles(downloadedFile);
+
+        return downloadedFile;
     }
 
     /// <summary>
@@ -61,23 +69,54 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     }
 
     /// <summary>
-    /// Generates the output file path template for yt-dlp
-    /// Uses %(title)s to get the actual video title
+    /// Ensures the temporary directory exists
     /// </summary>
-    private string GenerateOutputPath()
+    private void EnsureTempDirectoryExists()
+    {
+        if (!Directory.Exists(_tempDirectory))
+        {
+            Directory.CreateDirectory(_tempDirectory);
+        }
+    }
+
+    /// <summary>
+    /// Generates the output file path template for yt-dlp in temp directory
+    /// Uses %(title)s to get the actual video title
+    /// Downloads to temp directory first, then moves to final location
+    /// </summary>
+    private string GenerateTempOutputPath()
     {
         // yt-dlp will automatically sanitize the title for filesystem
-        return Path.Combine(_downloadDirectory, "%(title)s");
+        return Path.Combine(_tempDirectory, "%(title)s");
     }
 
     /// <summary>
     /// Builds command-line arguments for yt-dlp
+    /// Includes comprehensive metadata embedding for all available fields
+    /// Maps YouTube metadata to MP3 ID3 tags (Artist, Album, Title, etc.)
     /// </summary>
     private static string BuildYtDlpArguments(string url, string outputPath)
     {
-        return $"--extract-audio --audio-format mp3 --audio-quality 0 " +
+        return $"--extract-audio " +
+               $"--audio-format mp3 " +
+               $"--audio-quality 0 " +
                $"--output \"{outputPath}.%(ext)s\" " +
                $"--no-playlist " +
+               $"--add-metadata " +
+               $"--embed-thumbnail " +
+               $"--parse-metadata \"%(title)s:%(meta_title)s\" " +
+               $"--parse-metadata \"%(uploader)s:%(meta_artist)s\" " +
+               $"--parse-metadata \"%(uploader)s:%(meta_album_artist)s\" " +
+               $"--parse-metadata \"%(channel)s:%(meta_album)s\" " +
+               $"--parse-metadata \"%(upload_date>%Y)s:%(meta_date)s\" " +
+               $"--parse-metadata \"%(creator)s:%(meta_composer)s\" " +
+               $"--parse-metadata \"%(uploader)s:%(meta_performer)s\" " +
+               $"--parse-metadata \"%(description)s:%(meta_comment)s\" " +
+               $"--parse-metadata \"%(channel)s:%(meta_publisher)s\" " +
+               $"--parse-metadata \"%(webpage_url)s:%(meta_purl)s\" " +
+               $"--parse-metadata \"%(genre)s:%(meta_genre)s\" " +
+               $"--write-thumbnail " +
+               $"--convert-thumbnails jpg " +
                $"--progress " +
                $"\"{url}\"";
     }
@@ -184,22 +223,91 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     }
 
     /// <summary>
-    /// Finds the downloaded MP3 file in the download directory
+    /// Finds the downloaded MP3 file in temp directory and moves it to final location
     /// Since we use %(title)s template, we find the most recently created MP3
     /// </summary>
-    private string FindDownloadedFile(string outputPath)
+    private string FindDownloadedFile()
     {
-        // Get the most recently created MP3 file in the download directory
-        var mp3File = Directory.GetFiles(_downloadDirectory, "*.mp3")
-            .OrderByDescending(f => File.GetCreationTime(f))
-            .FirstOrDefault();
+        // Get the most recently created MP3 file in the temp directory
+        var tempMp3File = Directory.GetFiles(_tempDirectory, "*.mp3")
+            .OrderByDescending(File.GetCreationTime)
+            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded MP3 file not found in temp directory", _tempDirectory);
 
-        if (mp3File != null)
+        // Move MP3 to final download directory
+        var fileName = Path.GetFileName(tempMp3File);
+        var finalPath = Path.Combine(_downloadDirectory, fileName);
+
+        // Handle duplicate files by adding number suffix
+        finalPath = GetUniqueFilePath(finalPath);
+
+        File.Move(tempMp3File, finalPath);
+
+        return finalPath;
+    }
+
+    /// <summary>
+    /// Gets a unique file path by adding (1), (2), etc. if file already exists
+    /// </summary>
+    private static string GetUniqueFilePath(string filePath)
+    {
+        if (!File.Exists(filePath))
         {
-            return mp3File;
+            return filePath;
         }
 
-        throw new FileNotFoundException("Downloaded MP3 file not found in download directory", _downloadDirectory);
+        var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+        var fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
+        var extension = Path.GetExtension(filePath);
+
+        var counter = 1;
+        string uniquePath;
+
+        do
+        {
+            var newFileName = $"{fileNameWithoutExt} ({counter}){extension}";
+            uniquePath = Path.Combine(directory, newFileName);
+            counter++;
+        } while (File.Exists(uniquePath));
+
+        return uniquePath;
+    }
+
+    /// <summary>
+    /// Cleans up temporary files (thumbnails, metadata files) after processing
+    /// Keeps only the final MP3 file in download directory
+    /// </summary>
+    private void CleanupTempFiles(string downloadedFilePath)
+    {
+        try
+        {
+            // Get the base name from the actual downloaded file (not the template)
+            var baseName = Path.GetFileNameWithoutExtension(downloadedFilePath);
+
+            // Delete all remaining files in temp directory that match this download
+            // This includes .jpg thumbnails, .webp images, metadata files, etc.
+            var tempFiles = Directory.GetFiles(_tempDirectory, "*.*")
+                .Where(f =>
+                {
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(f);
+                    return fileNameWithoutExt.Equals(baseName, StringComparison.OrdinalIgnoreCase);
+                });
+
+            foreach (var tempFile in tempFiles)
+            {
+                try
+                {
+                    File.Delete(tempFile);
+                }
+                catch
+                {
+                    // Ignore individual file deletion errors
+                }
+            }
+        }
+        catch
+        {
+            // Ignore cleanup errors - not critical to operation
+        }
     }
 
     /// <summary>
