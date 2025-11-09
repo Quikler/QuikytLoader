@@ -41,6 +41,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         await RunYtDlpAsync(arguments, progress);
 
         var downloadedFile = FindDownloadedFile();
+        Console.WriteLine("downloadedFile: " + downloadedFile);
         CleanupTempFiles(downloadedFile);
 
         return downloadedFile;
@@ -222,6 +223,31 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         return null;
     }
 
+    private static string ReplaceWhiteSpaces(string name)
+    {
+        var normalized = Regex.Replace(name, @"\s+", " ");
+        return normalized.Trim();
+    }
+
+    private (string tempMp3File, string thumbnailFile) ReplaceDownloadedFilesNames()
+    {
+        var tempMp3File = Directory.GetFiles(_tempDirectory, "*.mp3")
+            .OrderByDescending(File.GetCreationTime)
+            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded MP3 file not found in temp directory", _tempDirectory);
+        var newTempMp3File = ReplaceWhiteSpaces(tempMp3File);
+        File.Move(tempMp3File, Path.Combine(_tempDirectory, newTempMp3File), overwrite: true);
+        Console.WriteLine("newTempMp3File: " + newTempMp3File);
+
+        var thumbnailFile = Directory.GetFiles(_tempDirectory, "*.jpg")
+            .OrderByDescending(File.GetCreationTime)
+            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded thumbnail file not found in temp directory", _tempDirectory);
+        var newThumbnailFile = ReplaceWhiteSpaces(thumbnailFile);
+        File.Move(thumbnailFile, Path.Combine(_tempDirectory, newThumbnailFile), overwrite: true);
+        Console.WriteLine("newthumbnailFile: " + newThumbnailFile);
+
+        return (newTempMp3File, newThumbnailFile);
+    }
+
     /// <summary>
     /// Finds the downloaded MP3 file in temp directory and moves it to final location
     /// Since we use %(title)s template, we find the most recently created MP3
@@ -229,18 +255,22 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     private string FindDownloadedFile()
     {
         // Get the most recently created MP3 file in the temp directory
-        var tempMp3File = Directory.GetFiles(_tempDirectory, "*.mp3")
-            .OrderByDescending(File.GetCreationTime)
-            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded MP3 file not found in temp directory", _tempDirectory);
+        var (tempMp3File, _) = ReplaceDownloadedFilesNames();
 
         // Move MP3 to final download directory
+        Console.WriteLine("FindDownloadedFile tempMp3File: " + tempMp3File);
         var fileName = Path.GetFileName(tempMp3File);
+        Console.WriteLine("FindDownloadedFile fileName: " + fileName);
         var finalPath = Path.Combine(_downloadDirectory, fileName);
+        Console.WriteLine("FindDownloadedFile finalPath: " + finalPath);
 
         // Handle duplicate files by adding number suffix
         finalPath = GetUniqueFilePath(finalPath);
+        Console.WriteLine("FindDownloadedFile unique finalPath: " + finalPath);
 
+        Console.WriteLine("Before move");
         File.Move(tempMp3File, finalPath);
+        Console.WriteLine("After move");
 
         return finalPath;
     }
@@ -281,7 +311,10 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         try
         {
             // Get the base name from the actual downloaded file (not the template)
+            Console.WriteLine("before baseName");
             var baseName = Path.GetFileNameWithoutExtension(downloadedFilePath);
+
+            Console.WriteLine("baseName: " + baseName);
 
             // Delete all remaining files in temp directory that match this download
             // This includes .jpg thumbnails, .webp images, metadata files, etc.
@@ -291,6 +324,8 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
                     var fileNameWithoutExt = Path.GetFileNameWithoutExtension(f);
                     return fileNameWithoutExt.Equals(baseName, StringComparison.OrdinalIgnoreCase);
                 });
+
+            Console.WriteLine("tempFiles: " + string.Join(", ", tempFiles));
 
             foreach (var tempFile in tempFiles)
             {
