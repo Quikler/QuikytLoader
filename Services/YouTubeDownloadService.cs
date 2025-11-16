@@ -52,6 +52,66 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     }
 
     /// <summary>
+    /// Downloads a video from YouTube with a custom filename and converts it to MP3 format
+    /// </summary>
+    public async Task<DownloadResult> DownloadAsync(string url, string customTitle, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    {
+        EnsureDownloadDirectoryExists();
+        EnsureTempDirectoryExists();
+
+        ValidateUrl(url);
+
+        var tempOutputPath = GenerateTempOutputPathWithCustomTitle(customTitle);
+        Console.WriteLine($"Tmep output path: {tempOutputPath}");
+        var arguments = BuildYtDlpArgumentsWithCustomTitle(url, tempOutputPath, customTitle);
+
+        await RunYtDlpAsync(arguments, progress, cancellationToken);
+
+        var result = FindDownloadedFilesAndMove();
+        Console.WriteLine($"Downloaded: {result.AudioFilePath}, Thumbnail: {result.ThumbnailPath ?? "none"}");
+        CleanupTempFiles(result.AudioFilePath);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Fetches the video title from YouTube without downloading
+    /// </summary>
+    public async Task<string> GetVideoTitleAsync(string url)
+    {
+        ValidateUrl(url);
+
+        var arguments = $"--get-title --no-playlist \"{url}\"";
+        var processInfo = CreateProcessInfo(arguments);
+
+        using var process = new Process { StartInfo = processInfo };
+
+        var outputBuilder = new System.Text.StringBuilder();
+        process.OutputDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrWhiteSpace(e.Data))
+            {
+                outputBuilder.AppendLine(e.Data);
+            }
+        };
+
+        StartProcess(process);
+        process.BeginOutputReadLine();
+
+        await process.WaitForExitAsync();
+
+        ValidateProcessSuccess(process);
+
+        var title = outputBuilder.ToString().Trim();
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new InvalidOperationException("Failed to fetch video title");
+        }
+
+        return title;
+    }
+
+    /// <summary>
     /// Validates that the URL is not empty
     /// </summary>
     private static void ValidateUrl(string url)
@@ -96,6 +156,28 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     }
 
     /// <summary>
+    /// Generates the output file path with a custom title for yt-dlp in temp directory
+    /// Uses custom title instead of video title
+    /// Downloads to temp directory first, then moves to final location
+    /// </summary>
+    private string GenerateTempOutputPathWithCustomTitle(string customTitle)
+    {
+        // Sanitize the custom title for filesystem use
+        var sanitized = SanitizeFilename(customTitle);
+        return Path.Combine(_tempDirectory, sanitized);
+    }
+
+    /// <summary>
+    /// Sanitizes a filename by removing or replacing invalid characters
+    /// </summary>
+    private static string SanitizeFilename(string filename)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var sanitized = string.Join("_", filename.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
+        return sanitized.Trim();
+    }
+
+    /// <summary>
     /// Builds command-line arguments for yt-dlp
     /// Includes comprehensive metadata embedding for all available fields
     /// Maps YouTube metadata to MP3 ID3 tags (Artist, Album, Title, etc.)
@@ -110,6 +192,37 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
                $"--add-metadata " +
                $"--embed-thumbnail " +
                $"--parse-metadata \"%(title)s:%(meta_title)s\" " +
+               $"--parse-metadata \"%(uploader)s:%(meta_artist)s\" " +
+               $"--parse-metadata \"%(uploader)s:%(meta_album_artist)s\" " +
+               $"--parse-metadata \"%(channel)s:%(meta_album)s\" " +
+               $"--parse-metadata \"%(upload_date>%Y)s:%(meta_date)s\" " +
+               $"--parse-metadata \"%(creator)s:%(meta_composer)s\" " +
+               $"--parse-metadata \"%(uploader)s:%(meta_performer)s\" " +
+               $"--parse-metadata \"%(description)s:%(meta_comment)s\" " +
+               $"--parse-metadata \"%(channel)s:%(meta_publisher)s\" " +
+               $"--parse-metadata \"%(webpage_url)s:%(meta_purl)s\" " +
+               $"--parse-metadata \"%(genre)s:%(meta_genre)s\" " +
+               $"--write-thumbnail " +
+               $"--convert-thumbnails jpg " +
+               $"--progress " +
+               $"\"{url}\"";
+    }
+
+    /// <summary>
+    /// Builds command-line arguments for yt-dlp with custom title
+    /// Uses custom title for metadata instead of YouTube video title
+    /// Other metadata (artist, album, etc.) still comes from YouTube
+    /// </summary>
+    private static string BuildYtDlpArgumentsWithCustomTitle(string url, string outputPath, string customTitle)
+    {
+        return $"--extract-audio " +
+               $"--audio-format mp3 " +
+               $"--audio-quality 0 " +
+               $"--output \"{outputPath}.%(ext)s\" " +
+               $"--no-playlist " +
+               $"--add-metadata " +
+               $"--embed-thumbnail " +
+               $"--parse-metadata \"{customTitle}:%(meta_title)s\" " +
                $"--parse-metadata \"%(uploader)s:%(meta_artist)s\" " +
                $"--parse-metadata \"%(uploader)s:%(meta_album_artist)s\" " +
                $"--parse-metadata \"%(channel)s:%(meta_album)s\" " +
