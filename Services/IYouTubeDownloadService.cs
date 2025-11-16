@@ -12,6 +12,7 @@ public interface IYouTubeDownloadService
     /// </summary>
     /// <param name="url">The YouTube video URL</param>
     /// <param name="progress">Optional progress reporter (0-100)</param>
+    /// <param name="cancellationToken">Optional cancellation token to cancel the download</param>
     /// <returns>Download result containing paths to the MP3 file and thumbnail</returns>
-    System.Threading.Tasks.Task<DownloadResult> DownloadAsync(string url, System.IProgress<double>? progress = null);
+    System.Threading.Tasks.Task<DownloadResult> DownloadAsync(string url, System.IProgress<double>? progress = null, System.Threading.CancellationToken cancellationToken = default);
 }

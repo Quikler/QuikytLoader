@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using QuikytLoader.Models;
 using SixLabors.ImageSharp;
@@ -31,7 +32,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     /// <summary>
     /// Downloads a video from YouTube and converts it to MP3 format
     /// </summary>
-    public async Task<DownloadResult> DownloadAsync(string url, IProgress<double>? progress = null)
+    public async Task<DownloadResult> DownloadAsync(string url, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         EnsureDownloadDirectoryExists();
         EnsureTempDirectoryExists();
@@ -41,7 +42,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         var tempOutputPath = GenerateTempOutputPath();
         var arguments = BuildYtDlpArguments(url, tempOutputPath);
 
-        await RunYtDlpAsync(arguments, progress);
+        await RunYtDlpAsync(arguments, progress, cancellationToken);
 
         var result = FindDownloadedFilesAndMove();
         Console.WriteLine($"Downloaded: {result.AudioFilePath}, Thumbnail: {result.ThumbnailPath ?? "none"}");
@@ -128,7 +129,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     /// <summary>
     /// Runs yt-dlp process and monitors progress
     /// </summary>
-    private static async Task RunYtDlpAsync(string arguments, IProgress<double>? progress)
+    private static async Task RunYtDlpAsync(string arguments, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var processInfo = CreateProcessInfo(arguments);
 
@@ -142,7 +143,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
-        await WaitForProcessExit(process);
+        await WaitForProcessExit(process, cancellationToken);
 
         ValidateProcessSuccess(process);
     }
@@ -176,10 +177,24 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
     /// <summary>
     /// Waits for the process to exit asynchronously
+    /// Kills the process if cancellation is requested
     /// </summary>
-    private static async Task WaitForProcessExit(Process process)
+    private static async Task WaitForProcessExit(Process process, CancellationToken cancellationToken)
     {
-        await process.WaitForExitAsync();
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Kill the yt-dlp process if cancellation is requested
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+                await process.WaitForExitAsync(); // Wait for the process to fully exit
+            }
+            throw; // Re-throw to propagate cancellation
+        }
     }
 
     /// <summary>

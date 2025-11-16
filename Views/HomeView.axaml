@@ -47,32 +47,43 @@
                                  FontSize="14"
                                  Height="40"
                                  VerticalContentAlignment="Center"
-                                 IsEnabled="{Binding !IsProcessing}">
-                            <i:Interaction.Behaviors>
-                                <ia:EventTriggerBehavior EventName="KeyDown">
-                                    <ia:InvokeCommandAction Command="{Binding DownloadAndSendCommand}"/>
-                                </ia:EventTriggerBehavior>
-                            </i:Interaction.Behaviors>
-                        </TextBox>
+                                 IsEnabled="{Binding !IsProcessing}"
+                                 KeyDown="TextBox_KeyDown"/>
 
                         <TextBlock Text="Paste a YouTube video or music URL"
                                    FontSize="12"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
 
-                    <!-- Download Button -->
-                    <Button Command="{Binding DownloadAndSendCommand}"
-                            HorizontalAlignment="Stretch"
-                            Height="48"
-                            FontSize="16"
-                            FontWeight="SemiBold"
-                            Classes="accent">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ui:SymbolIcon Symbol="Download" FontSize="20"/>
-                            <TextBlock Text="Download &amp; Send to Telegram"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                    <!-- Download and Cancel Buttons -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <!-- Download Button -->
+                        <Button Grid.Column="0"
+                                Command="{Binding DownloadAndSendCommand}"
+                                HorizontalAlignment="Stretch"
+                                Height="48"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                Classes="accent"
+                                Margin="0,0,8,0"
+                                IsDefault="False">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ui:SymbolIcon Symbol="Download" FontSize="20"/>
+                                <TextBlock Text="Download &amp; Send to Telegram"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Cancel Button -->
+                        <Button Grid.Column="1"
+                                Command="{Binding CancelCommand}"
+                                Height="48"
+                                Width="48"
+                                FontSize="16"
+                                ToolTip.Tip="Cancel download">
+                            <ui:SymbolIcon Symbol="Cancel" FontSize="20"/>
+                        </Button>
+                    </Grid>
 
                 </StackPanel>
             </Border>

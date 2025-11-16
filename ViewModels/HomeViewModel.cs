@@ -4,6 +4,7 @@ using QuikytLoader.Models;
 using QuikytLoader.Services;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuikytLoader.ViewModels;
@@ -29,6 +30,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     private bool _isProgressVisible = false;
 
     private DownloadResult? _downloadResult;
+    private CancellationTokenSource? _cancellationTokenSource;
 
     /// <summary>
     /// Command to download YouTube video and send to Telegram
@@ -43,6 +45,24 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         }
 
         await ProcessDownloadAndSendAsync();
+    }
+
+    /// <summary>
+    /// Command to cancel the ongoing download
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
+    private void Cancel()
+    {
+        _cancellationTokenSource?.Cancel();
+        UpdateStatus("Cancelling download...");
+    }
+
+    /// <summary>
+    /// Determines if the cancel command can execute
+    /// </summary>
+    private bool CanExecuteCancel()
+    {
+        return IsProcessing && _cancellationTokenSource != null;
     }
 
     /// <summary>
@@ -88,6 +108,8 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     /// </summary>
     private async Task ProcessDownloadAndSendAsync()
     {
+        // Create new cancellation token source for this download
+        _cancellationTokenSource = new CancellationTokenSource();
         SetProcessingState(true);
         ShowProgress();
 
@@ -99,6 +121,10 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
 
             HandleSuccess();
         }
+        catch (OperationCanceledException)
+        {
+            HandleCancellation();
+        }
         catch (Exception ex)
         {
             HandleError(ex.Message);
@@ -107,6 +133,10 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         {
             // Cleanup temp files after all workflow steps complete
             CleanupTempFiles();
+
+            // Dispose and clear the cancellation token source
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
 
             SetProcessingState(false);
             HideProgress();
@@ -121,7 +151,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         UpdateStatus("Downloading from YouTube...");
 
         var progress = new Progress<double>(UpdateProgress);
-        _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, progress);
+        _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, progress, _cancellationTokenSource!.Token);
     }
 
     /// <summary>
@@ -160,12 +190,22 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     }
 
     /// <summary>
+    /// Handles cancellation of the workflow
+    /// </summary>
+    private void HandleCancellation()
+    {
+        UpdateStatus("Download cancelled");
+        ResetProgress();
+    }
+
+    /// <summary>
     /// Sets the processing state and updates command availability
     /// </summary>
     private void SetProcessingState(bool isProcessing)
     {
         IsProcessing = isProcessing;
         DownloadAndSendCommand.NotifyCanExecuteChanged();
+        CancelCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>
