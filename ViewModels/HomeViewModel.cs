@@ -3,7 +3,9 @@ using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Models;
 using QuikytLoader.Services;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,11 +31,52 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     [ObservableProperty]
     private bool _isProgressVisible = false;
 
+    /// <summary>
+    /// Collection of download queue items
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<DownloadQueueItem> _queueItems = new();
+
+    /// <summary>
+    /// Indicates if the queue is currently being processed
+    /// </summary>
+    private bool _isQueueProcessing = false;
+
     private DownloadResult? _downloadResult;
     private CancellationTokenSource? _cancellationTokenSource;
 
     /// <summary>
-    /// Command to download YouTube video and send to Telegram
+    /// Command to add URL to download queue
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExecuteAddToQueue))]
+    private void AddToQueue()
+    {
+        if (!ValidateUrl())
+        {
+            UpdateStatus("Invalid YouTube URL");
+            return;
+        }
+
+        var queueItem = new DownloadQueueItem
+        {
+            Url = YoutubeUrl,
+            Status = DownloadStatus.Pending,
+            StatusMessage = "Pending"
+        };
+
+        QueueItems.Add(queueItem);
+        ClearUrl();
+        UpdateStatus($"Added to queue. {QueueItems.Count(i => i.Status == DownloadStatus.Pending)} items pending.");
+
+        // Start processing queue if not already running
+        if (!_isQueueProcessing)
+        {
+            _ = ProcessQueueAsync();
+        }
+    }
+
+    /// <summary>
+    /// Command to download YouTube video and send to Telegram (legacy single download)
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteDownload))]
     private async Task DownloadAndSendAsync()
@@ -71,6 +114,14 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     private bool CanExecuteDownload()
     {
         return !IsProcessing && HasValidUrl();
+    }
+
+    /// <summary>
+    /// Determines if the add to queue command can execute
+    /// </summary>
+    private bool CanExecuteAddToQueue()
+    {
+        return HasValidUrl();
     }
 
     /// <summary>
@@ -144,6 +195,81 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     }
 
     /// <summary>
+    /// Processes items in the download queue sequentially
+    /// </summary>
+    private async Task ProcessQueueAsync()
+    {
+        _isQueueProcessing = true;
+
+        while (QueueItems.Any(i => i.Status == DownloadStatus.Pending))
+        {
+            var nextItem = QueueItems.First(i => i.Status == DownloadStatus.Pending);
+
+            // Update item status to Downloading
+            nextItem.Status = DownloadStatus.Downloading;
+            nextItem.StatusMessage = "Starting download...";
+
+            // Create new cancellation token source for this download
+            _cancellationTokenSource = new CancellationTokenSource();
+            SetProcessingState(true);
+
+            try
+            {
+                // Download from YouTube
+                await DownloadFromYouTubeForQueueItemAsync(nextItem);
+
+                // Send to Telegram
+                await SendToTelegramForQueueItemAsync(nextItem);
+
+                // Mark as completed
+                nextItem.Status = DownloadStatus.Completed;
+                nextItem.StatusMessage = "✓ Completed";
+                nextItem.Progress = 100;
+            }
+            catch (OperationCanceledException)
+            {
+                nextItem.Status = DownloadStatus.Cancelled;
+                nextItem.StatusMessage = "Cancelled";
+                nextItem.Progress = 0;
+            }
+            catch (Exception ex)
+            {
+                nextItem.Status = DownloadStatus.Failed;
+                nextItem.StatusMessage = "Failed";
+                nextItem.ErrorMessage = ex.Message;
+                nextItem.Progress = 0;
+            }
+            finally
+            {
+                // Cleanup temp files after processing this item
+                if (nextItem.DownloadResult?.ThumbnailPath != null)
+                {
+                    try
+                    {
+                        if (File.Exists(nextItem.DownloadResult.ThumbnailPath))
+                        {
+                            File.Delete(nextItem.DownloadResult.ThumbnailPath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
+                    }
+                }
+
+                // Dispose and clear the cancellation token source
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+
+                SetProcessingState(false);
+            }
+        }
+
+        _isQueueProcessing = false;
+        UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
+    }
+
+    /// <summary>
     /// Downloads video from YouTube and converts to MP3 with thumbnail
     /// </summary>
     private async Task DownloadFromYouTubeAsync()
@@ -169,6 +295,34 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
 
         await telegramService.SendAudioAsync(_downloadResult.AudioFilePath, _downloadResult.ThumbnailPath);
         UpdateProgress(100);
+    }
+
+    /// <summary>
+    /// Downloads video from YouTube for a specific queue item
+    /// </summary>
+    private async Task DownloadFromYouTubeForQueueItemAsync(DownloadQueueItem item)
+    {
+        item.StatusMessage = "Downloading from YouTube...";
+
+        var progress = new Progress<double>(value => item.Progress = value);
+        item.DownloadResult = await youtubeService.DownloadAsync(item.Url, progress, _cancellationTokenSource!.Token);
+    }
+
+    /// <summary>
+    /// Sends the downloaded file to Telegram for a specific queue item
+    /// </summary>
+    private async Task SendToTelegramForQueueItemAsync(DownloadQueueItem item)
+    {
+        item.StatusMessage = "Sending to Telegram...";
+        item.Progress = Random.Shared.Next(50, 80);
+
+        if (item.DownloadResult is null)
+        {
+            throw new InvalidOperationException("No file to send. Download failed.");
+        }
+
+        await telegramService.SendAudioAsync(item.DownloadResult.AudioFilePath, item.DownloadResult.ThumbnailPath);
+        item.Progress = 100;
     }
 
     /// <summary>
@@ -264,6 +418,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     partial void OnYoutubeUrlChanged(string value)
     {
         DownloadAndSendCommand.NotifyCanExecuteChanged();
+        AddToQueueCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>

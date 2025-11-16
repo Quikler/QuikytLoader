@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuikytLoader.ViewModels"
+             xmlns:models="using:QuikytLoader.Models"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:i="using:Avalonia.Xaml.Interactivity"
              xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
@@ -11,7 +12,7 @@
         <vm:HomeViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="*,Auto,Auto" Margin="40">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="40">
 
         <!-- Main Content -->
         <StackPanel Grid.Row="0" Spacing="24" VerticalAlignment="Center">
@@ -47,7 +48,6 @@
                                  FontSize="14"
                                  Height="40"
                                  VerticalContentAlignment="Center"
-                                 IsEnabled="{Binding !IsProcessing}"
                                  KeyDown="TextBox_KeyDown"/>
 
                         <TextBlock Text="Paste a YouTube video or music URL"
@@ -55,52 +55,109 @@
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
 
-                    <!-- Download and Cancel Buttons -->
-                    <Grid ColumnDefinitions="*,Auto">
-                        <!-- Download Button -->
-                        <Button Grid.Column="0"
-                                Command="{Binding DownloadAndSendCommand}"
-                                HorizontalAlignment="Stretch"
-                                Height="48"
-                                FontSize="16"
-                                FontWeight="SemiBold"
-                                Classes="accent"
-                                Margin="0,0,8,0"
-                                IsDefault="False">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <ui:SymbolIcon Symbol="Download" FontSize="20"/>
-                                <TextBlock Text="Download &amp; Send to Telegram"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <!-- Cancel Button -->
-                        <Button Grid.Column="1"
-                                Command="{Binding CancelCommand}"
-                                Height="48"
-                                Width="48"
-                                FontSize="16"
-                                ToolTip.Tip="Cancel download">
-                            <ui:SymbolIcon Symbol="Cancel" FontSize="20"/>
-                        </Button>
-                    </Grid>
+                    <!-- Add to Queue Button -->
+                    <Button Command="{Binding AddToQueueCommand}"
+                            HorizontalAlignment="Stretch"
+                            Height="48"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Classes="accent"
+                            IsDefault="False">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ui:SymbolIcon Symbol="Add" FontSize="20"/>
+                            <TextBlock Text="Add to Queue"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                 </StackPanel>
             </Border>
 
         </StackPanel>
 
-        <!-- Progress Bar -->
-        <ProgressBar Grid.Row="1"
-                     Value="{Binding ProgressValue}"
-                     Maximum="100"
-                     Height="6"
-                     Margin="0,20,0,0"
-                     IsVisible="{Binding IsProgressVisible}"
-                     ShowProgressText="False"/>
+        <!-- Queue List -->
+        <Border Grid.Row="1"
+                Margin="0,24,0,0"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                IsVisible="{Binding QueueItems.Count}">
+            <DockPanel>
+                <!-- Queue Header -->
+                <Border DockPanel.Dock="Top"
+                        Background="{DynamicResource LayerFillColorDefaultBrush}"
+                        Padding="16,12"
+                        CornerRadius="8,8,0,0">
+                    <TextBlock Text="Download Queue"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </Border>
+
+                <!-- Queue Items -->
+                <ScrollViewer MaxHeight="400">
+                    <ItemsControl ItemsSource="{Binding QueueItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="16,12">
+                                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+
+                                        <!-- URL -->
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="{Binding Url}"
+                                                   FontSize="13"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+
+                                        <!-- Status Badge -->
+                                        <Border Grid.Row="0" Grid.Column="1"
+                                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="4"
+                                                Padding="8,4"
+                                                Margin="8,0,0,0">
+                                            <TextBlock Text="{Binding Status}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"/>
+                                        </Border>
+
+                                        <!-- Status Message -->
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Text="{Binding StatusMessage}"
+                                                   FontSize="12"
+                                                   Margin="0,4,0,0"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+
+                                        <!-- Progress Bar -->
+                                        <ProgressBar Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                     Value="{Binding Progress}"
+                                                     Maximum="100"
+                                                     Height="4"
+                                                     Margin="0,8,0,0"
+                                                     IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:DownloadStatus.Downloading}}"
+                                                     ShowProgressText="False"/>
+
+                                        <!-- Error Message -->
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Text="{Binding ErrorMessage}"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
 
         <!-- Status Message -->
-        <Border Grid.Row="2"
+        <Border Grid.Row="3"
                 Margin="0,16,0,0"
                 Padding="12,8"
                 Background="{DynamicResource LayerFillColorDefaultBrush}"
