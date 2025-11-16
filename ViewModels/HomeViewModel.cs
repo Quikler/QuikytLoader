@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuikytLoader.Models;
 using QuikytLoader.Services;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace QuikytLoader.ViewModels;
@@ -26,7 +28,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     [ObservableProperty]
     private bool _isProgressVisible = false;
 
-    private string? _downloadedFilePath;
+    private DownloadResult? _downloadResult;
 
     /// <summary>
     /// Command to download YouTube video and send to Telegram
@@ -93,6 +95,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         {
             await DownloadFromYouTubeAsync();
             await SendToTelegramAsync();
+            // Future services can use thumbnail here before cleanup
 
             HandleSuccess();
         }
@@ -102,36 +105,39 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         }
         finally
         {
+            // Cleanup temp files after all workflow steps complete
+            CleanupTempFiles();
+
             SetProcessingState(false);
             HideProgress();
         }
     }
 
     /// <summary>
-    /// Downloads video from YouTube and converts to MP3
+    /// Downloads video from YouTube and converts to MP3 with thumbnail
     /// </summary>
     private async Task DownloadFromYouTubeAsync()
     {
         UpdateStatus("Downloading from YouTube...");
 
         var progress = new Progress<double>(UpdateProgress);
-        _downloadedFilePath = await youtubeService.DownloadAsync(YoutubeUrl, progress);
+        _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, progress);
     }
 
     /// <summary>
-    /// Sends the downloaded file to Telegram bot
+    /// Sends the downloaded file to Telegram bot with thumbnail
     /// </summary>
     private async Task SendToTelegramAsync()
     {
         UpdateStatus("Sending to Telegram...");
         UpdateProgress(Random.Shared.Next(50, 80));
 
-        if (_downloadedFilePath is null)
+        if (_downloadResult is null)
         {
             throw new InvalidOperationException("No file to send. Download failed.");
         }
 
-        await telegramService.SendAudioAsync(_downloadedFilePath);
+        await telegramService.SendAudioAsync(_downloadResult.AudioFilePath, _downloadResult.ThumbnailPath);
         UpdateProgress(100);
     }
 
@@ -218,5 +224,32 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     partial void OnYoutubeUrlChanged(string value)
     {
         DownloadAndSendCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Cleans up temporary files created during the download workflow
+    /// Deletes the temporary thumbnail file if it exists
+    /// Called after all workflow steps complete (success or failure)
+    /// </summary>
+    private void CleanupTempFiles()
+    {
+        if (_downloadResult?.ThumbnailPath == null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(_downloadResult.ThumbnailPath))
+            {
+                File.Delete(_downloadResult.ThumbnailPath);
+                Console.WriteLine($"Cleaned up temp thumbnail: {_downloadResult.ThumbnailPath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the workflow if cleanup fails
+            Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
+        }
     }
 }
