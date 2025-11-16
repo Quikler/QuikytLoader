@@ -39,6 +39,12 @@ public partial class DownloadQueueItem : ObservableObject
     private string _statusMessage = "Pending";
 
     /// <summary>
+    /// Optional custom title for the output file (if null, uses video title)
+    /// </summary>
+    [ObservableProperty]
+    private string? _customTitle;
+
+    /// <summary>
     /// Result of the download operation (populated when status is Completed)
     /// </summary>
     public DownloadResult? DownloadResult { get; set; }

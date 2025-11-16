@@ -31,6 +31,27 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     [ObservableProperty]
     private bool _isProgressVisible = false;
 
+    [ObservableProperty]
+    private bool _editTitle = false;
+
+    [ObservableProperty]
+    private string _customTitle = string.Empty;
+
+    [ObservableProperty]
+    private bool _isTitleFetched = false;
+
+    [ObservableProperty]
+    private string _titleFetchStatus = string.Empty;
+
+    [ObservableProperty]
+    private bool _isWaitingForProceed = false;
+
+    [ObservableProperty]
+    private string _addToQueueButtonText = "Add to Queue";
+
+    [ObservableProperty]
+    private bool _isProceedButtonState = false;
+
     /// <summary>
     /// Collection of download queue items
     /// </summary>
@@ -47,9 +68,12 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
 
     /// <summary>
     /// Command to add URL to download queue
+    /// Two-step process when EditTitle is checked:
+    /// 1. First click: Fetch title and wait for user to edit
+    /// 2. Second click (Proceed): Add to queue with custom title
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteAddToQueue))]
-    private void AddToQueue()
+    private async Task AddToQueue()
     {
         if (!ValidateUrl())
         {
@@ -57,15 +81,35 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
             return;
         }
 
+        // If EditTitle is checked and we haven't fetched the title yet
+        if (EditTitle && !IsWaitingForProceed)
+        {
+            // Step 1: Fetch title and wait for user to edit
+            await FetchVideoTitleAsync();
+
+            if (IsTitleFetched)
+            {
+                // Change button to "Proceed" state
+                IsWaitingForProceed = true;
+                AddToQueueButtonText = "Proceed";
+                IsProceedButtonState = true;
+            }
+            return;
+        }
+
+        // Step 2: Proceed with adding to queue (either EditTitle is unchecked or user clicked Proceed)
         var queueItem = new DownloadQueueItem
         {
             Url = YoutubeUrl,
             Status = DownloadStatus.Pending,
-            StatusMessage = "Pending"
+            StatusMessage = "Pending",
+            CustomTitle = EditTitle && IsTitleFetched ? CustomTitle : null
         };
 
         QueueItems.Add(queueItem);
         ClearUrl();
+        ClearTitleEdit();
+        ResetButtonState();
         UpdateStatus($"Added to queue. {QueueItems.Count(i => i.Status == DownloadStatus.Pending)} items pending.");
 
         // Start processing queue if not already running
@@ -277,7 +321,17 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         UpdateStatus("Downloading from YouTube...");
 
         var progress = new Progress<double>(UpdateProgress);
-        _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, progress, _cancellationTokenSource!.Token);
+
+        // Use custom title if EditTitle is checked and title is available
+        if (EditTitle && IsTitleFetched && !string.IsNullOrWhiteSpace(CustomTitle))
+        {
+            Console.WriteLine($"Custom title: {CustomTitle}");
+            _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, CustomTitle, progress, _cancellationTokenSource!.Token);
+        }
+        else
+        {
+            _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, progress, _cancellationTokenSource!.Token);
+        }
     }
 
     /// <summary>
@@ -293,6 +347,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
             throw new InvalidOperationException("No file to send. Download failed.");
         }
 
+        Console.WriteLine($"Sending audio {_downloadResult.AudioFilePath}");
         await telegramService.SendAudioAsync(_downloadResult.AudioFilePath, _downloadResult.ThumbnailPath);
         UpdateProgress(100);
     }
@@ -305,7 +360,16 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         item.StatusMessage = "Downloading from YouTube...";
 
         var progress = new Progress<double>(value => item.Progress = value);
-        item.DownloadResult = await youtubeService.DownloadAsync(item.Url, progress, _cancellationTokenSource!.Token);
+
+        // Use custom title if available in the queue item
+        if (!string.IsNullOrWhiteSpace(item.CustomTitle))
+        {
+            item.DownloadResult = await youtubeService.DownloadAsync(item.Url, item.CustomTitle, progress, _cancellationTokenSource!.Token);
+        }
+        else
+        {
+            item.DownloadResult = await youtubeService.DownloadAsync(item.Url, progress, _cancellationTokenSource!.Token);
+        }
     }
 
     /// <summary>
@@ -412,6 +476,27 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     }
 
     /// <summary>
+    /// Clears the title edit fields
+    /// </summary>
+    private void ClearTitleEdit()
+    {
+        EditTitle = false;
+        CustomTitle = string.Empty;
+        IsTitleFetched = false;
+        TitleFetchStatus = string.Empty;
+    }
+
+    /// <summary>
+    /// Resets the button state back to "Add to Queue"
+    /// </summary>
+    private void ResetButtonState()
+    {
+        IsWaitingForProceed = false;
+        AddToQueueButtonText = "Add to Queue";
+        IsProceedButtonState = false;
+    }
+
+    /// <summary>
     /// Called when YoutubeUrl property changes
     /// Updates command availability based on URL validity
     /// </summary>
@@ -419,6 +504,49 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     {
         DownloadAndSendCommand.NotifyCanExecuteChanged();
         AddToQueueCommand.NotifyCanExecuteChanged();
+
+        // Reset title fetch state when URL changes
+        IsTitleFetched = false;
+        CustomTitle = string.Empty;
+        TitleFetchStatus = string.Empty;
+
+        // Reset button state when URL changes
+        ResetButtonState();
+    }
+
+    /// <summary>
+    /// Called when EditTitle property changes
+    /// Resets button state when checkbox is unchecked
+    /// </summary>
+    partial void OnEditTitleChanged(bool value)
+    {
+        if (!value)
+        {
+            // Reset button state when unchecking EditTitle
+            ResetButtonState();
+        }
+    }
+
+    /// <summary>
+    /// Fetches the video title from YouTube without downloading
+    /// </summary>
+    private async Task FetchVideoTitleAsync()
+    {
+        TitleFetchStatus = "Fetching video title...";
+        IsTitleFetched = false;
+
+        try
+        {
+            var title = await youtubeService.GetVideoTitleAsync(YoutubeUrl);
+            CustomTitle = title;
+            IsTitleFetched = true;
+            TitleFetchStatus = "Edit the title above if needed";
+        }
+        catch (Exception ex)
+        {
+            TitleFetchStatus = $"Failed to fetch title: {ex.Message}";
+            IsTitleFetched = false;
+        }
     }
 
     /// <summary>
