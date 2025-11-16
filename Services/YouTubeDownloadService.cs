@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using QuikytLoader.Models;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace QuikytLoader.Services;
 
@@ -281,6 +283,9 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
             var jpegThumbnailPath = Path.ChangeExtension(tempThumbnailFile, ".jpeg");
             File.Move(tempThumbnailFile, jpegThumbnailPath, overwrite: true);
 
+            // Process thumbnail for Telegram (crop to square, resize to 320x320 max)
+            ProcessThumbnailForTelegram(jpegThumbnailPath);
+
             // Keep thumbnail in temp directory for Telegram to use
             // It will be cleaned up after sending
             finalThumbnailPath = jpegThumbnailPath;
@@ -360,6 +365,47 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         catch
         {
             // Ignore cleanup errors - not critical to operation
+        }
+    }
+
+    /// <summary>
+    /// Processes thumbnail to meet Telegram requirements: 320x320 max, JPEG format
+    /// Crops image to square and resizes if dimensions exceed 320 pixels
+    /// </summary>
+    private static void ProcessThumbnailForTelegram(string thumbnailPath)
+    {
+        try
+        {
+            using var image = Image.Load(thumbnailPath);
+
+            // Check if processing is needed
+            var maxDimension = Math.Max(image.Width, image.Height);
+            if (maxDimension <= 320 && image.Width == image.Height)
+            {
+                // Already 320x320 or smaller and square, no processing needed
+                return;
+            }
+
+            // Crop to square (center crop)
+            var minDimension = Math.Min(image.Width, image.Height);
+            var cropX = (image.Width - minDimension) / 2;
+            var cropY = (image.Height - minDimension) / 2;
+
+            image.Mutate(x => x
+                .Crop(new Rectangle(cropX, cropY, minDimension, minDimension))
+                .Resize(new ResizeOptions
+                {
+                    Size = new Size(320, 320),
+                    Mode = ResizeMode.Max // Only resize if larger than 320
+                }));
+
+            // Save back to the same file as JPEG
+            image.SaveAsJpeg(thumbnailPath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to process thumbnail: {ex.Message}");
+            // Non-critical error, continue without processed thumbnail
         }
     }
 
