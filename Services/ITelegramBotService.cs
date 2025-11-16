@@ -10,9 +10,10 @@ namespace QuikytLoader.Services;
 public interface ITelegramBotService : IAsyncDisposable
 {
     /// <summary>
-    /// Sends an audio file to the configured Telegram chat
+    /// Sends an audio file to the configured Telegram chat with optional thumbnail
     /// Automatically initializes the bot on first use (lazy initialization)
     /// </summary>
-    /// <param name="filePath">Path to the audio file to send</param>
-    Task SendAudioAsync(string filePath);
+    /// <param name="audioFilePath">Path to the audio file to send</param>
+    /// <param name="thumbnailPath">Optional path to the thumbnail image (JPEG format required)</param>
+    Task SendAudioAsync(string audioFilePath, string? thumbnailPath = null);
 }

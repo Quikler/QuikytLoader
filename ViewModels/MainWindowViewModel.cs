@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuikytLoader.Models;
 using QuikytLoader.Services;
 using System;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IYouTubeDownloadService _youtubeService;
     // private readonly ITelegramBotService _telegramService;
 
-    private string? _downloadedFilePath;
+    private DownloadResult? _downloadResult;
 
     public MainWindowViewModel(IYouTubeDownloadService youtubeService)
     {
@@ -124,7 +125,7 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateStatus("Downloading from YouTube...");
 
         var progress = new Progress<double>(UpdateProgress);
-        _downloadedFilePath = await _youtubeService.DownloadAsync(YoutubeUrl, progress);
+        _downloadResult = await _youtubeService.DownloadAsync(YoutubeUrl, progress);
     }
 
     /// <summary>

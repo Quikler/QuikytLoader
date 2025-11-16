@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using QuikytLoader.Models;
 
 namespace QuikytLoader.Services;
 
@@ -28,7 +29,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     /// <summary>
     /// Downloads a video from YouTube and converts it to MP3 format
     /// </summary>
-    public async Task<string> DownloadAsync(string url, IProgress<double>? progress = null)
+    public async Task<DownloadResult> DownloadAsync(string url, IProgress<double>? progress = null)
     {
         EnsureDownloadDirectoryExists();
         EnsureTempDirectoryExists();
@@ -40,11 +41,11 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
         await RunYtDlpAsync(arguments, progress);
 
-        var downloadedFile = FindDownloadedFile();
-        Console.WriteLine("downloadedFile: " + downloadedFile);
-        CleanupTempFiles(downloadedFile);
+        var result = FindDownloadedFilesAndMove();
+        Console.WriteLine($"Downloaded: {result.AudioFilePath}, Thumbnail: {result.ThumbnailPath ?? "none"}");
+        CleanupTempFiles(result.AudioFilePath);
 
-        return downloadedFile;
+        return result;
     }
 
     /// <summary>
@@ -223,56 +224,73 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
         return null;
     }
 
-    private static string ReplaceWhiteSpaces(string name)
+    /// <summary>
+    /// Normalizes whitespace in filenames (replaces multiple spaces with single space)
+    /// </summary>
+    private static string NormalizeWhitespace(string filename)
     {
-        var normalized = Regex.Replace(name, @"\s+", " ");
+        var normalized = Regex.Replace(filename, @"\s+", " ");
         return normalized.Trim();
     }
 
-    private (string tempMp3File, string thumbnailFile) ReplaceDownloadedFilesNames()
+    /// <summary>
+    /// Finds downloaded files in temp directory, normalizes filenames, and moves to final location
+    /// Returns both the audio file path and thumbnail path (if available)
+    /// </summary>
+    private DownloadResult FindDownloadedFilesAndMove()
     {
+        // Find and normalize MP3 file
         var tempMp3File = Directory.GetFiles(_tempDirectory, "*.mp3")
             .OrderByDescending(File.GetCreationTime)
             .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded MP3 file not found in temp directory", _tempDirectory);
-        var newTempMp3File = ReplaceWhiteSpaces(tempMp3File);
-        File.Move(tempMp3File, Path.Combine(_tempDirectory, newTempMp3File), overwrite: true);
-        Console.WriteLine("newTempMp3File: " + newTempMp3File);
 
-        var thumbnailFile = Directory.GetFiles(_tempDirectory, "*.jpg")
+        var normalizedMp3Name = NormalizeWhitespace(Path.GetFileName(tempMp3File));
+        var normalizedMp3Path = Path.Combine(_tempDirectory, normalizedMp3Name);
+
+        // Rename if needed
+        if (tempMp3File != normalizedMp3Path)
+        {
+            File.Move(tempMp3File, normalizedMp3Path, overwrite: true);
+            tempMp3File = normalizedMp3Path;
+        }
+
+        // Move MP3 to final download directory with unique name
+        var finalAudioPath = Path.Combine(_downloadDirectory, normalizedMp3Name);
+        finalAudioPath = GetUniqueFilePath(finalAudioPath);
+        File.Move(tempMp3File, finalAudioPath);
+
+        // Find and normalize thumbnail (optional - may not exist)
+        string? finalThumbnailPath = null;
+        var tempThumbnailFile = Directory.GetFiles(_tempDirectory, "*.jpg")
             .OrderByDescending(File.GetCreationTime)
-            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded thumbnail file not found in temp directory", _tempDirectory);
-        var newThumbnailFile = ReplaceWhiteSpaces(thumbnailFile);
-        File.Move(thumbnailFile, Path.Combine(_tempDirectory, newThumbnailFile), overwrite: true);
-        Console.WriteLine("newthumbnailFile: " + newThumbnailFile);
+            .FirstOrDefault();
 
-        return (newTempMp3File, newThumbnailFile);
-    }
+        if (tempThumbnailFile != null)
+        {
+            var normalizedThumbnailName = NormalizeWhitespace(Path.GetFileName(tempThumbnailFile));
+            var normalizedThumbnailPath = Path.Combine(_tempDirectory, normalizedThumbnailName);
 
-    /// <summary>
-    /// Finds the downloaded MP3 file in temp directory and moves it to final location
-    /// Since we use %(title)s template, we find the most recently created MP3
-    /// </summary>
-    private string FindDownloadedFile()
-    {
-        // Get the most recently created MP3 file in the temp directory
-        var (tempMp3File, _) = ReplaceDownloadedFilesNames();
+            // Rename if needed
+            if (tempThumbnailFile != normalizedThumbnailPath)
+            {
+                File.Move(tempThumbnailFile, normalizedThumbnailPath, overwrite: true);
+                tempThumbnailFile = normalizedThumbnailPath;
+            }
 
-        // Move MP3 to final download directory
-        Console.WriteLine("FindDownloadedFile tempMp3File: " + tempMp3File);
-        var fileName = Path.GetFileName(tempMp3File);
-        Console.WriteLine("FindDownloadedFile fileName: " + fileName);
-        var finalPath = Path.Combine(_downloadDirectory, fileName);
-        Console.WriteLine("FindDownloadedFile finalPath: " + finalPath);
+            // Convert .jpg to .jpeg for Telegram compatibility
+            var jpegThumbnailPath = Path.ChangeExtension(tempThumbnailFile, ".jpeg");
+            File.Move(tempThumbnailFile, jpegThumbnailPath, overwrite: true);
 
-        // Handle duplicate files by adding number suffix
-        finalPath = GetUniqueFilePath(finalPath);
-        Console.WriteLine("FindDownloadedFile unique finalPath: " + finalPath);
+            // Keep thumbnail in temp directory for Telegram to use
+            // It will be cleaned up after sending
+            finalThumbnailPath = jpegThumbnailPath;
+        }
 
-        Console.WriteLine("Before move");
-        File.Move(tempMp3File, finalPath);
-        Console.WriteLine("After move");
-
-        return finalPath;
+        return new DownloadResult
+        {
+            AudioFilePath = finalAudioPath,
+            ThumbnailPath = finalThumbnailPath
+        };
     }
 
     /// <summary>

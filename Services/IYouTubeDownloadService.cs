@@ -1,3 +1,5 @@
+using QuikytLoader.Models;
+
 namespace QuikytLoader.Services;
 
 /// <summary>
@@ -10,6 +12,6 @@ public interface IYouTubeDownloadService
     /// </summary>
     /// <param name="url">The YouTube video URL</param>
     /// <param name="progress">Optional progress reporter (0-100)</param>
-    /// <returns>The full path to the downloaded MP3 file</returns>
-    System.Threading.Tasks.Task<string> DownloadAsync(string url, System.IProgress<double>? progress = null);
+    /// <returns>Download result containing paths to the MP3 file and thumbnail</returns>
+    System.Threading.Tasks.Task<DownloadResult> DownloadAsync(string url, System.IProgress<double>? progress = null);
 }
