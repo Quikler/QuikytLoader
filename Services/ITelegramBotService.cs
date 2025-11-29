@@ -15,6 +15,5 @@ public interface ITelegramBotService : IAsyncDisposable
     /// </summary>
     /// <param name="audioFilePath">Path to the audio file to send</param>
     /// <param name="thumbnailPath">Optional path to the thumbnail image (JPEG format required)</param>
-    /// <returns>The Telegram message ID of the sent message</returns>
-    Task<int> SendAudioAsync(string audioFilePath, string? thumbnailPath = null);
+    Task SendAudioAsync(string audioFilePath, string? thumbnailPath = null);
 }

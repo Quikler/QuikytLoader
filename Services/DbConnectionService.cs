@@ -59,8 +59,7 @@ public class DbConnectionService : IDbConnectionService
             CREATE TABLE IF NOT EXISTS DownloadHistory (
                 YouTubeId TEXT PRIMARY KEY,
                 VideoTitle TEXT NOT NULL,
-                DownloadedAt TEXT NOT NULL,
-                TelegramMessageId INTEGER NOT NULL
+                DownloadedAt TEXT NOT NULL
             )
             """;
 
