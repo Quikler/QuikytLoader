@@ -19,9 +19,4 @@ public class DownloadHistoryRecord
     /// Timestamp when the video was downloaded and sent to Telegram (ISO 8601 format).
     /// </summary>
     public required string DownloadedAt { get; init; }
-
-    /// <summary>
-    /// Telegram message ID returned when the file was sent.
-    /// </summary>
-    public required int TelegramMessageId { get; init; }
 }

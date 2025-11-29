@@ -398,11 +398,11 @@ public partial class HomeViewModel(
         }
 
         Console.WriteLine($"Sending audio {_downloadResult.TempMediaFilePath}");
-        var messageId = await telegramService.SendAudioAsync(_downloadResult.TempMediaFilePath, _downloadResult.TempThumbnailPath);
+        await telegramService.SendAudioAsync(_downloadResult.TempMediaFilePath, _downloadResult.TempThumbnailPath);
         UpdateProgress(100);
 
         // Save to history after successful Telegram send
-        await SaveToHistoryAsync(_downloadResult, messageId, EditTitle && IsTitleFetched ? CustomTitle : null);
+        await SaveToHistoryAsync(_downloadResult, EditTitle && IsTitleFetched ? CustomTitle : null);
     }
 
     /// <summary>
@@ -438,11 +438,11 @@ public partial class HomeViewModel(
             throw new InvalidOperationException("No file to send. Download failed.");
         }
 
-        var messageId = await telegramService.SendAudioAsync(item.DownloadResult.TempMediaFilePath, item.DownloadResult.TempThumbnailPath);
+        await telegramService.SendAudioAsync(item.DownloadResult.TempMediaFilePath, item.DownloadResult.TempThumbnailPath);
         item.Progress = 100;
 
         // Save to history after successful Telegram send
-        await SaveToHistoryAsync(item.DownloadResult, messageId, item.CustomTitle);
+        await SaveToHistoryAsync(item.DownloadResult, item.CustomTitle);
     }
 
     /// <summary>
@@ -655,9 +655,8 @@ public partial class HomeViewModel(
     /// Saves download history to database after successful Telegram send
     /// </summary>
     /// <param name="downloadResult">The download result containing video info</param>
-    /// <param name="telegramMessageId">The Telegram message ID</param>
     /// <param name="customTitle">Custom title if user edited it, null otherwise</param>
-    private async Task SaveToHistoryAsync(DownloadResult downloadResult, int telegramMessageId, string? customTitle)
+    private async Task SaveToHistoryAsync(DownloadResult downloadResult, string? customTitle)
     {
         try
         {
@@ -668,8 +667,7 @@ public partial class HomeViewModel(
             {
                 YouTubeId = downloadResult.YouTubeId,
                 VideoTitle = videoTitle,
-                DownloadedAt = DateTime.UtcNow.ToString("o"), // ISO 8601 format
-                TelegramMessageId = telegramMessageId
+                DownloadedAt = DateTime.UtcNow.ToString("o") // ISO 8601 format
             };
 
             await historyService.SaveHistoryAsync(record);

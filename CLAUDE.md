@@ -71,14 +71,13 @@ The app uses a layered navigation system:
 - Lazy initialization pattern: bot client created on first SendAudioAsync call
 - Reloads settings on each send to pick up configuration changes
 - Sends MP3 files with optional thumbnail to configured chat ID
-- Returns Telegram message ID after successful send
 - Uses Telegram.Bot library (v22.7.5)
 - Implements IAsyncDisposable for proper cleanup on app shutdown
 
 **DownloadHistoryService** - Download history tracking
 - Stores YouTube download history in SQLite database
 - Checks for duplicate downloads by YouTube ID
-- Saves download records with video title, timestamp, and Telegram message ID
+- Saves download records with video title and timestamp
 - Uses INSERT OR REPLACE for upserts (updates DownloadedAt timestamp on re-downloads)
 - Provides GetThumbnailUrlAsync to derive thumbnail URLs from YouTube ID (via yt-dlp or YouTube CDN fallback)
 
@@ -174,11 +173,10 @@ MainWindow contains:
   - YouTube video ID (11 chars, primary key)
   - Video title (custom or original from filename)
   - Download timestamp (ISO 8601 UTC format)
-  - Telegram message ID (for future retrieval)
 - Thumbnail URLs can be derived from YouTube ID when needed (via GetThumbnailUrlAsync)
 - Re-downloading same video updates the DownloadedAt timestamp (INSERT OR REPLACE)
 - Database stored at `~/.config/QuikytLoader/history.db`
-- Schema: DownloadHistory table with YouTubeId as primary key
+- Schema: DownloadHistory table (YouTubeId, VideoTitle, DownloadedAt)
 
 ### Settings and Security
 - Settings stored in JSON at `~/.config/QuikytLoader/settings.json`
