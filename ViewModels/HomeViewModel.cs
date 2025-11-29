@@ -664,16 +664,12 @@ public partial class HomeViewModel(
             // Get video title (either custom or from file name)
             var videoTitle = customTitle ?? Path.GetFileNameWithoutExtension(downloadResult.TempMediaFilePath);
 
-            // Get thumbnail URL for the video
-            var thumbnailUrl = await historyService.GetThumbnailUrlAsync(downloadResult.YouTubeId);
-
             var record = new DownloadHistoryRecord
             {
                 YouTubeId = downloadResult.YouTubeId,
                 VideoTitle = videoTitle,
                 DownloadedAt = DateTime.UtcNow.ToString("o"), // ISO 8601 format
-                TelegramMessageId = telegramMessageId,
-                ThumbnailUrl = thumbnailUrl
+                TelegramMessageId = telegramMessageId
             };
 
             await historyService.SaveHistoryAsync(record);
