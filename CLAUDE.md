@@ -44,29 +44,46 @@ The app uses a layered navigation system:
    - Progress reporting via IProgress<double>
    - Status management and validation
 
-3. **SettingsViewModel** - Telegram bot configuration (planned)
-   - Will store bot token and chat ID
+3. **SettingsViewModel** - Telegram bot configuration
+   - Manages bot token and chat ID via ISettingsManager
+   - Provides save/load commands for settings persistence
 
 ### Service Layer
 
 **YouTubeDownloadService** - Core download logic
-- Downloads to system temp directory (`/tmp/QuikytLoader`)
-- Moves final MP3 to `~/Downloads/QuikytLoader`
+- Downloads to system temp directory (`/tmp/QuikytLoader`) only - files not saved to user's Downloads
+- All files remain in temp directory for sending to Telegram, then cleaned up by HomeViewModel
 - Embeds comprehensive metadata (Artist, Album, Composer, Performer, Publisher, etc.)
 - Embeds video thumbnail as album art with automatic format conversion
-- Handles duplicate files with numbered suffixes: `filename (1).mp3`, `filename (2).mp3`
-- Auto-cleanup of temporary files (thumbnails, metadata) after processing
-- Spawns yt-dlp process with arguments built in BuildYtDlpArguments (YouTubeDownloadService.cs:98)
-- Parses progress from yt-dlp output via regex (YouTubeDownloadService.cs:316)
+- Auto-normalizes filenames (removes extra whitespace)
+- Spawns yt-dlp process with arguments built in BuildYtDlpArguments (YouTubeDownloadService.cs:185)
+- Parses progress from yt-dlp output via regex
+- Supports custom title overrides via GetVideoTitleAsync and custom DownloadAsync overload
+- Returns DownloadResult with TempMediaFilePath and TempThumbnailPath
+
+**TelegramBotService** - Telegram integration
+- Lazy initialization pattern: bot client created on first SendAudioAsync call
+- Reloads settings on each send to pick up configuration changes
+- Sends MP3 files with optional thumbnail to configured chat ID
+- Uses Telegram.Bot library (v22.7.5)
+- Implements IAsyncDisposable for proper cleanup on app shutdown
+
+**SettingsManager** - JSON-based settings persistence
+- Stores config in `~/.config/QuikytLoader/settings.json` (follows XDG Base Directory spec)
+- Atomic writes via temp file + rename to prevent corruption
+- Sets restrictive file permissions on Linux (mode 600 - user read/write only)
+- Auto-creates default settings if file doesn't exist or is corrupted
 
 ### Dependency Injection
 
 All services and ViewModels registered in App.axaml.cs:
-- AppViewModel, HomeViewModel, SettingsViewModel (Transient)
+- AppViewModel, HomeViewModel, SettingsViewModel, MainWindowViewModel (Transient)
+- ISettingsManager -> SettingsManager (Singleton)
 - IYouTubeDownloadService -> YouTubeDownloadService (Singleton)
-- ITelegramBotService (planned, currently commented out)
+- ITelegramBotService -> TelegramBotService (Singleton)
 
 Constructor injection used throughout - never use ServiceProvider directly.
+App shutdown handler calls host.StopAsync() to properly dispose async disposable services.
 
 ### UI Structure
 
@@ -84,12 +101,31 @@ MainWindow contains:
 
 ## Important Implementation Notes
 
-### File Handling
+### Download Queue System
+- HomeViewModel maintains ObservableCollection<DownloadQueueItem> for batch downloads
+- Queue processes sequentially: downloads next pending item, sends to Telegram, marks completed
+- Each queue item tracks its own status (Pending/Downloading/Completed/Failed/Cancelled)
+- Per-item progress reporting via IProgress<double> bound to queue item
+- Queue processing runs in background (_isQueueProcessing flag prevents duplicate processing)
+- Temp files (media + thumbnail) automatically cleaned up after each queue item completes
+
+### Custom Title Editing Workflow
+- Two-step process when EditTitle checkbox is checked:
+  1. First click "Add to Queue": fetches video title via GetVideoTitleAsync, populates CustomTitle field
+  2. User edits title, clicks "Proceed": adds to queue with custom title
+- Button text dynamically changes: "Add to Queue" -> "Proceed"
+- IsProceedButtonState flag tracks button state for UI styling
+- State resets when: URL changes, EditTitle unchecked, or item added to queue
+
+### File Handling and Cleanup
 - YouTubeDownloadService uses sanitized video titles as filenames via `%(title)s` template
-- Downloads happen in temp directory first, then moved to final location
-- Temp directory: `/tmp/QuikytLoader`
-- Final directory: `~/Downloads/QuikytLoader`
-- Automatic cleanup of thumbnails and metadata files after processing
+- Custom titles sanitized via SanitizeFilename (replaces invalid chars with underscore)
+- All downloads stored in temp directory: `/tmp/QuikytLoader`
+- Files NOT saved to user's Downloads folder - only temporary for Telegram upload
+- Thumbnail processing: crops to square, resizes to 320x320 max for Telegram requirements
+- HomeViewModel handles cleanup: deletes both media file and thumbnail after sending to Telegram
+- Cleanup happens in finally block to ensure temp files removed even on errors
+- DownloadResult contains TempMediaFilePath and TempThumbnailPath properties
 
 ### yt-dlp Integration
 - All yt-dlp arguments constructed in BuildYtDlpArguments method
@@ -97,15 +133,18 @@ MainWindow contains:
 - Progress extracted via regex from stdout/stderr
 - Comprehensive metadata embedding including Artist, Album, Composer, Publisher, etc.
 - Thumbnail embedding with automatic format conversion to JPG
+- Process cancellation supported: kills yt-dlp process tree on CancellationToken
 
 ### MVVM Communication
 - ViewModels never reference Views directly
 - Commands expose functionality to UI via data binding
 - Observable properties ([ObservableProperty]) auto-generate INotifyPropertyChanged
 - Command availability controlled via CanExecute predicates
+- NotifyCanExecuteChanged() called when conditions change (e.g., URL validity, processing state)
 
-## Planned Features (Not Yet Implemented)
-
-- ITelegramBotService integration (Telegram.Bot NuGet package already included)
-- Settings persistence for bot token and chat ID
-- The workflow currently simulates Telegram sending with Task.Delay (HomeViewModel.cs:138)
+### Settings and Security
+- Settings stored in JSON at `~/.config/QuikytLoader/settings.json`
+- File permissions restricted to mode 600 on Linux (user read/write only) for bot token security
+- TelegramBotService validates settings on each send (throws if BotToken or ChatId missing)
+- Bot token can be obtained from @BotFather on Telegram
+- Chat ID can be obtained from @userinfobot on Telegram

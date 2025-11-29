@@ -286,18 +286,35 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
             finally
             {
                 // Cleanup temp files after processing this item
-                if (nextItem.DownloadResult?.ThumbnailPath != null)
+                if (nextItem.DownloadResult != null)
                 {
+                    // Cleanup media file
                     try
                     {
-                        if (File.Exists(nextItem.DownloadResult.ThumbnailPath))
+                        if (File.Exists(nextItem.DownloadResult.TempMediaFilePath))
                         {
-                            File.Delete(nextItem.DownloadResult.ThumbnailPath);
+                            File.Delete(nextItem.DownloadResult.TempMediaFilePath);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
+                        Console.WriteLine($"Failed to cleanup temp media file: {ex.Message}");
+                    }
+
+                    // Cleanup thumbnail
+                    if (nextItem.DownloadResult.TempThumbnailPath != null)
+                    {
+                        try
+                        {
+                            if (File.Exists(nextItem.DownloadResult.TempThumbnailPath))
+                            {
+                                File.Delete(nextItem.DownloadResult.TempThumbnailPath);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
+                        }
                     }
                 }
 
@@ -347,8 +364,8 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
             throw new InvalidOperationException("No file to send. Download failed.");
         }
 
-        Console.WriteLine($"Sending audio {_downloadResult.AudioFilePath}");
-        await telegramService.SendAudioAsync(_downloadResult.AudioFilePath, _downloadResult.ThumbnailPath);
+        Console.WriteLine($"Sending audio {_downloadResult.TempMediaFilePath}");
+        await telegramService.SendAudioAsync(_downloadResult.TempMediaFilePath, _downloadResult.TempThumbnailPath);
         UpdateProgress(100);
     }
 
@@ -385,7 +402,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
             throw new InvalidOperationException("No file to send. Download failed.");
         }
 
-        await telegramService.SendAudioAsync(item.DownloadResult.AudioFilePath, item.DownloadResult.ThumbnailPath);
+        await telegramService.SendAudioAsync(item.DownloadResult.TempMediaFilePath, item.DownloadResult.TempThumbnailPath);
         item.Progress = 100;
     }
 
@@ -551,28 +568,47 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
 
     /// <summary>
     /// Cleans up temporary files created during the download workflow
-    /// Deletes the temporary thumbnail file if it exists
+    /// Deletes both the temporary media file and thumbnail if they exist
     /// Called after all workflow steps complete (success or failure)
     /// </summary>
     private void CleanupTempFiles()
     {
-        if (_downloadResult?.ThumbnailPath == null)
+        if (_downloadResult == null)
         {
             return;
         }
 
+        // Cleanup media file
         try
         {
-            if (File.Exists(_downloadResult.ThumbnailPath))
+            if (File.Exists(_downloadResult.TempMediaFilePath))
             {
-                File.Delete(_downloadResult.ThumbnailPath);
-                Console.WriteLine($"Cleaned up temp thumbnail: {_downloadResult.ThumbnailPath}");
+                File.Delete(_downloadResult.TempMediaFilePath);
+                Console.WriteLine($"Cleaned up temp media file: {_downloadResult.TempMediaFilePath}");
             }
         }
         catch (Exception ex)
         {
             // Log but don't fail the workflow if cleanup fails
-            Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
+            Console.WriteLine($"Failed to cleanup temp media file: {ex.Message}");
+        }
+
+        // Cleanup thumbnail
+        if (_downloadResult.TempThumbnailPath != null)
+        {
+            try
+            {
+                if (File.Exists(_downloadResult.TempThumbnailPath))
+                {
+                    File.Delete(_downloadResult.TempThumbnailPath);
+                    Console.WriteLine($"Cleaned up temp thumbnail: {_downloadResult.TempThumbnailPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail the workflow if cleanup fails
+                Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
+            }
         }
     }
 }

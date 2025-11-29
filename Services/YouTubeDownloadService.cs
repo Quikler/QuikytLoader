@@ -13,28 +13,24 @@ namespace QuikytLoader.Services;
 
 /// <summary>
 /// Service for downloading videos from YouTube using yt-dlp
+/// Downloads media to temp directory for sending to Telegram only (not stored locally)
 /// </summary>
 public partial class YouTubeDownloadService : IYouTubeDownloadService
 {
-    private readonly string _downloadDirectory;
-    private readonly string _tempDirectory;
+    private readonly string _tempDownloadDirectory;
 
     public YouTubeDownloadService()
     {
-        // Use ~/Downloads/QuikytLoader as default download directory
-        var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        _downloadDirectory = Path.Combine(homeDir, "Downloads", "QuikytLoader");
-
-        // Use system temp directory for temporary files (thumbnails)
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
+        // Use system temp directory for all downloads (media files are temporary)
+        _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
     }
 
     /// <summary>
     /// Downloads a video from YouTube and converts it to MP3 format
+    /// Files are kept in temp directory for sending to Telegram
     /// </summary>
     public async Task<DownloadResult> DownloadAsync(string url, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
-        EnsureDownloadDirectoryExists();
         EnsureTempDirectoryExists();
 
         ValidateUrl(url);
@@ -44,32 +40,30 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
         await RunYtDlpAsync(arguments, progress, cancellationToken);
 
-        var result = FindDownloadedFilesAndMove();
-        Console.WriteLine($"Downloaded: {result.AudioFilePath}, Thumbnail: {result.ThumbnailPath ?? "none"}");
-        CleanupTempFiles(result.AudioFilePath);
+        var result = FindDownloadedFiles();
+        Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
         return result;
     }
 
     /// <summary>
     /// Downloads a video from YouTube with a custom filename and converts it to MP3 format
+    /// Files are kept in temp directory for sending to Telegram
     /// </summary>
     public async Task<DownloadResult> DownloadAsync(string url, string customTitle, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
-        EnsureDownloadDirectoryExists();
         EnsureTempDirectoryExists();
 
         ValidateUrl(url);
 
         var tempOutputPath = GenerateTempOutputPathWithCustomTitle(customTitle);
-        Console.WriteLine($"Tmep output path: {tempOutputPath}");
+        Console.WriteLine($"Temp output path: {tempOutputPath}");
         var arguments = BuildYtDlpArgumentsWithCustomTitle(url, tempOutputPath, customTitle);
 
         await RunYtDlpAsync(arguments, progress, cancellationToken);
 
-        var result = FindDownloadedFilesAndMove();
-        Console.WriteLine($"Downloaded: {result.AudioFilePath}, Thumbnail: {result.ThumbnailPath ?? "none"}");
-        CleanupTempFiles(result.AudioFilePath);
+        var result = FindDownloadedFiles();
+        Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
         return result;
     }
@@ -123,48 +117,35 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     }
 
     /// <summary>
-    /// Ensures the download directory exists
-    /// </summary>
-    private void EnsureDownloadDirectoryExists()
-    {
-        if (!Directory.Exists(_downloadDirectory))
-        {
-            Directory.CreateDirectory(_downloadDirectory);
-        }
-    }
-
-    /// <summary>
-    /// Ensures the temporary directory exists
+    /// Ensures the temporary download directory exists
     /// </summary>
     private void EnsureTempDirectoryExists()
     {
-        if (!Directory.Exists(_tempDirectory))
+        if (!Directory.Exists(_tempDownloadDirectory))
         {
-            Directory.CreateDirectory(_tempDirectory);
+            Directory.CreateDirectory(_tempDownloadDirectory);
         }
     }
 
     /// <summary>
     /// Generates the output file path template for yt-dlp in temp directory
     /// Uses %(title)s to get the actual video title
-    /// Downloads to temp directory first, then moves to final location
     /// </summary>
     private string GenerateTempOutputPath()
     {
         // yt-dlp will automatically sanitize the title for filesystem
-        return Path.Combine(_tempDirectory, "%(title)s");
+        return Path.Combine(_tempDownloadDirectory, "%(title)s");
     }
 
     /// <summary>
     /// Generates the output file path with a custom title for yt-dlp in temp directory
     /// Uses custom title instead of video title
-    /// Downloads to temp directory first, then moves to final location
     /// </summary>
     private string GenerateTempOutputPathWithCustomTitle(string customTitle)
     {
         // Sanitize the custom title for filesystem use
         var sanitized = SanitizeFilename(customTitle);
-        return Path.Combine(_tempDirectory, sanitized);
+        return Path.Combine(_tempDownloadDirectory, sanitized);
     }
 
     /// <summary>
@@ -364,18 +345,19 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     }
 
     /// <summary>
-    /// Finds downloaded files in temp directory, normalizes filenames, and moves to final location
+    /// Finds downloaded files in temp directory and normalizes filenames
     /// Returns both the audio file path and thumbnail path (if available)
+    /// Files remain in temp directory for sending to Telegram
     /// </summary>
-    private DownloadResult FindDownloadedFilesAndMove()
+    private DownloadResult FindDownloadedFiles()
     {
         // Find and normalize MP3 file
-        var tempMp3File = Directory.GetFiles(_tempDirectory, "*.mp3")
+        var tempMp3File = Directory.GetFiles(_tempDownloadDirectory, "*.mp3")
             .OrderByDescending(File.GetCreationTime)
-            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded MP3 file not found in temp directory", _tempDirectory);
+            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded MP3 file not found in temp directory", _tempDownloadDirectory);
 
         var normalizedMp3Name = NormalizeWhitespace(Path.GetFileName(tempMp3File));
-        var normalizedMp3Path = Path.Combine(_tempDirectory, normalizedMp3Name);
+        var normalizedMp3Path = Path.Combine(_tempDownloadDirectory, normalizedMp3Name);
 
         // Rename if needed
         if (tempMp3File != normalizedMp3Path)
@@ -384,21 +366,16 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
             tempMp3File = normalizedMp3Path;
         }
 
-        // Move MP3 to final download directory with unique name
-        var finalAudioPath = Path.Combine(_downloadDirectory, normalizedMp3Name);
-        finalAudioPath = GetUniqueFilePath(finalAudioPath);
-        File.Move(tempMp3File, finalAudioPath);
-
         // Find and normalize thumbnail (optional - may not exist)
-        string? finalThumbnailPath = null;
-        var tempThumbnailFile = Directory.GetFiles(_tempDirectory, "*.jpg")
+        string? tempThumbnailPath = null;
+        var tempThumbnailFile = Directory.GetFiles(_tempDownloadDirectory, "*.jpg")
             .OrderByDescending(File.GetCreationTime)
             .FirstOrDefault();
 
         if (tempThumbnailFile != null)
         {
             var normalizedThumbnailName = NormalizeWhitespace(Path.GetFileName(tempThumbnailFile));
-            var normalizedThumbnailPath = Path.Combine(_tempDirectory, normalizedThumbnailName);
+            var normalizedThumbnailPath = Path.Combine(_tempDownloadDirectory, normalizedThumbnailName);
 
             // Rename if needed
             if (tempThumbnailFile != normalizedThumbnailPath)
@@ -416,85 +393,16 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
             // Keep thumbnail in temp directory for Telegram to use
             // It will be cleaned up after sending
-            finalThumbnailPath = jpegThumbnailPath;
+            tempThumbnailPath = jpegThumbnailPath;
         }
 
         return new DownloadResult
         {
-            AudioFilePath = finalAudioPath,
-            ThumbnailPath = finalThumbnailPath
+            TempMediaFilePath = tempMp3File,
+            TempThumbnailPath = tempThumbnailPath
         };
     }
 
-    /// <summary>
-    /// Gets a unique file path by adding (1), (2), etc. if file already exists
-    /// </summary>
-    private static string GetUniqueFilePath(string filePath)
-    {
-        if (!File.Exists(filePath))
-        {
-            return filePath;
-        }
-
-        var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-        var fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
-        var extension = Path.GetExtension(filePath);
-
-        var counter = 1;
-        string uniquePath;
-
-        do
-        {
-            var newFileName = $"{fileNameWithoutExt} ({counter}){extension}";
-            uniquePath = Path.Combine(directory, newFileName);
-            counter++;
-        } while (File.Exists(uniquePath));
-
-        return uniquePath;
-    }
-
-    /// <summary>
-    /// Cleans up temporary files (thumbnails, metadata files) after processing
-    /// Keeps only the final MP3 file in download directory
-    /// </summary>
-    private void CleanupTempFiles(string downloadedFilePath)
-    {
-        try
-        {
-            // Get the base name from the actual downloaded file (not the template)
-            Console.WriteLine("before baseName");
-            var baseName = Path.GetFileNameWithoutExtension(downloadedFilePath);
-
-            Console.WriteLine("baseName: " + baseName);
-
-            // Delete all remaining files in temp directory that match this download
-            // This includes .jpg thumbnails, .webp images, metadata files, etc.
-            var tempFiles = Directory.GetFiles(_tempDirectory, "*.*")
-                .Where(f =>
-                {
-                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(f);
-                    return fileNameWithoutExt.Equals(baseName, StringComparison.OrdinalIgnoreCase);
-                });
-
-            Console.WriteLine("tempFiles: " + string.Join(", ", tempFiles));
-
-            foreach (var tempFile in tempFiles)
-            {
-                try
-                {
-                    File.Delete(tempFile);
-                }
-                catch
-                {
-                    // Ignore individual file deletion errors
-                }
-            }
-        }
-        catch
-        {
-            // Ignore cleanup errors - not critical to operation
-        }
-    }
 
     /// <summary>
     /// Processes thumbnail to meet Telegram requirements: 320x320 max, JPEG format
