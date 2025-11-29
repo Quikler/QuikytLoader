@@ -24,9 +24,4 @@ public class DownloadHistoryRecord
     /// Telegram message ID returned when the file was sent.
     /// </summary>
     public required int TelegramMessageId { get; init; }
-
-    /// <summary>
-    /// Thumbnail URL for the video.
-    /// </summary>
-    public required string ThumbnailUrl { get; init; }
 }

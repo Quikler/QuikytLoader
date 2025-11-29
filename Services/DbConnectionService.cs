@@ -60,8 +60,7 @@ public class DbConnectionService : IDbConnectionService
                 YouTubeId TEXT PRIMARY KEY,
                 VideoTitle TEXT NOT NULL,
                 DownloadedAt TEXT NOT NULL,
-                TelegramMessageId INTEGER NOT NULL,
-                ThumbnailUrl TEXT NOT NULL
+                TelegramMessageId INTEGER NOT NULL
             )
             """;
 

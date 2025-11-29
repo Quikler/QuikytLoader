@@ -18,7 +18,7 @@ public class DownloadHistoryService(IDbConnectionService dbConnectionService) : 
         await using var connection = await dbConnectionService.GetConnectionAsync(cancellationToken);
 
         const string query = """
-            SELECT YouTubeId, VideoTitle, DownloadedAt, TelegramMessageId, ThumbnailUrl
+            SELECT YouTubeId, VideoTitle, DownloadedAt, TelegramMessageId
             FROM DownloadHistory
             WHERE YouTubeId = @YouTubeId
             """;
@@ -34,8 +34,8 @@ public class DownloadHistoryService(IDbConnectionService dbConnectionService) : 
 
         // Use INSERT OR REPLACE to handle both insert and update cases
         const string upsertSql = """
-            INSERT OR REPLACE INTO DownloadHistory (YouTubeId, VideoTitle, DownloadedAt, TelegramMessageId, ThumbnailUrl)
-            VALUES (@YouTubeId, @VideoTitle, @DownloadedAt, @TelegramMessageId, @ThumbnailUrl)
+            INSERT OR REPLACE INTO DownloadHistory (YouTubeId, VideoTitle, DownloadedAt, TelegramMessageId)
+            VALUES (@YouTubeId, @VideoTitle, @DownloadedAt, @TelegramMessageId)
             """;
 
         await connection.ExecuteAsync(

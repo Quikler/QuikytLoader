@@ -78,9 +78,9 @@ The app uses a layered navigation system:
 **DownloadHistoryService** - Download history tracking
 - Stores YouTube download history in SQLite database
 - Checks for duplicate downloads by YouTube ID
-- Saves download records with video title, timestamp, Telegram message ID, and thumbnail URL
+- Saves download records with video title, timestamp, and Telegram message ID
 - Uses INSERT OR REPLACE for upserts (updates DownloadedAt timestamp on re-downloads)
-- Fetches thumbnail URLs via yt-dlp or falls back to YouTube CDN
+- Provides GetThumbnailUrlAsync to derive thumbnail URLs from YouTube ID (via yt-dlp or YouTube CDN fallback)
 
 **DbConnectionService** - Database connection management
 - Manages SQLite database at `~/.config/QuikytLoader/history.db`
@@ -175,7 +175,7 @@ MainWindow contains:
   - Video title (custom or original from filename)
   - Download timestamp (ISO 8601 UTC format)
   - Telegram message ID (for future retrieval)
-  - Thumbnail URL (from yt-dlp or YouTube CDN fallback)
+- Thumbnail URLs can be derived from YouTube ID when needed (via GetThumbnailUrlAsync)
 - Re-downloading same video updates the DownloadedAt timestamp (INSERT OR REPLACE)
 - Database stored at `~/.config/QuikytLoader/history.db`
 - Schema: DownloadHistory table with YouTubeId as primary key
