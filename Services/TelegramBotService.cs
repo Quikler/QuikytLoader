@@ -23,7 +23,8 @@ public class TelegramBotService(ISettingsManager settingsManager) : ITelegramBot
     /// Sends an audio file to the configured Telegram chat with optional thumbnail
     /// Automatically initializes the bot on first use (lazy initialization)
     /// </summary>
-    public async Task SendAudioAsync(string audioFilePath, string? thumbnailPath = null)
+    /// <returns>The Telegram message ID of the sent message</returns>
+    public async Task<int> SendAudioAsync(string audioFilePath, string? thumbnailPath = null)
     {
         // Ensure bot is initialized (lazy initialization)
         await EnsureInitializedAsync();
@@ -57,7 +58,7 @@ public class TelegramBotService(ISettingsManager settingsManager) : ITelegramBot
                 thumbnailInputFile = InputFile.FromStream(thumbnailStream, thumbnailFileName);
             }
 
-            await _botClient!.SendAudio(
+            var message = await _botClient!.SendAudio(
                 chatId: chatId,
                 audio: audioInputFile,
                 thumbnail: thumbnailInputFile,
@@ -65,7 +66,10 @@ public class TelegramBotService(ISettingsManager settingsManager) : ITelegramBot
             );
 
             Console.WriteLine($"Audio file sent to Telegram: {fileName}" +
-                            (thumbnailInputFile != null ? " (with thumbnail)" : ""));
+                            (thumbnailInputFile != null ? " (with thumbnail)" : "") +
+                            $" (Message ID: {message.Id})");
+
+            return message.Id;
         }
         finally
         {

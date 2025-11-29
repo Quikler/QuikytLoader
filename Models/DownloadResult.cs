@@ -8,6 +8,11 @@ namespace QuikytLoader.Models;
 public class DownloadResult
 {
     /// <summary>
+    /// YouTube video ID (11 characters)
+    /// </summary>
+    public required string YouTubeId { get; init; }
+
+    /// <summary>
     /// Full path to the temporary MP3 audio file
     /// File is in temp directory and should be deleted after sending to Telegram
     /// </summary>

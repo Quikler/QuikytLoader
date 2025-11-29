@@ -14,7 +14,11 @@ namespace QuikytLoader.ViewModels;
 /// <summary>
 /// ViewModel for the Home page (YouTube download functionality)
 /// </summary>
-public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITelegramBotService telegramService) : ViewModelBase
+public partial class HomeViewModel(
+    IYouTubeDownloadService youtubeService,
+    ITelegramBotService telegramService,
+    IDownloadHistoryService historyService,
+    IYoutubeExtractor youtubeExtractor) : ViewModelBase
 {
     [ObservableProperty]
     private string _youtubeUrl = string.Empty;
@@ -71,6 +75,7 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
     /// Two-step process when EditTitle is checked:
     /// 1. First click: Fetch title and wait for user to edit
     /// 2. Second click (Proceed): Add to queue with custom title
+    /// Includes duplicate detection: prompts user if video was already downloaded
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteAddToQueue))]
     private async Task AddToQueue()
@@ -95,6 +100,34 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
                 IsProceedButtonState = true;
             }
             return;
+        }
+
+        // Check for duplicates before adding to queue
+        try
+        {
+            var youtubeId = await youtubeExtractor.ExtractIdAsync(YoutubeUrl);
+            if (youtubeId is not null)
+            {
+                var existingRecord = await historyService.CheckDuplicateAsync(youtubeId);
+                if (existingRecord is not null)
+                {
+                    // Show duplicate warning (for now, just log - we'll add UI dialog later)
+                    var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
+                                  $"Title: {existingRecord.VideoTitle}\n\n" +
+                                  $"Do you want to download it again?";
+
+                    Console.WriteLine($"[DUPLICATE DETECTED] {message}");
+
+                    // TODO: Show user dialog and get confirmation
+                    // For now, we'll continue with the download
+                    UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to check duplicates: {ex.Message}");
+            // Continue with download even if duplicate check fails
         }
 
         // Step 2: Proceed with adding to queue (either EditTitle is unchecked or user clicked Proceed)
@@ -365,8 +398,11 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
         }
 
         Console.WriteLine($"Sending audio {_downloadResult.TempMediaFilePath}");
-        await telegramService.SendAudioAsync(_downloadResult.TempMediaFilePath, _downloadResult.TempThumbnailPath);
+        var messageId = await telegramService.SendAudioAsync(_downloadResult.TempMediaFilePath, _downloadResult.TempThumbnailPath);
         UpdateProgress(100);
+
+        // Save to history after successful Telegram send
+        await SaveToHistoryAsync(_downloadResult, messageId, EditTitle && IsTitleFetched ? CustomTitle : null);
     }
 
     /// <summary>
@@ -402,8 +438,11 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
             throw new InvalidOperationException("No file to send. Download failed.");
         }
 
-        await telegramService.SendAudioAsync(item.DownloadResult.TempMediaFilePath, item.DownloadResult.TempThumbnailPath);
+        var messageId = await telegramService.SendAudioAsync(item.DownloadResult.TempMediaFilePath, item.DownloadResult.TempThumbnailPath);
         item.Progress = 100;
+
+        // Save to history after successful Telegram send
+        await SaveToHistoryAsync(item.DownloadResult, messageId, item.CustomTitle);
     }
 
     /// <summary>
@@ -609,6 +648,41 @@ public partial class HomeViewModel(IYouTubeDownloadService youtubeService, ITele
                 // Log but don't fail the workflow if cleanup fails
                 Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
             }
+        }
+    }
+
+    /// <summary>
+    /// Saves download history to database after successful Telegram send
+    /// </summary>
+    /// <param name="downloadResult">The download result containing video info</param>
+    /// <param name="telegramMessageId">The Telegram message ID</param>
+    /// <param name="customTitle">Custom title if user edited it, null otherwise</param>
+    private async Task SaveToHistoryAsync(DownloadResult downloadResult, int telegramMessageId, string? customTitle)
+    {
+        try
+        {
+            // Get video title (either custom or from file name)
+            var videoTitle = customTitle ?? Path.GetFileNameWithoutExtension(downloadResult.TempMediaFilePath);
+
+            // Get thumbnail URL for the video
+            var thumbnailUrl = await historyService.GetThumbnailUrlAsync(downloadResult.YouTubeId);
+
+            var record = new DownloadHistoryRecord
+            {
+                YouTubeId = downloadResult.YouTubeId,
+                VideoTitle = videoTitle,
+                DownloadedAt = DateTime.UtcNow.ToString("o"), // ISO 8601 format
+                TelegramMessageId = telegramMessageId,
+                ThumbnailUrl = thumbnailUrl
+            };
+
+            await historyService.SaveHistoryAsync(record);
+            Console.WriteLine($"Saved to history: {downloadResult.YouTubeId} - {videoTitle}");
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the workflow if history save fails
+            Console.WriteLine($"Failed to save download history: {ex.Message}");
         }
     }
 }

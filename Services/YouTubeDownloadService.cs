@@ -15,15 +15,9 @@ namespace QuikytLoader.Services;
 /// Service for downloading videos from YouTube using yt-dlp
 /// Downloads media to temp directory for sending to Telegram only (not stored locally)
 /// </summary>
-public partial class YouTubeDownloadService : IYouTubeDownloadService
+public partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor) : IYouTubeDownloadService
 {
-    private readonly string _tempDownloadDirectory;
-
-    public YouTubeDownloadService()
-    {
-        // Use system temp directory for all downloads (media files are temporary)
-        _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
-    }
+    private readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
 
     /// <summary>
     /// Downloads a video from YouTube and converts it to MP3 format
@@ -35,12 +29,16 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
         ValidateUrl(url);
 
+        // Extract YouTube ID
+        var youtubeId = await youtubeExtractor.ExtractIdAsync(url, cancellationToken)
+            ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
+
         var tempOutputPath = GenerateTempOutputPath();
         var arguments = BuildYtDlpArguments(url, tempOutputPath);
 
         await RunYtDlpAsync(arguments, progress, cancellationToken);
 
-        var result = FindDownloadedFiles();
+        var result = FindDownloadedFiles(youtubeId);
         Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
         return result;
@@ -56,13 +54,17 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
         ValidateUrl(url);
 
+        // Extract YouTube ID
+        var youtubeId = await youtubeExtractor.ExtractIdAsync(url, cancellationToken)
+            ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
+
         var tempOutputPath = GenerateTempOutputPathWithCustomTitle(customTitle);
         Console.WriteLine($"Temp output path: {tempOutputPath}");
         var arguments = BuildYtDlpArgumentsWithCustomTitle(url, tempOutputPath, customTitle);
 
         await RunYtDlpAsync(arguments, progress, cancellationToken);
 
-        var result = FindDownloadedFiles();
+        var result = FindDownloadedFiles(youtubeId);
         Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
         return result;
@@ -285,7 +287,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
             if (!process.HasExited)
             {
                 process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync(); // Wait for the process to fully exit
+                await process.WaitForExitAsync(cancellationToken); // Wait for the process to fully exit
             }
             throw; // Re-throw to propagate cancellation
         }
@@ -349,7 +351,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
     /// Returns both the audio file path and thumbnail path (if available)
     /// Files remain in temp directory for sending to Telegram
     /// </summary>
-    private DownloadResult FindDownloadedFiles()
+    private DownloadResult FindDownloadedFiles(string youtubeId)
     {
         // Find and normalize MP3 file
         var tempMp3File = Directory.GetFiles(_tempDownloadDirectory, "*.mp3")
@@ -398,6 +400,7 @@ public partial class YouTubeDownloadService : IYouTubeDownloadService
 
         return new DownloadResult
         {
+            YouTubeId = youtubeId,
             TempMediaFilePath = tempMp3File,
             TempThumbnailPath = tempThumbnailPath
         };
