@@ -1,4 +1,3 @@
-using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -46,7 +45,7 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private IHostBuilder CreateHostBuilder()
+    private static IHostBuilder CreateHostBuilder()
     {
         return Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
@@ -61,6 +60,9 @@ public partial class App : Application
                 services.AddSingleton<ISettingsManager, SettingsManager>();
                 services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
                 services.AddSingleton<ITelegramBotService, TelegramBotService>();
+                services.AddSingleton<IYoutubeExtractor, YoutubeExtractor>();
+                services.AddSingleton<IDbConnectionService, DbConnectionService>();
+                services.AddSingleton<IDownloadHistoryService, DownloadHistoryService>();
             });
     }
 }

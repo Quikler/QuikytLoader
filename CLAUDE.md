@@ -59,14 +59,35 @@ The app uses a layered navigation system:
 - Spawns yt-dlp process with arguments built in BuildYtDlpArguments (YouTubeDownloadService.cs:185)
 - Parses progress from yt-dlp output via regex
 - Supports custom title overrides via GetVideoTitleAsync and custom DownloadAsync overload
-- Returns DownloadResult with TempMediaFilePath and TempThumbnailPath
+- Returns DownloadResult with YouTubeId, TempMediaFilePath and TempThumbnailPath
+- Uses IYoutubeExtractor to extract video IDs from URLs
+
+**YoutubeExtractor** - YouTube ID extraction
+- Fast regex-based extraction for common YouTube URL formats (youtube.com/watch?v=ID, youtu.be/ID, etc.)
+- Fallback to yt-dlp `--print id` for edge cases
+- Returns 11-character YouTube video ID
 
 **TelegramBotService** - Telegram integration
 - Lazy initialization pattern: bot client created on first SendAudioAsync call
 - Reloads settings on each send to pick up configuration changes
 - Sends MP3 files with optional thumbnail to configured chat ID
+- Returns Telegram message ID after successful send
 - Uses Telegram.Bot library (v22.7.5)
 - Implements IAsyncDisposable for proper cleanup on app shutdown
+
+**DownloadHistoryService** - Download history tracking
+- Stores YouTube download history in SQLite database
+- Checks for duplicate downloads by YouTube ID
+- Saves download records with video title, timestamp, Telegram message ID, and thumbnail URL
+- Uses INSERT OR REPLACE for upserts (updates DownloadedAt timestamp on re-downloads)
+- Fetches thumbnail URLs via yt-dlp or falls back to YouTube CDN
+
+**DbConnectionService** - Database connection management
+- Manages SQLite database at `~/.config/QuikytLoader/history.db`
+- SQLite automatically creates database file on first connection
+- Initializes schema with CREATE TABLE IF NOT EXISTS (idempotent, safe for concurrent calls)
+- Sets restrictive file permissions on Linux (mode 600 - user read/write only)
+- Provides connections to other services (currently used by DownloadHistoryService)
 
 **SettingsManager** - JSON-based settings persistence
 - Stores config in `~/.config/QuikytLoader/settings.json` (follows XDG Base Directory spec)
@@ -81,6 +102,9 @@ All services and ViewModels registered in App.axaml.cs:
 - ISettingsManager -> SettingsManager (Singleton)
 - IYouTubeDownloadService -> YouTubeDownloadService (Singleton)
 - ITelegramBotService -> TelegramBotService (Singleton)
+- IYoutubeExtractor -> YoutubeExtractor (Singleton)
+- IDbConnectionService -> DbConnectionService (Singleton)
+- IDownloadHistoryService -> DownloadHistoryService (Singleton)
 
 Constructor injection used throughout - never use ServiceProvider directly.
 App shutdown handler calls host.StopAsync() to properly dispose async disposable services.
@@ -142,9 +166,24 @@ MainWindow contains:
 - Command availability controlled via CanExecute predicates
 - NotifyCanExecuteChanged() called when conditions change (e.g., URL validity, processing state)
 
+### Download History and Duplicate Detection
+- HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryService
+- Duplicate detection extracts YouTube ID via IYoutubeExtractor and queries SQLite database
+- Currently logs duplicate warning to console (UI dialog for user confirmation to be implemented)
+- After successful Telegram send, saves record to history with:
+  - YouTube video ID (11 chars, primary key)
+  - Video title (custom or original from filename)
+  - Download timestamp (ISO 8601 UTC format)
+  - Telegram message ID (for future retrieval)
+  - Thumbnail URL (from yt-dlp or YouTube CDN fallback)
+- Re-downloading same video updates the DownloadedAt timestamp (INSERT OR REPLACE)
+- Database stored at `~/.config/QuikytLoader/history.db`
+- Schema: DownloadHistory table with YouTubeId as primary key
+
 ### Settings and Security
 - Settings stored in JSON at `~/.config/QuikytLoader/settings.json`
-- File permissions restricted to mode 600 on Linux (user read/write only) for bot token security
+- Database stored at `~/.config/QuikytLoader/history.db`
+- File permissions restricted to mode 600 on Linux (user read/write only) for security
 - TelegramBotService validates settings on each send (throws if BotToken or ChatId missing)
 - Bot token can be obtained from @BotFather on Telegram
 - Chat ID can be obtained from @userinfobot on Telegram
