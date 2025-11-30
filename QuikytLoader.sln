@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader.Application", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader.Infrastructure", "QuikytLoader.Infrastructure\QuikytLoader.Infrastructure.csproj", "{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader", "QuikytLoader.csproj", "{9F3BF385-C59F-4586-9BD9-8DC0078BAA23}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader.AvaloniaUI", "QuikytLoader.AvaloniaUI\QuikytLoader.AvaloniaUI.csproj", "{A3C63184-4F8F-4949-BA35-BE5630972E3F}"
 EndProject
 Global
@@ -34,10 +32,6 @@ Global
 		{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9F3BF385-C59F-4586-9BD9-8DC0078BAA23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9F3BF385-C59F-4586-9BD9-8DC0078BAA23}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9F3BF385-C59F-4586-9BD9-8DC0078BAA23}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9F3BF385-C59F-4586-9BD9-8DC0078BAA23}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A3C63184-4F8F-4949-BA35-BE5630972E3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A3C63184-4F8F-4949-BA35-BE5630972E3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3C63184-4F8F-4949-BA35-BE5630972E3F}.Release|Any CPU.ActiveCfg = Release|Any CPU

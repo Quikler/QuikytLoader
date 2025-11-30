@@ -28,12 +28,8 @@ class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        // Register ViewModels
-        services.AddTransient<MainWindowViewModel>();
-
-        // Register Services (we'll add these later)
-        // services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
-        // services.AddSingleton<ITelegramBotService, TelegramBotService>();
+        // DI configuration is now done in App.axaml.cs
+        // This Program.cs is legacy and not used for DI
     }
 
     public static AppBuilder BuildAvaloniaApp()
