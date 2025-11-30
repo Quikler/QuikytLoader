@@ -1,7 +1,7 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using QuikytLoader.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels;
 
 namespace QuikytLoader.AvaloniaUI;
 

@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.ViewModels"
+             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
-             x:Class="QuikytLoader.Views.SettingsView"
+             x:Class="QuikytLoader.AvaloniaUI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
     <Design.DataContext>

@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.UseCases;
 
-namespace QuikytLoader.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 /// <summary>
 /// ViewModel for the Settings page (Telegram bot configuration)

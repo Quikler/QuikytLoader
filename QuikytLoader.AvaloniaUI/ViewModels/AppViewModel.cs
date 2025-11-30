@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace QuikytLoader.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 /// <summary>
 /// Root ViewModel for the application
@@ -26,13 +26,9 @@ public partial class AppViewModel : ViewModelBase
         HomeViewModel = homeViewModel;
         SettingsViewModel = settingsViewModel;
 
-        // Start with Home view
         _currentView = HomeViewModel;
     }
 
-    /// <summary>
-    /// Navigates to Home view
-    /// </summary>
     [RelayCommand]
     private void NavigateToHome()
     {
@@ -41,9 +37,6 @@ public partial class AppViewModel : ViewModelBase
         IsSettingsSelected = false;
     }
 
-    /// <summary>
-    /// Navigates to Settings view
-    /// </summary>
     [RelayCommand]
     private void NavigateToSettings()
     {

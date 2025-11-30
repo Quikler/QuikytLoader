@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Domain.Enums;
 
-namespace QuikytLoader.Models;
+namespace QuikytLoader.AvaloniaUI.Models;
 
 /// <summary>
 /// Represents a single item in the download queue

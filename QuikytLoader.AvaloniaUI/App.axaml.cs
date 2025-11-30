@@ -1,14 +1,13 @@
-using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using QuikytLoader.Application.DependencyInjection;
+using QuikytLoader.AvaloniaUI.ViewModels;
+using QuikytLoader.AvaloniaUI.Views;
 using QuikytLoader.Infrastructure.DependencyInjection;
-using QuikytLoader.ViewModels;
-using QuikytLoader.Views;
 
-namespace QuikytLoader;
+namespace QuikytLoader.AvaloniaUI;
 
 public partial class App : Avalonia.Application
 {

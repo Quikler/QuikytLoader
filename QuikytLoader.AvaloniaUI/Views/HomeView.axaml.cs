@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using QuikytLoader.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels;
 
-namespace QuikytLoader.Views;
+namespace QuikytLoader.AvaloniaUI.Views;
 
 public partial class HomeView : UserControl
 {
