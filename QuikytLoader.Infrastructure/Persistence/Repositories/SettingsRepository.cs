@@ -9,7 +9,7 @@ namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 /// Repository for application settings persistence using JSON file storage
 /// Follows XDG Base Directory specification on Linux (~/.config/QuikytLoader)
 /// </summary>
-public class SettingsRepository : ISettingsRepository
+internal class SettingsRepository : ISettingsRepository
 {
     private readonly string _settingsPath;
     private static readonly JsonSerializerOptions JsonOptions = new()

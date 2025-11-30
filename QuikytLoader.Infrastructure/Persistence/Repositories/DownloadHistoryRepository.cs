@@ -9,7 +9,7 @@ namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Repository for managing download history using SQLite database with Dapper ORM
 /// </summary>
-public class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactory) : IDownloadHistoryRepository
+internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactory) : IDownloadHistoryRepository
 {
     public async Task SaveAsync(DownloadRecord record, CancellationToken cancellationToken = default)
     {

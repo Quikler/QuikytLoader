@@ -11,7 +11,7 @@ namespace QuikytLoader.Infrastructure.YouTube;
 /// Service for downloading videos from YouTube using yt-dlp
 /// Downloads media to temp directory for sending to Telegram only (not stored locally)
 /// </summary>
-public partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor) : IYouTubeDownloadService
+internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor) : IYouTubeDownloadService
 {
     private readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
 
