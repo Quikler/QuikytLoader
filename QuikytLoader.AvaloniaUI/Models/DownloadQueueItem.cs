@@ -1,10 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using QuikytLoader.Application.DTOs;
+using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.Models;
 
 /// <summary>
 /// Represents a single item in the download queue
 /// Observable to support UI binding and real-time updates
+/// UI-specific model not part of Domain/Application layers
 /// </summary>
 public partial class DownloadQueueItem : ObservableObject
 {
@@ -47,5 +50,5 @@ public partial class DownloadQueueItem : ObservableObject
     /// <summary>
     /// Result of the download operation (populated when status is Completed)
     /// </summary>
-    public DownloadResult? DownloadResult { get; set; }
+    public DownloadResultDto? DownloadResult { get; set; }
 }

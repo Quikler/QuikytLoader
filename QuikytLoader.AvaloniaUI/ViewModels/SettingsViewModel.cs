@@ -1,18 +1,16 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QuikytLoader.Models;
-using QuikytLoader.Services;
+using QuikytLoader.Application.DTOs;
+using QuikytLoader.Application.UseCases;
 
 namespace QuikytLoader.ViewModels;
 
 /// <summary>
-/// ViewModel for the Settings page
-/// Handles Telegram bot configuration
+/// ViewModel for the Settings page (Telegram bot configuration)
+/// Uses Application layer Use Cases to manage settings
 /// </summary>
-public partial class SettingsViewModel : ViewModelBase
+public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCase) : ViewModelBase
 {
-    private readonly ISettingsManager _settingsManager;
-
     [ObservableProperty]
     private string _botToken = string.Empty;
 
@@ -22,9 +20,11 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    public SettingsViewModel(ISettingsManager settingsManager)
+    /// <summary>
+    /// Loads settings from storage on initialization
+    /// </summary>
+    public void Initialize()
     {
-        _settingsManager = settingsManager;
         LoadSettings();
     }
 
@@ -33,7 +33,7 @@ public partial class SettingsViewModel : ViewModelBase
     /// </summary>
     private void LoadSettings()
     {
-        var settings = _settingsManager.Load();
+        var settings = manageSettingsUseCase.LoadSettings();
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
     }
@@ -44,13 +44,13 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private void SaveSettings()
     {
-        var settings = new AppSettings
+        var settings = new AppSettingsDto
         {
             BotToken = BotToken,
             ChatId = ChatId
         };
 
-        _settingsManager.Save(settings);
+        manageSettingsUseCase.SaveSettings(settings);
         StatusMessage = "Settings saved successfully!";
     }
 }

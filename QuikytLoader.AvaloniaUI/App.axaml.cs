@@ -3,7 +3,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using QuikytLoader.Services;
+using QuikytLoader.Application.DependencyInjection;
+using QuikytLoader.Infrastructure.DependencyInjection;
 using QuikytLoader.ViewModels;
 using QuikytLoader.Views;
 
@@ -25,6 +26,10 @@ public partial class App : Avalonia.Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var appViewModel = _host.Services.GetRequiredService<AppViewModel>();
+
+            // Initialize SettingsViewModel to load settings
+            var settingsViewModel = _host.Services.GetRequiredService<SettingsViewModel>();
+            settingsViewModel.Initialize();
 
             desktop.MainWindow = new MainWindow
             {
@@ -50,19 +55,14 @@ public partial class App : Avalonia.Application
         return Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
             {
+                // Register layer services using extension methods
+                services.AddApplicationServices();
+                services.AddInfrastructureServices();
+
                 // Register ViewModels
                 services.AddTransient<AppViewModel>();
                 services.AddTransient<HomeViewModel>();
                 services.AddTransient<SettingsViewModel>();
-                services.AddTransient<MainWindowViewModel>();
-
-                // Register Services
-                services.AddSingleton<ISettingsManager, SettingsManager>();
-                services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
-                services.AddSingleton<ITelegramBotService, TelegramBotService>();
-                services.AddSingleton<IYoutubeExtractor, YoutubeExtractor>();
-                services.AddSingleton<IDbConnectionService, DbConnectionService>();
-                services.AddSingleton<IDownloadHistoryService, DownloadHistoryService>();
             });
     }
 }

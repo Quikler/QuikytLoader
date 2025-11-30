@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuikytLoader.Application.DTOs;
+using QuikytLoader.Application.UseCases;
+using QuikytLoader.Domain.Enums;
 using QuikytLoader.Models;
-using QuikytLoader.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -13,12 +15,12 @@ namespace QuikytLoader.ViewModels;
 
 /// <summary>
 /// ViewModel for the Home page (YouTube download functionality)
+/// Uses Application layer Use Cases to orchestrate business logic
 /// </summary>
 public partial class HomeViewModel(
-    IYouTubeDownloadService youtubeService,
-    ITelegramBotService telegramService,
-    IDownloadHistoryService historyService,
-    IYoutubeExtractor youtubeExtractor) : ViewModelBase
+    DownloadAndSendUseCase downloadAndSendUseCase,
+    CheckDuplicateUseCase checkDuplicateUseCase,
+    GetVideoInfoUseCase getVideoInfoUseCase) : ViewModelBase
 {
     [ObservableProperty]
     private string _youtubeUrl = string.Empty;
@@ -67,7 +69,6 @@ public partial class HomeViewModel(
     /// </summary>
     private bool _isQueueProcessing = false;
 
-    private DownloadResult? _downloadResult;
     private CancellationTokenSource? _cancellationTokenSource;
 
     /// <summary>
@@ -105,11 +106,11 @@ public partial class HomeViewModel(
         // Check for duplicates before adding to queue
         try
         {
-            var youtubeId = await youtubeExtractor.ExtractIdAsync(YoutubeUrl);
-            if (youtubeId is not null)
+            var exists = await checkDuplicateUseCase.ExistsAsync(YoutubeUrl);
+            if (exists)
             {
-                var existingRecord = await historyService.CheckDuplicateAsync(youtubeId);
-                if (existingRecord is not null)
+                var existingRecord = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
+                if (existingRecord != null)
                 {
                     // Show duplicate warning (for now, just log - we'll add UI dialog later)
                     var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
@@ -153,125 +154,6 @@ public partial class HomeViewModel(
     }
 
     /// <summary>
-    /// Command to download YouTube video and send to Telegram (legacy single download)
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanExecuteDownload))]
-    private async Task DownloadAndSendAsync()
-    {
-        if (!ValidateUrl())
-        {
-            UpdateStatus("Invalid YouTube URL");
-            return;
-        }
-
-        await ProcessDownloadAndSendAsync();
-    }
-
-    /// <summary>
-    /// Command to cancel the ongoing download
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
-    private void Cancel()
-    {
-        _cancellationTokenSource?.Cancel();
-        UpdateStatus("Cancelling download...");
-    }
-
-    /// <summary>
-    /// Determines if the cancel command can execute
-    /// </summary>
-    private bool CanExecuteCancel()
-    {
-        return IsProcessing && _cancellationTokenSource != null;
-    }
-
-    /// <summary>
-    /// Determines if the download command can execute
-    /// </summary>
-    private bool CanExecuteDownload()
-    {
-        return !IsProcessing && HasValidUrl();
-    }
-
-    /// <summary>
-    /// Determines if the add to queue command can execute
-    /// </summary>
-    private bool CanExecuteAddToQueue()
-    {
-        return HasValidUrl();
-    }
-
-    /// <summary>
-    /// Validates if the URL is not empty and has basic YouTube format
-    /// </summary>
-    private bool ValidateUrl()
-    {
-        if (string.IsNullOrWhiteSpace(YoutubeUrl))
-        {
-            return false;
-        }
-
-        return IsYouTubeUrl(YoutubeUrl);
-    }
-
-    /// <summary>
-    /// Checks if URL contains YouTube domain
-    /// </summary>
-    private static bool IsYouTubeUrl(string url)
-    {
-        return url.Contains("youtube.com", StringComparison.OrdinalIgnoreCase) ||
-               url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
-    /// Checks if current URL has valid format
-    /// </summary>
-    private bool HasValidUrl()
-    {
-        return !string.IsNullOrWhiteSpace(YoutubeUrl) && IsYouTubeUrl(YoutubeUrl);
-    }
-
-    /// <summary>
-    /// Main workflow: Download from YouTube and send to Telegram
-    /// </summary>
-    private async Task ProcessDownloadAndSendAsync()
-    {
-        // Create new cancellation token source for this download
-        _cancellationTokenSource = new CancellationTokenSource();
-        SetProcessingState(true);
-        ShowProgress();
-
-        try
-        {
-            await DownloadFromYouTubeAsync();
-            await SendToTelegramAsync();
-            // Future services can use thumbnail here before cleanup
-
-            HandleSuccess();
-        }
-        catch (OperationCanceledException)
-        {
-            HandleCancellation();
-        }
-        catch (Exception ex)
-        {
-            HandleError(ex.Message);
-        }
-        finally
-        {
-            // Cleanup temp files after all workflow steps complete
-            CleanupTempFiles();
-
-            // Dispose and clear the cancellation token source
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-
-            SetProcessingState(false);
-            HideProgress();
-        }
-    }
-
-    /// <summary>
     /// Processes items in the download queue sequentially
     /// </summary>
     private async Task ProcessQueueAsync()
@@ -292,11 +174,16 @@ public partial class HomeViewModel(
 
             try
             {
-                // Download from YouTube
-                await DownloadFromYouTubeForQueueItemAsync(nextItem);
+                // Use the DownloadAndSendUseCase to orchestrate the entire workflow
+                var progress = new Progress<double>(value => nextItem.Progress = value);
 
-                // Send to Telegram
-                await SendToTelegramForQueueItemAsync(nextItem);
+                var result = await downloadAndSendUseCase.ExecuteAsync(
+                    nextItem.Url,
+                    nextItem.CustomTitle,
+                    progress,
+                    _cancellationTokenSource.Token);
+
+                nextItem.DownloadResult = result;
 
                 // Mark as completed
                 nextItem.Status = DownloadStatus.Completed;
@@ -364,112 +251,59 @@ public partial class HomeViewModel(
     }
 
     /// <summary>
-    /// Downloads video from YouTube and converts to MP3 with thumbnail
+    /// Command to cancel the ongoing download
     /// </summary>
-    private async Task DownloadFromYouTubeAsync()
+    [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
+    private void Cancel()
     {
-        UpdateStatus("Downloading from YouTube...");
-
-        var progress = new Progress<double>(UpdateProgress);
-
-        // Use custom title if EditTitle is checked and title is available
-        if (EditTitle && IsTitleFetched && !string.IsNullOrWhiteSpace(CustomTitle))
-        {
-            Console.WriteLine($"Custom title: {CustomTitle}");
-            _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, CustomTitle, progress, _cancellationTokenSource!.Token);
-        }
-        else
-        {
-            _downloadResult = await youtubeService.DownloadAsync(YoutubeUrl, progress, _cancellationTokenSource!.Token);
-        }
+        _cancellationTokenSource?.Cancel();
+        UpdateStatus("Cancelling download...");
     }
 
     /// <summary>
-    /// Sends the downloaded file to Telegram bot with thumbnail
+    /// Determines if the cancel command can execute
     /// </summary>
-    private async Task SendToTelegramAsync()
+    private bool CanExecuteCancel()
     {
-        UpdateStatus("Sending to Telegram...");
-        UpdateProgress(Random.Shared.Next(50, 80));
+        return IsProcessing && _cancellationTokenSource != null;
+    }
 
-        if (_downloadResult is null)
+    /// <summary>
+    /// Determines if the add to queue command can execute
+    /// </summary>
+    private bool CanExecuteAddToQueue()
+    {
+        return HasValidUrl();
+    }
+
+    /// <summary>
+    /// Validates if the URL is not empty and has basic YouTube format
+    /// </summary>
+    private bool ValidateUrl()
+    {
+        if (string.IsNullOrWhiteSpace(YoutubeUrl))
         {
-            throw new InvalidOperationException("No file to send. Download failed.");
+            return false;
         }
 
-        Console.WriteLine($"Sending audio {_downloadResult.TempMediaFilePath}");
-        await telegramService.SendAudioAsync(_downloadResult.TempMediaFilePath, _downloadResult.TempThumbnailPath);
-        UpdateProgress(100);
-
-        // Save to history after successful Telegram send
-        await SaveToHistoryAsync(_downloadResult, EditTitle && IsTitleFetched ? CustomTitle : null);
+        return IsYouTubeUrl(YoutubeUrl);
     }
 
     /// <summary>
-    /// Downloads video from YouTube for a specific queue item
+    /// Checks if URL contains YouTube domain
     /// </summary>
-    private async Task DownloadFromYouTubeForQueueItemAsync(DownloadQueueItem item)
+    private static bool IsYouTubeUrl(string url)
     {
-        item.StatusMessage = "Downloading from YouTube...";
-
-        var progress = new Progress<double>(value => item.Progress = value);
-
-        // Use custom title if available in the queue item
-        if (!string.IsNullOrWhiteSpace(item.CustomTitle))
-        {
-            item.DownloadResult = await youtubeService.DownloadAsync(item.Url, item.CustomTitle, progress, _cancellationTokenSource!.Token);
-        }
-        else
-        {
-            item.DownloadResult = await youtubeService.DownloadAsync(item.Url, progress, _cancellationTokenSource!.Token);
-        }
+        return url.Contains("youtube.com", StringComparison.OrdinalIgnoreCase) ||
+               url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
-    /// Sends the downloaded file to Telegram for a specific queue item
+    /// Checks if current URL has valid format
     /// </summary>
-    private async Task SendToTelegramForQueueItemAsync(DownloadQueueItem item)
+    private bool HasValidUrl()
     {
-        item.StatusMessage = "Sending to Telegram...";
-        item.Progress = Random.Shared.Next(50, 80);
-
-        if (item.DownloadResult is null)
-        {
-            throw new InvalidOperationException("No file to send. Download failed.");
-        }
-
-        await telegramService.SendAudioAsync(item.DownloadResult.TempMediaFilePath, item.DownloadResult.TempThumbnailPath);
-        item.Progress = 100;
-
-        // Save to history after successful Telegram send
-        await SaveToHistoryAsync(item.DownloadResult, item.CustomTitle);
-    }
-
-    /// <summary>
-    /// Handles successful completion of the workflow
-    /// </summary>
-    private void HandleSuccess()
-    {
-        UpdateStatus("✓ Successfully sent to Telegram!");
-        ClearUrl();
-    }
-
-    /// <summary>
-    /// Handles errors during the workflow
-    /// </summary>
-    private void HandleError(string errorMessage)
-    {
-        UpdateStatus($"Error: {errorMessage}");
-        ResetProgress();
-    }
-
-    /// <summary>
-    /// Handles cancellation of the workflow
-    /// </summary>
-    private void HandleCancellation()
-    {
-        UpdateStatus("Download cancelled");
-        ResetProgress();
+        return !string.IsNullOrWhiteSpace(YoutubeUrl) && IsYouTubeUrl(YoutubeUrl);
     }
 
     /// <summary>
@@ -478,7 +312,6 @@ public partial class HomeViewModel(
     private void SetProcessingState(bool isProcessing)
     {
         IsProcessing = isProcessing;
-        DownloadAndSendCommand.NotifyCanExecuteChanged();
         CancelCommand.NotifyCanExecuteChanged();
     }
 
@@ -488,39 +321,6 @@ public partial class HomeViewModel(
     private void UpdateStatus(string message)
     {
         StatusMessage = message;
-    }
-
-    /// <summary>
-    /// Updates the progress bar value
-    /// </summary>
-    private void UpdateProgress(double value)
-    {
-        ProgressValue = value;
-    }
-
-    /// <summary>
-    /// Shows the progress bar
-    /// </summary>
-    private void ShowProgress()
-    {
-        IsProgressVisible = true;
-        ResetProgress();
-    }
-
-    /// <summary>
-    /// Hides the progress bar
-    /// </summary>
-    private void HideProgress()
-    {
-        IsProgressVisible = false;
-    }
-
-    /// <summary>
-    /// Resets progress to zero
-    /// </summary>
-    private void ResetProgress()
-    {
-        ProgressValue = 0;
     }
 
     /// <summary>
@@ -558,7 +358,6 @@ public partial class HomeViewModel(
     /// </summary>
     partial void OnYoutubeUrlChanged(string value)
     {
-        DownloadAndSendCommand.NotifyCanExecuteChanged();
         AddToQueueCommand.NotifyCanExecuteChanged();
 
         // Reset title fetch state when URL changes
@@ -593,7 +392,7 @@ public partial class HomeViewModel(
 
         try
         {
-            var title = await youtubeService.GetVideoTitleAsync(YoutubeUrl);
+            var title = await getVideoInfoUseCase.GetVideoTitleAsync(YoutubeUrl);
             CustomTitle = title;
             IsTitleFetched = true;
             TitleFetchStatus = "Edit the title above if needed";
@@ -602,81 +401,6 @@ public partial class HomeViewModel(
         {
             TitleFetchStatus = $"Failed to fetch title: {ex.Message}";
             IsTitleFetched = false;
-        }
-    }
-
-    /// <summary>
-    /// Cleans up temporary files created during the download workflow
-    /// Deletes both the temporary media file and thumbnail if they exist
-    /// Called after all workflow steps complete (success or failure)
-    /// </summary>
-    private void CleanupTempFiles()
-    {
-        if (_downloadResult == null)
-        {
-            return;
-        }
-
-        // Cleanup media file
-        try
-        {
-            if (File.Exists(_downloadResult.TempMediaFilePath))
-            {
-                File.Delete(_downloadResult.TempMediaFilePath);
-                Console.WriteLine($"Cleaned up temp media file: {_downloadResult.TempMediaFilePath}");
-            }
-        }
-        catch (Exception ex)
-        {
-            // Log but don't fail the workflow if cleanup fails
-            Console.WriteLine($"Failed to cleanup temp media file: {ex.Message}");
-        }
-
-        // Cleanup thumbnail
-        if (_downloadResult.TempThumbnailPath != null)
-        {
-            try
-            {
-                if (File.Exists(_downloadResult.TempThumbnailPath))
-                {
-                    File.Delete(_downloadResult.TempThumbnailPath);
-                    Console.WriteLine($"Cleaned up temp thumbnail: {_downloadResult.TempThumbnailPath}");
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log but don't fail the workflow if cleanup fails
-                Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Saves download history to database after successful Telegram send
-    /// </summary>
-    /// <param name="downloadResult">The download result containing video info</param>
-    /// <param name="customTitle">Custom title if user edited it, null otherwise</param>
-    private async Task SaveToHistoryAsync(DownloadResult downloadResult, string? customTitle)
-    {
-        try
-        {
-            // Get video title (either custom or from file name)
-            var videoTitle = customTitle ?? Path.GetFileNameWithoutExtension(downloadResult.TempMediaFilePath);
-
-            var record = new DownloadHistoryRecord
-            {
-                YouTubeId = downloadResult.YouTubeId,
-                VideoTitle = videoTitle,
-                DownloadedAt = DateTime.UtcNow.ToString("o") // ISO 8601 format
-            };
-
-            await historyService.SaveHistoryAsync(record);
-            Console.WriteLine($"Saved to history: {downloadResult.YouTubeId} - {videoTitle}");
-        }
-        catch (Exception ex)
-        {
-            // Log but don't fail the workflow if history save fails
-            Console.WriteLine($"Failed to save download history: {ex.Message}");
         }
     }
 }
