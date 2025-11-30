@@ -1,9 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.UseCases;
+using QuikytLoader.AvaloniaUI.Models;
 using QuikytLoader.Domain.Enums;
-using QuikytLoader.Models;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -11,7 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace QuikytLoader.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 /// <summary>
 /// ViewModel for the Home page (YouTube download functionality)
@@ -62,11 +61,8 @@ public partial class HomeViewModel(
     /// Collection of download queue items
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<DownloadQueueItem> _queueItems = new();
+    private ObservableCollection<DownloadQueueItem> _queueItems = [];
 
-    /// <summary>
-    /// Indicates if the queue is currently being processed
-    /// </summary>
     private bool _isQueueProcessing = false;
 
     private CancellationTokenSource? _cancellationTokenSource;
@@ -153,9 +149,6 @@ public partial class HomeViewModel(
         }
     }
 
-    /// <summary>
-    /// Processes items in the download queue sequentially
-    /// </summary>
     private async Task ProcessQueueAsync()
     {
         _isQueueProcessing = true;
@@ -250,9 +243,6 @@ public partial class HomeViewModel(
         UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
     }
 
-    /// <summary>
-    /// Command to cancel the ongoing download
-    /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
     private void Cancel()
     {
@@ -260,34 +250,11 @@ public partial class HomeViewModel(
         UpdateStatus("Cancelling download...");
     }
 
-    /// <summary>
-    /// Determines if the cancel command can execute
-    /// </summary>
-    private bool CanExecuteCancel()
-    {
-        return IsProcessing && _cancellationTokenSource != null;
-    }
+    private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource != null;
 
-    /// <summary>
-    /// Determines if the add to queue command can execute
-    /// </summary>
-    private bool CanExecuteAddToQueue()
-    {
-        return HasValidUrl();
-    }
+    private bool CanExecuteAddToQueue() => HasValidUrl();
 
-    /// <summary>
-    /// Validates if the URL is not empty and has basic YouTube format
-    /// </summary>
-    private bool ValidateUrl()
-    {
-        if (string.IsNullOrWhiteSpace(YoutubeUrl))
-        {
-            return false;
-        }
-
-        return IsYouTubeUrl(YoutubeUrl);
-    }
+    private bool ValidateUrl() => !string.IsNullOrWhiteSpace(YoutubeUrl) && IsYouTubeUrl(YoutubeUrl);
 
     /// <summary>
     /// Checks if URL contains YouTube domain

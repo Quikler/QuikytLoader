@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace QuikytLoader.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 /// <summary>
 /// Base class for all ViewModels providing INotifyPropertyChanged implementation

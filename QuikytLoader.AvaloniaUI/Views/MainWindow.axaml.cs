@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace QuikytLoader.Views;
+namespace QuikytLoader.AvaloniaUI.Views;
 
 public partial class MainWindow : Window
 {

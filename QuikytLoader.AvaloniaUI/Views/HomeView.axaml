@@ -1,12 +1,12 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.ViewModels"
-             xmlns:models="using:QuikytLoader.Models"
+             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:models="using:QuikytLoader.AvaloniaUI.Models"
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:i="using:Avalonia.Xaml.Interactivity"
              xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
-             x:Class="QuikytLoader.Views.HomeView"
+             x:Class="QuikytLoader.AvaloniaUI.Views.HomeView"
              x:DataType="vm:HomeViewModel">
 
     <Design.DataContext>
