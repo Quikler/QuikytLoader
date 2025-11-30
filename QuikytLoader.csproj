@@ -27,4 +27,21 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="QuikytLoader.Application\QuikytLoader.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exclude the new layer projects from compilation -->
+    <Compile Remove="QuikytLoader.Domain\**" />
+    <Compile Remove="QuikytLoader.Application\**" />
+    <Compile Remove="QuikytLoader.Infrastructure\**" />
+    <EmbeddedResource Remove="QuikytLoader.Domain\**" />
+    <EmbeddedResource Remove="QuikytLoader.Application\**" />
+    <EmbeddedResource Remove="QuikytLoader.Infrastructure\**" />
+    <None Remove="QuikytLoader.Domain\**" />
+    <None Remove="QuikytLoader.Application\**" />
+    <None Remove="QuikytLoader.Infrastructure\**" />
+  </ItemGroup>
 </Project>
