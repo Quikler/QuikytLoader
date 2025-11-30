@@ -8,7 +8,7 @@ namespace QuikytLoader.Infrastructure.Persistence;
 /// Factory for managing SQLite database connections and schema initialization.
 /// Database file is created automatically by SQLite when first connection is opened.
 /// </summary>
-public class DbConnectionFactory : IDbConnectionFactory
+internal class DbConnectionFactory : IDbConnectionFactory
 {
     private readonly string _dbPath;
     private readonly string _connectionString;

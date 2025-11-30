@@ -9,7 +9,7 @@ namespace QuikytLoader.Infrastructure.Telegram;
 /// Service for managing Telegram bot operations
 /// Handles sending audio files to configured Telegram chat
 /// </summary>
-public class TelegramBotService(ISettingsRepository settingsRepository) : ITelegramBotService
+internal class TelegramBotService(ISettingsRepository settingsRepository) : ITelegramBotService
 {
     private TelegramBotClient? _botClient;
     private CancellationTokenSource? _cts;
