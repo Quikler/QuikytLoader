@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader.Domain", "QuikytLoader.Domain\QuikytLoader.Domain.csproj", "{EDF0FBFE-DD8C-4686-867A-0B6210625D2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader.Application", "QuikytLoader.Application\QuikytLoader.Application.csproj", "{9BD8932D-F735-4421-BA10-5B8A446D28CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader.Infrastructure", "QuikytLoader.Infrastructure\QuikytLoader.Infrastructure.csproj", "{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikytLoader.AvaloniaUI", "QuikytLoader.AvaloniaUI\QuikytLoader.AvaloniaUI.csproj", "{A3C63184-4F8F-4949-BA35-BE5630972E3F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EDF0FBFE-DD8C-4686-867A-0B6210625D2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDF0FBFE-DD8C-4686-867A-0B6210625D2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDF0FBFE-DD8C-4686-867A-0B6210625D2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDF0FBFE-DD8C-4686-867A-0B6210625D2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BD8932D-F735-4421-BA10-5B8A446D28CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BD8932D-F735-4421-BA10-5B8A446D28CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BD8932D-F735-4421-BA10-5B8A446D28CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BD8932D-F735-4421-BA10-5B8A446D28CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{622B2AC1-D15F-4AE8-B0B3-5C29693869BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3C63184-4F8F-4949-BA35-BE5630972E3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3C63184-4F8F-4949-BA35-BE5630972E3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3C63184-4F8F-4949-BA35-BE5630972E3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3C63184-4F8F-4949-BA35-BE5630972E3F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

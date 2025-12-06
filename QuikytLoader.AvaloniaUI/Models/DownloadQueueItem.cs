@@ -1,0 +1,54 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using QuikytLoader.Application.DTOs;
+using QuikytLoader.Domain.Enums;
+
+namespace QuikytLoader.AvaloniaUI.Models;
+
+/// <summary>
+/// Represents a single item in the download queue
+/// Observable to support UI binding and real-time updates
+/// UI-specific model not part of Domain/Application layers
+/// </summary>
+public partial class DownloadQueueItem : ObservableObject
+{
+    /// <summary>
+    /// The YouTube URL to download
+    /// </summary>
+    [ObservableProperty]
+    private string _url = string.Empty;
+
+    /// <summary>
+    /// Current status of this download
+    /// </summary>
+    [ObservableProperty]
+    private DownloadStatus _status = DownloadStatus.Pending;
+
+    /// <summary>
+    /// Download progress (0-100)
+    /// </summary>
+    [ObservableProperty]
+    private double _progress = 0;
+
+    /// <summary>
+    /// Error message if status is Failed
+    /// </summary>
+    [ObservableProperty]
+    private string? _errorMessage;
+
+    /// <summary>
+    /// Status message for display (e.g., "Downloading...", "Sending to Telegram...")
+    /// </summary>
+    [ObservableProperty]
+    private string _statusMessage = "Pending";
+
+    /// <summary>
+    /// Optional custom title for the output file (if null, uses video title)
+    /// </summary>
+    [ObservableProperty]
+    private string? _customTitle;
+
+    /// <summary>
+    /// Result of the download operation (populated when status is Completed)
+    /// </summary>
+    public DownloadResultDto? DownloadResult { get; set; }
+}
