@@ -38,22 +38,22 @@ internal class SettingsRepository : ISettingsRepository
     }
 
     /// <summary>
-    /// Loads settings from JSON file
+    /// Loads settings from JSON file asynchronously
     /// Creates default settings file if it doesn't exist
     /// Returns defaults if file is corrupted
     /// </summary>
-    public AppSettingsDto Load()
+    public async Task<AppSettingsDto> LoadAsync(CancellationToken cancellationToken = default)
     {
         if (!File.Exists(_settingsPath))
         {
             var defaultSettings = new AppSettingsDto();
-            Save(defaultSettings);
+            await SaveAsync(defaultSettings, cancellationToken);
             return defaultSettings;
         }
 
         try
         {
-            var json = File.ReadAllText(_settingsPath);
+            var json = await File.ReadAllTextAsync(_settingsPath, cancellationToken);
             return JsonSerializer.Deserialize<AppSettingsDto>(json) ?? new AppSettingsDto();
         }
         catch (JsonException)
@@ -64,17 +64,17 @@ internal class SettingsRepository : ISettingsRepository
     }
 
     /// <summary>
-    /// Saves settings to JSON file using atomic write operation
+    /// Saves settings to JSON file asynchronously using atomic write operation
     /// Writes to temporary file first, then renames to prevent corruption
     /// Sets restrictive file permissions on Linux (mode 600)
     /// </summary>
-    public void Save(AppSettingsDto settings)
+    public async Task SaveAsync(AppSettingsDto settings, CancellationToken cancellationToken = default)
     {
         var json = JsonSerializer.Serialize(settings, JsonOptions);
 
         // Atomic write: write to temp file, then rename
         var tempPath = _settingsPath + ".tmp";
-        File.WriteAllText(tempPath, json);
+        await File.WriteAllTextAsync(tempPath, json, cancellationToken);
 
         if (OperatingSystem.IsLinux())
         {

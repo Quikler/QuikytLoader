@@ -26,9 +26,9 @@ public partial class App : Avalonia.Application
         {
             var appViewModel = _host.Services.GetRequiredService<AppViewModel>();
 
-            // Initialize SettingsViewModel to load settings
+            // Initialize SettingsViewModel to load settings asynchronously
             var settingsViewModel = _host.Services.GetRequiredService<SettingsViewModel>();
-            settingsViewModel.Initialize();
+            _ = settingsViewModel.InitializeAsync(); // Fire-and-forget for framework initialization
 
             desktop.MainWindow = new MainWindow
             {

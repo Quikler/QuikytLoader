@@ -13,6 +13,11 @@ public class DownloadResultDto
     public required string YouTubeId { get; init; }
 
     /// <summary>
+    /// Video title (sanitized filename without extension)
+    /// </summary>
+    public required string VideoTitle { get; init; }
+
+    /// <summary>
     /// Full path to the temporary MP3 audio file
     /// File is in temp directory and should be deleted after sending to Telegram
     /// </summary>

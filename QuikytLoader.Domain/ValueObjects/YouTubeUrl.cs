@@ -20,9 +20,17 @@ public record YouTubeUrl
 
     private static bool IsValidYouTubeUrl(string url)
     {
-        // Basic validation - check for youtube.com or youtu.be domains
-        return url.Contains("youtube.com", StringComparison.OrdinalIgnoreCase) ||
-               url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase);
+        // Validate URL format and ensure it's a legitimate YouTube domain
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return false;
+
+        // Validate scheme (must be http or https)
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            return false;
+
+        // Validate host (must be youtube.com subdomain or youtu.be)
+        return uri.Host.EndsWith("youtube.com", StringComparison.OrdinalIgnoreCase) ||
+               uri.Host.Equals("youtu.be", StringComparison.OrdinalIgnoreCase);
     }
 
     public static implicit operator string(YouTubeUrl url) => url.Value;

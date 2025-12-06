@@ -6,30 +6,21 @@ namespace QuikytLoader.Application.UseCases;
 /// <summary>
 /// Use case: Manage application settings (load/save)
 /// </summary>
-public class ManageSettingsUseCase
+public class ManageSettingsUseCase(ISettingsRepository settingsRepo)
 {
-    private readonly ISettingsRepository _settingsRepo;
-
-    public ManageSettingsUseCase(ISettingsRepository settingsRepo)
-    {
-        _settingsRepo = settingsRepo;
-    }
-
     /// <summary>
-    /// Loads application settings
+    /// Loads application settings asynchronously
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Current settings or defaults if not found</returns>
-    public AppSettingsDto LoadSettings()
-    {
-        return _settingsRepo.Load();
-    }
+    public Task<AppSettingsDto> LoadSettingsAsync(CancellationToken cancellationToken = default)
+        => settingsRepo.LoadAsync(cancellationToken);
 
     /// <summary>
-    /// Saves application settings
+    /// Saves application settings asynchronously
     /// </summary>
     /// <param name="settings">Settings to save</param>
-    public void SaveSettings(AppSettingsDto settings)
-    {
-        _settingsRepo.Save(settings);
-    }
+    /// <param name="cancellationToken">Cancellation token</param>
+    public Task SaveSettingsAsync(AppSettingsDto settings, CancellationToken cancellationToken = default)
+        => settingsRepo.SaveAsync(settings, cancellationToken);
 }
