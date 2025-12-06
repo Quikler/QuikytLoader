@@ -8,14 +8,16 @@ namespace QuikytLoader.Application.Interfaces.Repositories;
 public interface ISettingsRepository
 {
     /// <summary>
-    /// Loads settings from storage
+    /// Loads settings from storage asynchronously
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>AppSettingsDto instance with current settings, or defaults if not found</returns>
-    AppSettingsDto Load();
+    Task<AppSettingsDto> LoadAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Saves settings to storage
+    /// Saves settings to storage asynchronously
     /// </summary>
     /// <param name="settings">Settings to save</param>
-    void Save(AppSettingsDto settings);
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task SaveAsync(AppSettingsDto settings, CancellationToken cancellationToken = default);
 }

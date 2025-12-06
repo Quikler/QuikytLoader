@@ -16,6 +16,7 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
     private string? _currentBotToken;
     private string? _currentChatId;
     private bool _isInitialized;
+    private readonly SemaphoreSlim _initLock = new(1, 1);
 
     /// <summary>
     /// Sends an audio file to the configured Telegram chat with optional thumbnail
@@ -78,43 +79,52 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
     /// <summary>
     /// Ensures the Telegram bot client is initialized
     /// Reloads settings on each call to pick up configuration changes
+    /// Thread-safe with semaphore to prevent race conditions
     /// </summary>
     private async Task EnsureInitializedAsync()
     {
-        // Always reload settings to pick up changes made in Settings page
-        var settings = settingsRepository.Load();
-
-        if (string.IsNullOrWhiteSpace(settings.BotToken))
+        await _initLock.WaitAsync();
+        try
         {
-            throw new InvalidOperationException("Bot token is not configured. Please set it in Settings.");
-        }
+            // Always reload settings to pick up changes made in Settings page
+            var settings = await settingsRepository.LoadAsync();
 
-        // If bot token changed, need to recreate client
-        var tokenChanged = _currentBotToken != settings.BotToken;
+            if (string.IsNullOrWhiteSpace(settings.BotToken))
+            {
+                throw new InvalidOperationException("Bot token is not configured. Please set it in Settings.");
+            }
 
-        if (_isInitialized && !tokenChanged)
-        {
-            // Already initialized with same token, just update settings
+            // If bot token changed, need to recreate client
+            var tokenChanged = _currentBotToken != settings.BotToken;
+
+            if (_isInitialized && !tokenChanged)
+            {
+                // Already initialized with same token, just update settings
+                _currentChatId = settings.ChatId;
+                return;
+            }
+
+            // Dispose existing resources if reinitializing
+            if (_isInitialized)
+            {
+                await DisposeInternalAsync();
+            }
+
+            _currentBotToken = settings.BotToken;
             _currentChatId = settings.ChatId;
-            return;
-        }
+            _botClient = new TelegramBotClient(_currentBotToken);
+            _cts = new CancellationTokenSource();
 
-        // Dispose existing resources if reinitializing
-        if (_isInitialized)
+            // Verify bot connection
+            var me = await _botClient.GetMe(_cts.Token);
+            Console.WriteLine($"Telegram bot initialized: @{me.Username}");
+
+            _isInitialized = true;
+        }
+        finally
         {
-            await DisposeInternalAsync();
+            _initLock.Release();
         }
-
-        _currentBotToken = settings.BotToken;
-        _currentChatId = settings.ChatId;
-        _botClient = new TelegramBotClient(_currentBotToken);
-        _cts = new CancellationTokenSource();
-
-        // Verify bot connection
-        var me = await _botClient.GetMe(_cts.Token);
-        Console.WriteLine($"Telegram bot initialized: @{me.Username}");
-
-        _isInitialized = true;
     }
 
     /// <summary>
@@ -148,6 +158,7 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
     {
         GC.SuppressFinalize(this);
         await DisposeInternalAsync();
+        _initLock.Dispose();
         Console.WriteLine("Telegram bot disposed");
     }
 }

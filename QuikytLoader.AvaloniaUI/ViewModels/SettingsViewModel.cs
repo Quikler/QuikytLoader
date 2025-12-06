@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.UseCases;
+using System.Threading.Tasks;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
@@ -23,26 +24,26 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     /// <summary>
     /// Loads settings from storage on initialization
     /// </summary>
-    public void Initialize()
+    public async Task InitializeAsync()
     {
-        LoadSettings();
+        await LoadSettingsAsync();
     }
 
     /// <summary>
-    /// Loads settings from storage
+    /// Loads settings from storage asynchronously
     /// </summary>
-    private void LoadSettings()
+    private async Task LoadSettingsAsync()
     {
-        var settings = manageSettingsUseCase.LoadSettings();
+        var settings = await manageSettingsUseCase.LoadSettingsAsync();
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
     }
 
     /// <summary>
-    /// Saves settings to storage
+    /// Saves settings to storage asynchronously
     /// </summary>
     [RelayCommand]
-    private void SaveSettings()
+    private async Task SaveSettingsAsync()
     {
         var settings = new AppSettingsDto
         {
@@ -50,7 +51,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
             ChatId = ChatId
         };
 
-        manageSettingsUseCase.SaveSettings(settings);
+        await manageSettingsUseCase.SaveSettingsAsync(settings);
         StatusMessage = "Settings saved successfully!";
     }
 }

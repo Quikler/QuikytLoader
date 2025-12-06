@@ -14,6 +14,7 @@ namespace QuikytLoader.Infrastructure.YouTube;
 internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor) : IYouTubeDownloadService
 {
     private readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
+    private const int TelegramMaxThumbnailDimension = 320;
 
     /// <summary>
     /// Downloads a video from YouTube and converts it to MP3 format
@@ -283,7 +284,7 @@ internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor
             if (!process.HasExited)
             {
                 process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync(cancellationToken); // Wait for the process to fully exit
+                await process.WaitForExitAsync(CancellationToken.None); // Wait for the process to fully exit (don't use cancelled token)
             }
             throw; // Re-throw to propagate cancellation
         }
@@ -394,9 +395,13 @@ internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor
             tempThumbnailPath = jpegThumbnailPath;
         }
 
+        // Extract video title from filename (without extension)
+        var videoTitle = Path.GetFileNameWithoutExtension(tempMp3File);
+
         return new DownloadResultDto
         {
             YouTubeId = youtubeId,
+            VideoTitle = videoTitle,
             TempMediaFilePath = tempMp3File,
             TempThumbnailPath = tempThumbnailPath
         };
@@ -405,7 +410,7 @@ internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor
 
     /// <summary>
     /// Processes thumbnail to meet Telegram requirements: 320x320 max, JPEG format
-    /// Crops image to square and resizes if dimensions exceed 320 pixels
+    /// Crops image to square and resizes if dimensions exceed Telegram's maximum dimension
     /// </summary>
     private static void ProcessThumbnailForTelegram(string thumbnailPath)
     {
@@ -415,9 +420,9 @@ internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor
 
             // Check if processing is needed
             var maxDimension = Math.Max(image.Width, image.Height);
-            if (maxDimension <= 320 && image.Width == image.Height)
+            if (maxDimension <= TelegramMaxThumbnailDimension && image.Width == image.Height)
             {
-                // Already 320x320 or smaller and square, no processing needed
+                // Already within limits and square, no processing needed
                 return;
             }
 
@@ -430,8 +435,8 @@ internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor
                 .Crop(new Rectangle(cropX, cropY, minDimension, minDimension))
                 .Resize(new ResizeOptions
                 {
-                    Size = new Size(320, 320),
-                    Mode = ResizeMode.Max // Only resize if larger than 320
+                    Size = new Size(TelegramMaxThumbnailDimension, TelegramMaxThumbnailDimension),
+                    Mode = ResizeMode.Max // Only resize if larger than max dimension
                 }));
 
             // Save back to the same file as JPEG

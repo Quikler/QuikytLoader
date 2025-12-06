@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Models;
 using QuikytLoader.Domain.Enums;
+using QuikytLoader.Domain.ValueObjects;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -252,25 +253,23 @@ public partial class HomeViewModel(
 
     private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource != null;
 
-    private bool CanExecuteAddToQueue() => HasValidUrl();
+    private bool CanExecuteAddToQueue() => ValidateUrl();
 
-    private bool ValidateUrl() => !string.IsNullOrWhiteSpace(YoutubeUrl) && IsYouTubeUrl(YoutubeUrl);
-
-    /// <summary>
-    /// Checks if URL contains YouTube domain
-    /// </summary>
-    private static bool IsYouTubeUrl(string url)
+    private bool ValidateUrl()
     {
-        return url.Contains("youtube.com", StringComparison.OrdinalIgnoreCase) ||
-               url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase);
-    }
+        if (string.IsNullOrWhiteSpace(YoutubeUrl))
+            return false;
 
-    /// <summary>
-    /// Checks if current URL has valid format
-    /// </summary>
-    private bool HasValidUrl()
-    {
-        return !string.IsNullOrWhiteSpace(YoutubeUrl) && IsYouTubeUrl(YoutubeUrl);
+        // Use Domain's YouTubeUrl value object for validation (single source of truth)
+        try
+        {
+            _ = new YouTubeUrl(YoutubeUrl);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
