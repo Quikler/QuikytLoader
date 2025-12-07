@@ -20,7 +20,7 @@ public static class InfrastructureServiceExtensions
     {
         // YouTube services
         services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
-        services.AddSingleton<IYoutubeExtractor, YoutubeExtractor>();
+        services.AddSingleton<IYoutubeExtractorService, YoutubeExtractorService>();
 
         // Telegram services
         services.AddSingleton<ITelegramBotService, TelegramBotService>();

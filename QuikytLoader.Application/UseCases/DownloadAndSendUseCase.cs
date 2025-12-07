@@ -13,7 +13,7 @@ public class DownloadAndSendUseCase(
     IYouTubeDownloadService downloadService,
     IDownloadHistoryRepository historyRepo,
     ITelegramBotService telegramService,
-    IYoutubeExtractor extractor)
+    IYoutubeExtractorService youtubeExtractorService)
 {
     public async Task<DownloadResultDto> ExecuteAsync(
         string url,
@@ -22,7 +22,7 @@ public class DownloadAndSendUseCase(
         CancellationToken cancellationToken = default)
     {
         // 1. Extract YouTube ID
-        var youtubeId = await extractor.ExtractVideoIdAsync(url, cancellationToken)
+        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken)
             ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
 
         // 2. Download video

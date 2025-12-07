@@ -58,9 +58,6 @@ public partial class HomeViewModel(
     [ObservableProperty]
     private bool _isProceedButtonState = false;
 
-    /// <summary>
-    /// Collection of download queue items
-    /// </summary>
     [ObservableProperty]
     private ObservableCollection<DownloadQueueItem> _queueItems = [];
 
@@ -103,23 +100,19 @@ public partial class HomeViewModel(
         // Check for duplicates before adding to queue
         try
         {
-            var exists = await checkDuplicateUseCase.ExistsAsync(YoutubeUrl);
-            if (exists)
+            var existingRecord = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
+            if (existingRecord is not null)
             {
-                var existingRecord = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
-                if (existingRecord != null)
-                {
-                    // Show duplicate warning (for now, just log - we'll add UI dialog later)
-                    var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
-                                  $"Title: {existingRecord.VideoTitle}\n\n" +
-                                  $"Do you want to download it again?";
+                // Show duplicate warning (for now, just log - we'll add UI dialog later)
+                var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
+                              $"Title: {existingRecord.VideoTitle}\n\n" +
+                              $"Do you want to download it again?";
 
-                    Console.WriteLine($"[DUPLICATE DETECTED] {message}");
+                Console.WriteLine($"[DUPLICATE DETECTED] {message}");
 
-                    // TODO: Show user dialog and get confirmation
-                    // For now, we'll continue with the download
-                    UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
-                }
+                // TODO: Show user dialog and get confirmation
+                // For now, we'll continue with the download
+                UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
             }
         }
         catch (Exception ex)
@@ -260,7 +253,6 @@ public partial class HomeViewModel(
         if (string.IsNullOrWhiteSpace(YoutubeUrl))
             return false;
 
-        // Use Domain's YouTubeUrl value object for validation (single source of truth)
         try
         {
             _ = new YouTubeUrl(YoutubeUrl);
@@ -272,34 +264,16 @@ public partial class HomeViewModel(
         }
     }
 
-    /// <summary>
-    /// Sets the processing state and updates command availability
-    /// </summary>
     private void SetProcessingState(bool isProcessing)
     {
         IsProcessing = isProcessing;
         CancelCommand.NotifyCanExecuteChanged();
     }
 
-    /// <summary>
-    /// Updates the status message displayed to the user
-    /// </summary>
-    private void UpdateStatus(string message)
-    {
-        StatusMessage = message;
-    }
+    private void UpdateStatus(string message) => StatusMessage = message;
 
-    /// <summary>
-    /// Clears the URL input field
-    /// </summary>
-    private void ClearUrl()
-    {
-        YoutubeUrl = string.Empty;
-    }
+    private void ClearUrl() => YoutubeUrl = string.Empty;
 
-    /// <summary>
-    /// Clears the title edit fields
-    /// </summary>
     private void ClearTitleEdit()
     {
         EditTitle = false;
@@ -308,9 +282,6 @@ public partial class HomeViewModel(
         TitleFetchStatus = string.Empty;
     }
 
-    /// <summary>
-    /// Resets the button state back to "Add to Queue"
-    /// </summary>
     private void ResetButtonState()
     {
         IsWaitingForProceed = false;
@@ -318,27 +289,17 @@ public partial class HomeViewModel(
         IsProceedButtonState = false;
     }
 
-    /// <summary>
-    /// Called when YoutubeUrl property changes
-    /// Updates command availability based on URL validity
-    /// </summary>
     partial void OnYoutubeUrlChanged(string value)
     {
         AddToQueueCommand.NotifyCanExecuteChanged();
 
-        // Reset title fetch state when URL changes
         IsTitleFetched = false;
         CustomTitle = string.Empty;
         TitleFetchStatus = string.Empty;
 
-        // Reset button state when URL changes
         ResetButtonState();
     }
 
-    /// <summary>
-    /// Called when EditTitle property changes
-    /// Resets button state when checkbox is unchecked
-    /// </summary>
     partial void OnEditTitleChanged(bool value)
     {
         if (!value)
@@ -348,9 +309,6 @@ public partial class HomeViewModel(
         }
     }
 
-    /// <summary>
-    /// Fetches the video title from YouTube without downloading
-    /// </summary>
     private async Task FetchVideoTitleAsync()
     {
         TitleFetchStatus = "Fetching video title...";

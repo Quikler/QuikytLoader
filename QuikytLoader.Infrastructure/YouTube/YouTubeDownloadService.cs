@@ -11,7 +11,7 @@ namespace QuikytLoader.Infrastructure.YouTube;
 /// Service for downloading videos from YouTube using yt-dlp
 /// Downloads media to temp directory for sending to Telegram only (not stored locally)
 /// </summary>
-internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor) : IYouTubeDownloadService
+internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeExtractorService) : IYouTubeDownloadService
 {
     private readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
     private const int TelegramMaxThumbnailDimension = 320;
@@ -27,7 +27,7 @@ internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor
         ValidateUrl(url);
 
         // Extract YouTube ID
-        var youtubeId = await youtubeExtractor.ExtractVideoIdAsync(url, cancellationToken)
+        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken)
             ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
 
         var tempOutputPath = GenerateTempOutputPath();
@@ -52,7 +52,7 @@ internal partial class YouTubeDownloadService(IYoutubeExtractor youtubeExtractor
         ValidateUrl(url);
 
         // Extract YouTube ID
-        var youtubeId = await youtubeExtractor.ExtractVideoIdAsync(url, cancellationToken)
+        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken)
             ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
 
         var tempOutputPath = GenerateTempOutputPathWithCustomTitle(customTitle);

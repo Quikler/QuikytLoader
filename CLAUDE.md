@@ -60,9 +60,9 @@ The app uses a layered navigation system:
 - Parses progress from yt-dlp output via regex
 - Supports custom title overrides via GetVideoTitleAsync and custom DownloadAsync overload
 - Returns DownloadResult with YouTubeId, TempMediaFilePath and TempThumbnailPath
-- Uses IYoutubeExtractor to extract video IDs from URLs
+- Uses IYoutubeExtractorService to extract video IDs from URLs
 
-**YoutubeExtractor** - YouTube ID extraction
+**YoutubeExtractorService** - YouTube ID extraction
 - Fast regex-based extraction for common YouTube URL formats (youtube.com/watch?v=ID, youtu.be/ID, etc.)
 - Fallback to yt-dlp `--print id` for edge cases
 - Returns 11-character YouTube video ID
@@ -101,7 +101,7 @@ All services and ViewModels registered in App.axaml.cs:
 - ISettingsManager -> SettingsManager (Singleton)
 - IYouTubeDownloadService -> YouTubeDownloadService (Singleton)
 - ITelegramBotService -> TelegramBotService (Singleton)
-- IYoutubeExtractor -> YoutubeExtractor (Singleton)
+- IYoutubeExtractorService -> YoutubeExtractorService (Singleton)
 - IDbConnectionService -> DbConnectionService (Singleton)
 - IDownloadHistoryService -> DownloadHistoryService (Singleton)
 
@@ -167,7 +167,7 @@ MainWindow contains:
 
 ### Download History and Duplicate Detection
 - HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryService
-- Duplicate detection extracts YouTube ID via IYoutubeExtractor and queries SQLite database
+- Duplicate detection extracts YouTube ID via IYoutubeExtractorService and queries SQLite database
 - Currently logs duplicate warning to console (UI dialog for user confirmation to be implemented)
 - After successful Telegram send, saves record to history with:
   - YouTube video ID (11 chars, primary key)

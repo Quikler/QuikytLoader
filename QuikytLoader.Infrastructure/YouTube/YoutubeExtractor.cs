@@ -9,7 +9,7 @@ namespace QuikytLoader.Infrastructure.YouTube;
 /// Service for extracting YouTube video IDs from URLs.
 /// Uses regex for fast extraction, with yt-dlp fallback for edge cases.
 /// </summary>
-internal partial class YoutubeExtractor : IYoutubeExtractor
+internal partial class YoutubeExtractorService : IYoutubeExtractorService
 {
     // Regex patterns for common YouTube URL formats
     // Matches: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID, etc.
