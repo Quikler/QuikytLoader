@@ -45,8 +45,7 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
             new CommandDefinition(query, new { YouTubeId = id.Value }, cancellationToken: cancellationToken)
         );
 
-        if (result == null)
-            return null;
+        if (result is null) return null;
 
         return new DownloadRecord
         {
@@ -76,23 +75,6 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
             VideoTitle = r.VideoTitle,
             DownloadedAt = r.DownloadedAt
         });
-    }
-
-    public async Task<bool> ExistsAsync(YouTubeId id, CancellationToken cancellationToken = default)
-    {
-        await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
-
-        const string query = """
-            SELECT COUNT(1)
-            FROM DownloadHistory
-            WHERE YouTubeId = @YouTubeId
-            """;
-
-        var count = await connection.ExecuteScalarAsync<int>(
-            new CommandDefinition(query, new { YouTubeId = id.Value }, cancellationToken: cancellationToken)
-        );
-
-        return count > 0;
     }
 
     public async Task<string> GetThumbnailUrlAsync(YouTubeId youtubeId, CancellationToken cancellationToken = default)

@@ -5,7 +5,7 @@ namespace QuikytLoader.Application.Interfaces.Services;
 /// <summary>
 /// Service for extracting YouTube video IDs from URLs
 /// </summary>
-public interface IYoutubeExtractor
+public interface IYoutubeExtractorService
 {
     /// <summary>
     /// Extracts the YouTube video ID from a given URL

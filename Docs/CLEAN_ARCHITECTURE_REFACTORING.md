@@ -175,7 +175,7 @@ QuikytLoader.Application/
 │   ├── Services/
 │   │   ├── IYouTubeDownloadService.cs  # YouTube download abstraction
 │   │   ├── ITelegramBotService.cs      # Telegram send abstraction
-│   │   └── IYoutubeExtractor.cs        # URL → ID extraction
+│   │   └── IYoutubeExtractorService.cs        # URL → ID extraction
 │   └── Repositories/
 │       ├── IDownloadHistoryRepository.cs  # Download history persistence
 │       └── ISettingsRepository.cs         # Settings persistence
@@ -192,7 +192,7 @@ QuikytLoader.Application/
 |-------------|--------------|----------------|
 | `Services/IYouTubeDownloadService.cs` | `Application/Interfaces/Services/IYouTubeDownloadService.cs` | Move, update return types to DTOs |
 | `Services/ITelegramBotService.cs` | `Application/Interfaces/Services/ITelegramBotService.cs` | Move as-is |
-| `Services/IYoutubeExtractor.cs` | `Application/Interfaces/Services/IYoutubeExtractor.cs` | Move, return YouTubeId value object |
+| `Services/IYoutubeExtractorService.cs` | `Application/Interfaces/Services/IYoutubeExtractorService.cs` | Move, return YouTubeId value object |
 | `Services/IDownloadHistoryService.cs` | `Application/Interfaces/Repositories/IDownloadHistoryRepository.cs` | Rename, refactor to repository pattern |
 | `Services/ISettingsManager.cs` | `Application/Interfaces/Repositories/ISettingsRepository.cs` | Rename to repository pattern |
 | `Services/IDbConnectionService.cs` | `Application/Interfaces/Repositories/IDbConnectionFactory.cs` | Rename for clarity |
@@ -213,18 +213,18 @@ public class DownloadAndSendUseCase
     private readonly IYouTubeDownloadService _downloadService;
     private readonly IDownloadHistoryRepository _historyRepo;
     private readonly ITelegramBotService _telegramService;
-    private readonly IYoutubeExtractor _extractor;
+    private readonly IYoutubeExtractorService _youtubeExtractorService;
 
     public DownloadAndSendUseCase(
         IYouTubeDownloadService downloadService,
         IDownloadHistoryRepository historyRepo,
         ITelegramBotService telegramService,
-        IYoutubeExtractor extractor)
+        IYoutubeExtractor youtubeExtractorService)
     {
         _downloadService = downloadService;
         _historyRepo = historyRepo;
         _telegramService = telegramService;
-        _extractor = extractor;
+        _youtubeExtractorService = youtubeExtractorService;
     }
 
     public async Task<DownloadResultDto> ExecuteAsync(
@@ -234,7 +234,7 @@ public class DownloadAndSendUseCase
         CancellationToken cancellationToken = default)
     {
         // 1. Extract YouTube ID
-        var youtubeId = await _extractor.ExtractVideoIdAsync(url);
+        var youtubeId = await _youtubeExtractorService.ExtractVideoIdAsync(url);
 
         // 2. Download video
         var result = customTitle != null
@@ -274,7 +274,6 @@ public interface IDownloadHistoryRepository
     Task SaveAsync(DownloadRecord record);
     Task<DownloadRecord?> GetByIdAsync(YouTubeId id);
     Task<IEnumerable<DownloadRecord>> GetAllAsync();
-    Task<bool> ExistsAsync(YouTubeId id);
 }
 ```
 
@@ -401,7 +400,7 @@ public partial class HomeViewModel(
     IYouTubeDownloadService youtubeService,
     ITelegramBotService telegramService,
     IDownloadHistoryService historyService,
-    IYoutubeExtractor youtubeExtractor) : ViewModelBase
+    IYoutubeExtractor youtubeExtractorService) : ViewModelBase
 {
     [RelayCommand]
     private async Task DownloadAndSendAsync()
@@ -423,7 +422,7 @@ public partial class HomeViewModel(
     private async Task DownloadAndSendAsync()
     {
         // Check for duplicate
-        if (await checkDuplicateUseCase.ExistsAsync(YoutubeUrl))
+        if (await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl) is not null)
         {
             // Show warning to user
         }

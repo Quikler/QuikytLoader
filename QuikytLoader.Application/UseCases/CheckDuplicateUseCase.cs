@@ -9,26 +9,8 @@ namespace QuikytLoader.Application.UseCases;
 /// </summary>
 public class CheckDuplicateUseCase(
     IDownloadHistoryRepository historyRepo,
-    IYoutubeExtractor extractor)
+    IYoutubeExtractorService youtubeExtractorService)
 {
-
-    /// <summary>
-    /// Checks if a video has already been downloaded
-    /// </summary>
-    /// <param name="url">YouTube video URL</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if video exists in history, otherwise false</returns>
-    public async Task<bool> ExistsAsync(string url, CancellationToken cancellationToken = default)
-    {
-        var youtubeId = await extractor.ExtractVideoIdAsync(url, cancellationToken);
-        if (youtubeId == null)
-        {
-            return false;
-        }
-
-        return await historyRepo.ExistsAsync(youtubeId, cancellationToken);
-    }
-
     /// <summary>
     /// Gets the existing download record if it exists
     /// </summary>
@@ -37,11 +19,8 @@ public class CheckDuplicateUseCase(
     /// <returns>The download record if found, otherwise null</returns>
     public async Task<DownloadRecord?> GetExistingRecordAsync(string url, CancellationToken cancellationToken = default)
     {
-        var youtubeId = await extractor.ExtractVideoIdAsync(url, cancellationToken);
-        if (youtubeId == null)
-        {
-            return null;
-        }
+        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
+        if (youtubeId is null) return null;
 
         return await historyRepo.GetByIdAsync(youtubeId, cancellationToken);
     }

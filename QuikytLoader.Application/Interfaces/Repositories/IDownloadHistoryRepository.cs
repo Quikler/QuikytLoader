@@ -31,14 +31,6 @@ public interface IDownloadHistoryRepository
     Task<IEnumerable<DownloadRecord>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if a record exists for the given YouTube ID
-    /// </summary>
-    /// <param name="id">The YouTube video ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if exists, otherwise false</returns>
-    Task<bool> ExistsAsync(YouTubeId id, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Gets the thumbnail URL for a YouTube video
     /// Tries to get from yt-dlp, falls back to default YouTube thumbnail URLs
     /// </summary>
