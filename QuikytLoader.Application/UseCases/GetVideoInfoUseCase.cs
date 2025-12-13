@@ -27,6 +27,6 @@ public class GetVideoInfoUseCase(IYouTubeDownloadService downloadService)
             return Task.FromResult(Result<string>.Failure(Errors.YouTube.InvalidUrl(url)));
         }
 
-        return downloadService.GetVideoTitleAsync(youtubeUrlResult.Value!.Value);
+        return downloadService.GetVideoTitleAsync(youtubeUrlResult.Value.Value);
     }
 }

@@ -8,9 +8,9 @@ public static class ResultExtensions
     public static TValue Unwrap<TValue>(this Result<TValue> result)
     {
         if (!result.IsSuccess)
-            throw new InvalidOperationException($"Cannot unwrap failed result: {result.Error!.Message}");
+            throw new InvalidOperationException($"Cannot unwrap failed result: {result.Error.Message}");
 
-        return result.Value!;
+        return result.Value;
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ public static class ResultExtensions
         Action<TValue> onSuccess)
     {
         if (result.IsSuccess)
-            onSuccess(result.Value!);
+            onSuccess(result.Value);
 
         return result;
     }
@@ -44,7 +44,7 @@ public static class ResultExtensions
         Action<Error> onError)
     {
         if (!result.IsSuccess)
-            onError(result.Error!);
+            onError(result.Error);
 
         return result;
     }
@@ -103,7 +103,7 @@ public static class ResultExtensions
     {
         var result = await resultTask;
         if (result.IsSuccess)
-            await onSuccess(result.Value!);
+            await onSuccess(result.Value);
 
         return result;
     }
@@ -132,9 +132,9 @@ public static class ResultExtensions
         foreach (var result in results)
         {
             if (!result.IsSuccess)
-                return Result<IEnumerable<TValue>>.Failure(result.Error!);
+                return Result<IEnumerable<TValue>>.Failure(result.Error);
 
-            values.Add(result.Value!);
+            values.Add(result.Value);
         }
 
         return Result<IEnumerable<TValue>>.Success(values);

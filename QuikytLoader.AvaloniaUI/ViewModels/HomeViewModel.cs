@@ -174,7 +174,7 @@ public partial class HomeViewModel(
                 // Handle result using pattern matching
                 if (!downloadResult.IsSuccess)
                 {
-                    var error = downloadResult.Error!;
+                    var error = downloadResult.Error;
                     nextItem.Status = DownloadStatus.Failed;
                     nextItem.StatusMessage = "Failed";
                     nextItem.ErrorMessage = GetUserFriendlyErrorMessage(error);
@@ -185,7 +185,7 @@ public partial class HomeViewModel(
                 else
                 {
                     // Success!
-                    nextItem.DownloadResult = downloadResult.Value!;
+                    nextItem.DownloadResult = downloadResult.Value;
                     nextItem.Status = DownloadStatus.Completed;
                     nextItem.StatusMessage = "✓ Completed";
                     nextItem.Progress = 100;
@@ -317,14 +317,14 @@ public partial class HomeViewModel(
 
         if (!titleResult.IsSuccess)
         {
-            var error = titleResult.Error!;
+            var error = titleResult.Error;
             TitleFetchStatus = $"Failed to fetch title: {GetUserFriendlyErrorMessage(error)}";
             IsTitleFetched = false;
             Console.WriteLine($"Title fetch failed: {error.Code} - {error.Message}");
         }
         else
         {
-            CustomTitle = titleResult.Value!;
+            CustomTitle = titleResult.Value;
             IsTitleFetched = true;
             TitleFetchStatus = "Edit the title above if needed";
         }
