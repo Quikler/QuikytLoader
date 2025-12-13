@@ -32,21 +32,21 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
         // Extract YouTube ID
         var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error!);
+            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
 
-        var youtubeId = youtubeIdResult.Value!;
+        var youtubeId = youtubeIdResult.Value;
         var tempOutputPath = GenerateTempOutputPath();
         var arguments = BuildYtDlpArguments(url, tempOutputPath);
 
         var runResult = await RunYtDlpAsync(arguments, progress, cancellationToken);
         if (!runResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(runResult.Error!);
+            return Result<DownloadResultDto>.Failure(runResult.Error);
 
         var findResult = FindDownloadedFiles(youtubeId.Value);
         if (!findResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(findResult.Error!);
+            return Result<DownloadResultDto>.Failure(findResult.Error);
 
-        var result = findResult.Value!;
+        var result = findResult.Value;
         Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
         return Result<DownloadResultDto>.Success(result);
@@ -67,22 +67,22 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
         // Extract YouTube ID
         var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error!);
+            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
 
-        var youtubeId = youtubeIdResult.Value!;
+        var youtubeId = youtubeIdResult.Value;
         var tempOutputPath = GenerateTempOutputPathWithCustomTitle(customTitle);
         Console.WriteLine($"Temp output path: {tempOutputPath}");
         var arguments = BuildYtDlpArgumentsWithCustomTitle(url, tempOutputPath, customTitle);
 
         var runResult = await RunYtDlpAsync(arguments, progress, cancellationToken);
         if (!runResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(runResult.Error!);
+            return Result<DownloadResultDto>.Failure(runResult.Error);
 
         var findResult = FindDownloadedFiles(youtubeId.Value);
         if (!findResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(findResult.Error!);
+            return Result<DownloadResultDto>.Failure(findResult.Error);
 
-        var result = findResult.Value!;
+        var result = findResult.Value;
         Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
         return Result<DownloadResultDto>.Success(result);

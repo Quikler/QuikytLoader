@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace QuikytLoader.Domain.Common;
 
 /// <summary>
@@ -5,7 +7,10 @@ namespace QuikytLoader.Domain.Common;
 /// </summary>
 public readonly struct Result
 {
+    [MemberNotNullWhen(true, nameof(IsSuccess))]
+    [MemberNotNullWhen(false, nameof(Error))]
     public bool IsSuccess { get; }
+
     public Error? Error { get; }
 
     private Result(bool isSuccess, Error? error)
@@ -24,7 +29,7 @@ public readonly struct Result
         Func<TResult> onSuccess,
         Func<Error, TResult> onFailure)
     {
-        return IsSuccess ? onSuccess() : onFailure(Error!);
+        return IsSuccess ? onSuccess() : onFailure(Error);
     }
 
     /// <summary>
@@ -37,7 +42,7 @@ public readonly struct Result
         if (IsSuccess)
             onSuccess();
         else
-            onFailure(Error!);
+            onFailure(Error);
     }
 
     // Implicit conversion from Error to failed Result
@@ -49,7 +54,10 @@ public readonly struct Result
 /// </summary>
 public readonly struct Result<TValue>
 {
+    [MemberNotNullWhen(true, nameof(Value))]
+    [MemberNotNullWhen(false, nameof(Error))]
     public bool IsSuccess { get; }
+
     public TValue? Value { get; }
     public Error? Error { get; }
 
@@ -70,7 +78,7 @@ public readonly struct Result<TValue>
         Func<TValue, TResult> onSuccess,
         Func<Error, TResult> onFailure)
     {
-        return IsSuccess ? onSuccess(Value!) : onFailure(Error!);
+        return IsSuccess ? onSuccess(Value) : onFailure(Error);
     }
 
     /// <summary>
@@ -81,9 +89,9 @@ public readonly struct Result<TValue>
         Action<Error> onFailure)
     {
         if (IsSuccess)
-            onSuccess(Value!);
+            onSuccess(Value);
         else
-            onFailure(Error!);
+            onFailure(Error);
     }
 
     /// <summary>
@@ -92,8 +100,8 @@ public readonly struct Result<TValue>
     public Result<TNewValue> Map<TNewValue>(Func<TValue, TNewValue> mapper)
     {
         return IsSuccess
-            ? Result<TNewValue>.Success(mapper(Value!))
-            : Result<TNewValue>.Failure(Error!);
+            ? Result<TNewValue>.Success(mapper(Value))
+            : Result<TNewValue>.Failure(Error);
     }
 
     /// <summary>
@@ -102,8 +110,8 @@ public readonly struct Result<TValue>
     public async Task<Result<TNewValue>> MapAsync<TNewValue>(Func<TValue, Task<TNewValue>> mapper)
     {
         return IsSuccess
-            ? Result<TNewValue>.Success(await mapper(Value!))
-            : Result<TNewValue>.Failure(Error!);
+            ? Result<TNewValue>.Success(await mapper(Value))
+            : Result<TNewValue>.Failure(Error);
     }
 
     /// <summary>
@@ -111,7 +119,7 @@ public readonly struct Result<TValue>
     /// </summary>
     public Result<TNewValue> Bind<TNewValue>(Func<TValue, Result<TNewValue>> binder)
     {
-        return IsSuccess ? binder(Value!) : Result<TNewValue>.Failure(Error!);
+        return IsSuccess ? binder(Value) : Result<TNewValue>.Failure(Error);
     }
 
     /// <summary>
@@ -120,7 +128,7 @@ public readonly struct Result<TValue>
     public async Task<Result<TNewValue>> BindAsync<TNewValue>(
         Func<TValue, Task<Result<TNewValue>>> binder)
     {
-        return IsSuccess ? await binder(Value!) : Result<TNewValue>.Failure(Error!);
+        return IsSuccess ? await binder(Value) : Result<TNewValue>.Failure(Error);
     }
 
     // Implicit conversions for ergonomics
