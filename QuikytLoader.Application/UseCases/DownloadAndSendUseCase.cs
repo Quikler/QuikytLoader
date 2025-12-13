@@ -1,6 +1,7 @@
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.UseCases;
@@ -15,36 +16,55 @@ public class DownloadAndSendUseCase(
     ITelegramBotService telegramService,
     IYoutubeExtractorService youtubeExtractorService)
 {
-    public async Task<DownloadResultDto> ExecuteAsync(
+    public async Task<Result<DownloadResultDto>> ExecuteAsync(
         string url,
         string? customTitle = null,
         IProgress<double>? progress = null,
         CancellationToken cancellationToken = default)
     {
         // 1. Extract YouTube ID
-        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken)
-            ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
+        var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
+        if (!youtubeIdResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error!);
+
+        var youtubeId = youtubeIdResult.Value!;
 
         // 2. Download video
-        var result = customTitle != null
+        var downloadResult = customTitle != null
             ? await downloadService.DownloadAsync(url, customTitle, progress, cancellationToken)
             : await downloadService.DownloadAsync(url, progress, cancellationToken);
 
+        if (!downloadResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(downloadResult.Error!);
+
+        var result = downloadResult.Value!;
+
         // 3. Send to Telegram
-        await telegramService.SendAudioAsync(
+        var sendResult = await telegramService.SendAudioAsync(
             result.TempMediaFilePath,
             result.TempThumbnailPath);
 
-        // 4. Save to history
-        var record = new DownloadRecord
-        {
-            YouTubeId = youtubeId,
-            VideoTitle = customTitle ?? result.VideoTitle,
-            DownloadedAt = DateTime.UtcNow.ToString("o")
-        };
-        await historyRepo.SaveAsync(record, cancellationToken);
+        if (!sendResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(sendResult.Error!);
 
-        // 5. Return DTO
-        return result;
+        // 4. Save to history (non-critical - don't fail entire operation on error)
+        try
+        {
+            var record = new DownloadRecord
+            {
+                YouTubeId = youtubeId,
+                VideoTitle = customTitle ?? result.VideoTitle,
+                DownloadedAt = DateTime.UtcNow.ToString("o")
+            };
+            await historyRepo.SaveAsync(record, cancellationToken);
+        }
+        catch (Exception)
+        {
+            // Silently fail - history save is non-critical
+            // Caller still gets successful result
+        }
+
+        // 5. Return success with DTO
+        return Result<DownloadResultDto>.Success(result);
     }
 }
