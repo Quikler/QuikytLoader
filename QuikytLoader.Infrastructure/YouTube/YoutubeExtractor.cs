@@ -39,9 +39,9 @@ internal partial class YoutubeExtractorService : IYoutubeExtractorService
         // Fallback: Use yt-dlp for edge cases
         var ytDlpResult = await ExtractIdUsingYtDlpAsync(url, cancellationToken);
         if (!ytDlpResult.IsSuccess)
-            return Result<YouTubeId>.Failure(ytDlpResult.Error!);
+            return Result<YouTubeId>.Failure(ytDlpResult.Error);
 
-        var youtubeIdResult = YouTubeId.Create(ytDlpResult.Value!);
+        var youtubeIdResult = YouTubeId.Create(ytDlpResult.Value);
         if (!youtubeIdResult.IsSuccess)
         {
             // yt-dlp returned invalid ID format

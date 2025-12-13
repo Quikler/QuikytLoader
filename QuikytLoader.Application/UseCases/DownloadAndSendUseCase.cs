@@ -25,9 +25,9 @@ public class DownloadAndSendUseCase(
         // 1. Extract YouTube ID
         var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error!);
+            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
 
-        var youtubeId = youtubeIdResult.Value!;
+        var youtubeId = youtubeIdResult.Value;
 
         // 2. Download video
         var downloadResult = customTitle != null
@@ -35,9 +35,9 @@ public class DownloadAndSendUseCase(
             : await downloadService.DownloadAsync(url, progress, cancellationToken);
 
         if (!downloadResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(downloadResult.Error!);
+            return Result<DownloadResultDto>.Failure(downloadResult.Error);
 
-        var result = downloadResult.Value!;
+        var result = downloadResult.Value;
 
         // 3. Send to Telegram
         var sendResult = await telegramService.SendAudioAsync(
@@ -45,7 +45,7 @@ public class DownloadAndSendUseCase(
             result.TempThumbnailPath);
 
         if (!sendResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(sendResult.Error!);
+            return Result<DownloadResultDto>.Failure(sendResult.Error);
 
         // 4. Save to history (non-critical - don't fail entire operation on error)
         try

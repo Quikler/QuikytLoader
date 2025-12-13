@@ -31,11 +31,11 @@ public static class DownloadMapper
         var youtubeIdResult = YouTubeId.Create(dto.YouTubeId);
         if (!youtubeIdResult.IsSuccess)
             throw new InvalidOperationException(
-                $"Invalid YouTube ID from database: {youtubeIdResult.Error!.Message}");
+                $"Invalid YouTube ID from database: {youtubeIdResult.Error.Message}");
 
         return new DownloadRecord
         {
-            YouTubeId = youtubeIdResult.Value!,
+            YouTubeId = youtubeIdResult.Value,
             VideoTitle = dto.VideoTitle,
             DownloadedAt = dto.DownloadedAt
         };

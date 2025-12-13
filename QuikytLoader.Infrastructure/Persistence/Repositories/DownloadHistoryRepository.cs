@@ -51,11 +51,11 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         var youtubeIdResult = YouTubeId.Create(result.YouTubeId);
         if (!youtubeIdResult.IsSuccess)
             throw new InvalidOperationException(
-                $"Invalid YouTube ID from database: {youtubeIdResult.Error!.Message}");
+                $"Invalid YouTube ID from database: {youtubeIdResult.Error.Message}");
 
         return new DownloadRecord
         {
-            YouTubeId = youtubeIdResult.Value!,
+            YouTubeId = youtubeIdResult.Value,
             VideoTitle = result.VideoTitle,
             DownloadedAt = result.DownloadedAt
         };
@@ -81,11 +81,11 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
             var youtubeIdResult = YouTubeId.Create(r.YouTubeId);
             if (!youtubeIdResult.IsSuccess)
                 throw new InvalidOperationException(
-                    $"Invalid YouTube ID from database: {youtubeIdResult.Error!.Message}");
+                    $"Invalid YouTube ID from database: {youtubeIdResult.Error.Message}");
 
             return new DownloadRecord
             {
-                YouTubeId = youtubeIdResult.Value!,
+                YouTubeId = youtubeIdResult.Value,
                 VideoTitle = r.VideoTitle,
                 DownloadedAt = r.DownloadedAt
             };

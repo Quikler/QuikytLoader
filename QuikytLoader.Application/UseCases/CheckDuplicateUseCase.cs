@@ -22,6 +22,6 @@ public class CheckDuplicateUseCase(
         var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess) return null;
 
-        return await historyRepo.GetByIdAsync(youtubeIdResult.Value!, cancellationToken);
+        return await historyRepo.GetByIdAsync(youtubeIdResult.Value, cancellationToken);
     }
 }
