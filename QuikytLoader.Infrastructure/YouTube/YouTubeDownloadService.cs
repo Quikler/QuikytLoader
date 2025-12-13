@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Domain.Common;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
@@ -20,59 +21,81 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
     /// Downloads a video from YouTube and converts it to MP3 format
     /// Files are kept in temp directory for sending to Telegram
     /// </summary>
-    public async Task<DownloadResultDto> DownloadAsync(string url, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadResultDto>> DownloadAsync(string url, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         EnsureTempDirectoryExists();
 
-        ValidateUrl(url);
+        // Validate URL
+        if (string.IsNullOrWhiteSpace(url))
+            return Errors.YouTube.InvalidUrl(url);
 
         // Extract YouTube ID
-        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken)
-            ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
+        var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
+        if (!youtubeIdResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error!);
 
+        var youtubeId = youtubeIdResult.Value!;
         var tempOutputPath = GenerateTempOutputPath();
         var arguments = BuildYtDlpArguments(url, tempOutputPath);
 
-        await RunYtDlpAsync(arguments, progress, cancellationToken);
+        var runResult = await RunYtDlpAsync(arguments, progress, cancellationToken);
+        if (!runResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(runResult.Error!);
 
-        var result = FindDownloadedFiles(youtubeId.Value);
+        var findResult = FindDownloadedFiles(youtubeId.Value);
+        if (!findResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(findResult.Error!);
+
+        var result = findResult.Value!;
         Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
-        return result;
+        return Result<DownloadResultDto>.Success(result);
     }
 
     /// <summary>
     /// Downloads a video from YouTube with a custom filename and converts it to MP3 format
     /// Files are kept in temp directory for sending to Telegram
     /// </summary>
-    public async Task<DownloadResultDto> DownloadAsync(string url, string customTitle, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadResultDto>> DownloadAsync(string url, string customTitle, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         EnsureTempDirectoryExists();
 
-        ValidateUrl(url);
+        // Validate URL
+        if (string.IsNullOrWhiteSpace(url))
+            return Errors.YouTube.InvalidUrl(url);
 
         // Extract YouTube ID
-        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken)
-            ?? throw new InvalidOperationException("Failed to extract YouTube video ID from URL");
+        var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
+        if (!youtubeIdResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error!);
 
+        var youtubeId = youtubeIdResult.Value!;
         var tempOutputPath = GenerateTempOutputPathWithCustomTitle(customTitle);
         Console.WriteLine($"Temp output path: {tempOutputPath}");
         var arguments = BuildYtDlpArgumentsWithCustomTitle(url, tempOutputPath, customTitle);
 
-        await RunYtDlpAsync(arguments, progress, cancellationToken);
+        var runResult = await RunYtDlpAsync(arguments, progress, cancellationToken);
+        if (!runResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(runResult.Error!);
 
-        var result = FindDownloadedFiles(youtubeId.Value);
+        var findResult = FindDownloadedFiles(youtubeId.Value);
+        if (!findResult.IsSuccess)
+            return Result<DownloadResultDto>.Failure(findResult.Error!);
+
+        var result = findResult.Value!;
         Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
 
-        return result;
+        return Result<DownloadResultDto>.Success(result);
     }
 
     /// <summary>
     /// Fetches the video title from YouTube without downloading
     /// </summary>
-    public async Task<string> GetVideoTitleAsync(string url)
+    public async Task<Result<string>> GetVideoTitleAsync(string url)
     {
-        ValidateUrl(url);
+        // Validate URL
+        if (string.IsNullOrWhiteSpace(url))
+            return Errors.YouTube.InvalidUrl(url);
 
         var arguments = $"--get-title --no-playlist \"{url}\"";
         var processInfo = CreateProcessInfo(arguments);
@@ -88,32 +111,23 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
             }
         };
 
-        StartProcess(process);
+        if (!process.Start())
+            return Errors.YouTube.ProcessStartFailed();
+
         process.BeginOutputReadLine();
 
         await process.WaitForExitAsync();
 
-        ValidateProcessSuccess(process);
+        if (process.ExitCode != 0)
+            return Errors.YouTube.DownloadFailed(url, process.ExitCode);
 
         var title = outputBuilder.ToString().Trim();
         if (string.IsNullOrWhiteSpace(title))
-        {
-            throw new InvalidOperationException("Failed to fetch video title");
-        }
+            return Errors.YouTube.TitleFetchFailed(url);
 
-        return title;
+        return Result<string>.Success(title);
     }
 
-    /// <summary>
-    /// Validates that the URL is not empty
-    /// </summary>
-    private static void ValidateUrl(string url)
-    {
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            throw new ArgumentException("URL cannot be empty", nameof(url));
-        }
-    }
 
     /// <summary>
     /// Ensures the temporary download directory exists
@@ -222,7 +236,7 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
     /// <summary>
     /// Runs yt-dlp process and monitors progress
     /// </summary>
-    private static async Task RunYtDlpAsync(string arguments, IProgress<double>? progress, CancellationToken cancellationToken)
+    private static async Task<Result> RunYtDlpAsync(string arguments, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var processInfo = CreateProcessInfo(arguments);
 
@@ -231,14 +245,18 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
         process.OutputDataReceived += (sender, e) => HandleOutput(e.Data, progress);
         process.ErrorDataReceived += (sender, e) => HandleOutput(e.Data, progress);
 
-        StartProcess(process);
+        if (!process.Start())
+            return Errors.YouTube.ProcessStartFailed();
 
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
         await WaitForProcessExit(process, cancellationToken);
 
-        ValidateProcessSuccess(process);
+        if (process.ExitCode != 0)
+            return Errors.YouTube.DownloadFailed("", process.ExitCode);
+
+        return Result.Success();
     }
 
     /// <summary>
@@ -257,16 +275,6 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
         };
     }
 
-    /// <summary>
-    /// Starts the process and validates it started successfully
-    /// </summary>
-    private static void StartProcess(Process process)
-    {
-        if (!process.Start())
-        {
-            throw new InvalidOperationException("Failed to start yt-dlp process");
-        }
-    }
 
     /// <summary>
     /// Waits for the process to exit asynchronously
@@ -290,16 +298,6 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
         }
     }
 
-    /// <summary>
-    /// Validates that the process exited successfully
-    /// </summary>
-    private static void ValidateProcessSuccess(Process process)
-    {
-        if (process.ExitCode != 0)
-        {
-            throw new InvalidOperationException($"yt-dlp failed with exit code {process.ExitCode}");
-        }
-    }
 
     /// <summary>
     /// Handles output from yt-dlp and extracts progress information
@@ -348,12 +346,15 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
     /// Returns both the audio file path and thumbnail path (if available)
     /// Files remain in temp directory for sending to Telegram
     /// </summary>
-    private DownloadResultDto FindDownloadedFiles(string youtubeId)
+    private Result<DownloadResultDto> FindDownloadedFiles(string youtubeId)
     {
         // Find and normalize MP3 file
         var tempMp3File = Directory.GetFiles(_tempDownloadDirectory, "*.mp3")
             .OrderByDescending(File.GetCreationTime)
-            .FirstOrDefault() ?? throw new FileNotFoundException("Downloaded MP3 file not found in temp directory", _tempDownloadDirectory);
+            .FirstOrDefault();
+
+        if (tempMp3File == null)
+            return Errors.YouTube.FileNotFound(_tempDownloadDirectory);
 
         var normalizedMp3Name = NormalizeWhitespace(Path.GetFileName(tempMp3File));
         var normalizedMp3Path = Path.Combine(_tempDownloadDirectory, normalizedMp3Name);
@@ -398,13 +399,15 @@ internal partial class YouTubeDownloadService(IYoutubeExtractorService youtubeEx
         // Extract video title from filename (without extension)
         var videoTitle = Path.GetFileNameWithoutExtension(tempMp3File);
 
-        return new DownloadResultDto
+        var downloadResult = new DownloadResultDto
         {
             YouTubeId = youtubeId,
             VideoTitle = videoTitle,
             TempMediaFilePath = tempMp3File,
             TempThumbnailPath = tempThumbnailPath
         };
+
+        return Result<DownloadResultDto>.Success(downloadResult);
     }
 
 

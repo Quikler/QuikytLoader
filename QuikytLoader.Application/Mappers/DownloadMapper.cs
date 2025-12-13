@@ -27,9 +27,15 @@ public static class DownloadMapper
     /// </summary>
     public static DownloadRecord ToEntity(DownloadHistoryRecordDto dto)
     {
+        // Database values are assumed valid, but we still validate defensively
+        var youtubeIdResult = YouTubeId.Create(dto.YouTubeId);
+        if (!youtubeIdResult.IsSuccess)
+            throw new InvalidOperationException(
+                $"Invalid YouTube ID from database: {youtubeIdResult.Error!.Message}");
+
         return new DownloadRecord
         {
-            YouTubeId = new YouTubeId(dto.YouTubeId),
+            YouTubeId = youtubeIdResult.Value!,
             VideoTitle = dto.VideoTitle,
             DownloadedAt = dto.DownloadedAt
         };
