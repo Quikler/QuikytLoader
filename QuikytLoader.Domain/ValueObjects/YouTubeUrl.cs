@@ -1,3 +1,5 @@
+using QuikytLoader.Domain.Common;
+
 namespace QuikytLoader.Domain.ValueObjects;
 
 /// <summary>
@@ -7,15 +9,42 @@ public record YouTubeUrl
 {
     public string Value { get; }
 
-    public YouTubeUrl(string value)
+    private YouTubeUrl(string value)
+    {
+        Value = value;
+    }
+
+    /// <summary>
+    /// Creates a YouTubeUrl instance with validation.
+    /// </summary>
+    /// <param name="value">The YouTube URL string to validate</param>
+    /// <returns>Result containing the YouTubeUrl or validation error</returns>
+    public static Result<YouTubeUrl> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("YouTube URL cannot be empty", nameof(value));
+            return Error.Validation(
+                "YouTubeUrl.Empty",
+                "YouTube URL cannot be empty");
 
         if (!IsValidYouTubeUrl(value))
-            throw new ArgumentException("Invalid YouTube URL format", nameof(value));
+            return Error.Validation(
+                "YouTubeUrl.InvalidFormat",
+                "Invalid YouTube URL format");
 
-        Value = value;
+        return new YouTubeUrl(value);
+    }
+
+    /// <summary>
+    /// Attempts to create a YouTubeUrl instance. Useful for performance-sensitive UI scenarios.
+    /// </summary>
+    /// <param name="value">The YouTube URL string to validate</param>
+    /// <param name="youtubeUrl">The created YouTubeUrl if successful, null otherwise</param>
+    /// <returns>True if the URL is valid and YouTubeUrl was created, false otherwise</returns>
+    public static bool TryCreate(string value, out YouTubeUrl? youtubeUrl)
+    {
+        var result = Create(value);
+        youtubeUrl = result.IsSuccess ? result.Value : null;
+        return result.IsSuccess;
     }
 
     private static bool IsValidYouTubeUrl(string url)
