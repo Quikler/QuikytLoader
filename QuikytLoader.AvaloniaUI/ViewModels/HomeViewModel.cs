@@ -99,28 +99,30 @@ public partial class HomeViewModel(
         }
 
         // Check for duplicates before adding to queue
-        try
+        var duplicateCheckResult = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
+        if (!duplicateCheckResult.IsSuccess)
         {
-            var existingRecord = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
-            if (existingRecord is not null)
-            {
-                // Show duplicate warning (for now, just log - we'll add UI dialog later)
-                var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
-                              $"Title: {existingRecord.VideoTitle}\n\n" +
-                              $"Do you want to download it again?";
-
-                Console.WriteLine($"[DUPLICATE DETECTED] {message}");
-
-                // TODO: Show user dialog and get confirmation
-                // For now, we'll continue with the download
-                UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
-            }
+            // Error occurred during duplicate check (e.g., invalid URL or extraction failure)
+            var error = duplicateCheckResult.Error;
+            Console.WriteLine($"Duplicate check failed: {error.Code} - {error.Message}");
+            UpdateStatus($"Warning: {GetUserFriendlyErrorMessage(error)}");
+            // Continue with download despite the error
         }
-        catch (Exception ex)
+        else if (duplicateCheckResult.Value is not null)
         {
-            Console.WriteLine($"Failed to check duplicates: {ex.Message}");
-            // Continue with download even if duplicate check fails
+            // Duplicate found - show warning
+            var existingRecord = duplicateCheckResult.Value;
+            var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
+                          $"Title: {existingRecord.VideoTitle}\n\n" +
+                          $"Do you want to download it again?";
+
+            Console.WriteLine($"[DUPLICATE DETECTED] {message}");
+
+            // TODO: Show user dialog and get confirmation
+            // For now, we'll continue with the download
+            UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
         }
+        // If duplicateCheckResult.Value is null, no duplicate exists - continue silently
 
         // Step 2: Proceed with adding to queue (either EditTitle is unchecked or user clicked Proceed)
         var queueItem = new DownloadQueueItem
