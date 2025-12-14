@@ -17,16 +17,13 @@ public class GetVideoInfoUseCase(IYouTubeDownloadService downloadService)
     /// </summary>
     /// <param name="url">YouTube video URL</param>
     /// <returns>Result containing the video title, or error details if fetch fails</returns>
-    public Task<Result<string>> GetVideoTitleAsync(string url)
+    public async Task<Result<string>> GetVideoTitleAsync(string url)
     {
         // Validate URL format using value object
         var youtubeUrlResult = YouTubeUrl.Create(url);
         if (!youtubeUrlResult.IsSuccess)
-        {
-            // Map validation error to domain-specific error
-            return Task.FromResult(Result<string>.Failure(Errors.YouTube.InvalidUrl(url)));
-        }
+            return Result<string>.Failure(Errors.YouTube.InvalidUrl(url));
 
-        return downloadService.GetVideoTitleAsync(youtubeUrlResult.Value.Value);
+        return await downloadService.GetVideoTitleAsync(youtubeUrlResult.Value.Value);
     }
 }
