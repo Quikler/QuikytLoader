@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Models;
+using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Enums;
 using QuikytLoader.Domain.ValueObjects;
 using System;
@@ -98,28 +99,30 @@ public partial class HomeViewModel(
         }
 
         // Check for duplicates before adding to queue
-        try
+        var duplicateCheckResult = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
+        if (!duplicateCheckResult.IsSuccess)
         {
-            var existingRecord = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
-            if (existingRecord is not null)
-            {
-                // Show duplicate warning (for now, just log - we'll add UI dialog later)
-                var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
-                              $"Title: {existingRecord.VideoTitle}\n\n" +
-                              $"Do you want to download it again?";
-
-                Console.WriteLine($"[DUPLICATE DETECTED] {message}");
-
-                // TODO: Show user dialog and get confirmation
-                // For now, we'll continue with the download
-                UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
-            }
+            // Error occurred during duplicate check (e.g., invalid URL or extraction failure)
+            var error = duplicateCheckResult.Error;
+            Console.WriteLine($"Duplicate check failed: {error.Code} - {error.Message}");
+            UpdateStatus($"Warning: {GetUserFriendlyErrorMessage(error)}");
+            // Continue with download despite the error
         }
-        catch (Exception ex)
+        else if (duplicateCheckResult.Value is not null)
         {
-            Console.WriteLine($"Failed to check duplicates: {ex.Message}");
-            // Continue with download even if duplicate check fails
+            // Duplicate found - show warning
+            var existingRecord = duplicateCheckResult.Value;
+            var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
+                          $"Title: {existingRecord.VideoTitle}\n\n" +
+                          $"Do you want to download it again?";
+
+            Console.WriteLine($"[DUPLICATE DETECTED] {message}");
+
+            // TODO: Show user dialog and get confirmation
+            // For now, we'll continue with the download
+            UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
         }
+        // If duplicateCheckResult.Value is null, no duplicate exists - continue silently
 
         // Step 2: Proceed with adding to queue (either EditTitle is unchecked or user clicked Proceed)
         var queueItem = new DownloadQueueItem
@@ -164,30 +167,36 @@ public partial class HomeViewModel(
                 // Use the DownloadAndSendUseCase to orchestrate the entire workflow
                 var progress = new Progress<double>(value => nextItem.Progress = value);
 
-                var result = await downloadAndSendUseCase.ExecuteAsync(
+                var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
                     nextItem.Url,
                     nextItem.CustomTitle,
                     progress,
                     _cancellationTokenSource.Token);
 
-                nextItem.DownloadResult = result;
+                // Handle result using pattern matching
+                if (!downloadResult.IsSuccess)
+                {
+                    var error = downloadResult.Error;
+                    nextItem.Status = DownloadStatus.Failed;
+                    nextItem.StatusMessage = "Failed";
+                    nextItem.ErrorMessage = GetUserFriendlyErrorMessage(error);
+                    nextItem.Progress = 0;
 
-                // Mark as completed
-                nextItem.Status = DownloadStatus.Completed;
-                nextItem.StatusMessage = "✓ Completed";
-                nextItem.Progress = 100;
+                    Console.WriteLine($"Download failed: {error.Code} - {error.Message}");
+                }
+                else
+                {
+                    // Success!
+                    nextItem.DownloadResult = downloadResult.Value;
+                    nextItem.Status = DownloadStatus.Completed;
+                    nextItem.StatusMessage = "✓ Completed";
+                    nextItem.Progress = 100;
+                }
             }
             catch (OperationCanceledException)
             {
                 nextItem.Status = DownloadStatus.Cancelled;
                 nextItem.StatusMessage = "Cancelled";
-                nextItem.Progress = 0;
-            }
-            catch (Exception ex)
-            {
-                nextItem.Status = DownloadStatus.Failed;
-                nextItem.StatusMessage = "Failed";
-                nextItem.ErrorMessage = ex.Message;
                 nextItem.Progress = 0;
             }
             finally
@@ -253,15 +262,7 @@ public partial class HomeViewModel(
         if (string.IsNullOrWhiteSpace(YoutubeUrl))
             return false;
 
-        try
-        {
-            _ = new YouTubeUrl(YoutubeUrl);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
+        return YouTubeUrl.TryCreate(YoutubeUrl, out _);
     }
 
     private void SetProcessingState(bool isProcessing)
@@ -314,17 +315,41 @@ public partial class HomeViewModel(
         TitleFetchStatus = "Fetching video title...";
         IsTitleFetched = false;
 
-        try
+        var titleResult = await getVideoInfoUseCase.GetVideoTitleAsync(YoutubeUrl);
+
+        if (!titleResult.IsSuccess)
         {
-            var title = await getVideoInfoUseCase.GetVideoTitleAsync(YoutubeUrl);
-            CustomTitle = title;
+            var error = titleResult.Error;
+            TitleFetchStatus = $"Failed to fetch title: {GetUserFriendlyErrorMessage(error)}";
+            IsTitleFetched = false;
+            Console.WriteLine($"Title fetch failed: {error.Code} - {error.Message}");
+        }
+        else
+        {
+            CustomTitle = titleResult.Value;
             IsTitleFetched = true;
             TitleFetchStatus = "Edit the title above if needed";
         }
-        catch (Exception ex)
+    }
+
+    /// <summary>
+    /// Maps error codes to user-friendly error messages.
+    /// </summary>
+    private static string GetUserFriendlyErrorMessage(Error error)
+    {
+        return error.Code switch
         {
-            TitleFetchStatus = $"Failed to fetch title: {ex.Message}";
-            IsTitleFetched = false;
-        }
+            "YouTube.InvalidUrl" => "Invalid YouTube URL. Please check the link and try again.",
+            "YouTube.VideoIdExtractionFailed" => "Unable to process YouTube URL. Please verify the link is correct.",
+            "YouTube.DownloadFailed" => "Failed to download video. Please check your internet connection and try again.",
+            "YouTube.TitleFetchFailed" => "Unable to fetch video information. Please check the URL and try again.",
+            "YouTube.FileNotFound" => "Downloaded file not found. The download may have failed.",
+            "YouTube.ProcessStartFailed" => "Failed to start download process. Please ensure yt-dlp is installed.",
+            "Telegram.BotTokenNotConfigured" => "Telegram bot not configured. Please set bot token in Settings.",
+            "Telegram.ChatIdNotConfigured" => "Telegram chat not configured. Please set chat ID in Settings.",
+            "Telegram.SendFailed" => "Failed to send to Telegram. Please verify your bot configuration in Settings.",
+            "Telegram.InitializationFailed" => "Failed to initialize Telegram bot. Please check your bot token in Settings.",
+            _ => $"An error occurred: {error.Message}"
+        };
     }
 }

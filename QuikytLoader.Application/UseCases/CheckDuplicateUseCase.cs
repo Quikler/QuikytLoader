@@ -1,5 +1,6 @@
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.UseCases;
@@ -12,16 +13,19 @@ public class CheckDuplicateUseCase(
     IYoutubeExtractorService youtubeExtractorService)
 {
     /// <summary>
-    /// Gets the existing download record if it exists
+    /// Gets the existing download record if it exists.
+    /// Returns a Result containing the download record if found, null if not found, or an Error on failure.
     /// </summary>
     /// <param name="url">YouTube video URL</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The download record if found, otherwise null</returns>
-    public async Task<DownloadRecord?> GetExistingRecordAsync(string url, CancellationToken cancellationToken = default)
+    /// <returns>Result containing the download record if found, null if no duplicate exists, or error details if extraction fails</returns>
+    public async Task<Result<DownloadRecord?>> GetExistingRecordAsync(string url, CancellationToken cancellationToken = default)
     {
-        var youtubeId = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
-        if (youtubeId is null) return null;
+        var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
+        if (!youtubeIdResult.IsSuccess)
+            return Result<DownloadRecord?>.Failure(youtubeIdResult.Error);
 
-        return await historyRepo.GetByIdAsync(youtubeId, cancellationToken);
+        var record = await historyRepo.GetByIdAsync(youtubeIdResult.Value, cancellationToken);
+        return Result<DownloadRecord?>.Success(record);
     }
 }

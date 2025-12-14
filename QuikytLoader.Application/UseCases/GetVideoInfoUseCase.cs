@@ -1,4 +1,5 @@
 using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.ValueObjects;
 
 namespace QuikytLoader.Application.UseCases;
@@ -10,11 +11,19 @@ namespace QuikytLoader.Application.UseCases;
 public class GetVideoInfoUseCase(IYouTubeDownloadService downloadService)
 {
     /// <summary>
-    /// Gets the video title from YouTube without downloading the video
-    /// Validates that the URL is a proper YouTube URL before fetching
+    /// Gets the video title from YouTube without downloading the video.
+    /// Validates that the URL is a proper YouTube URL before fetching.
+    /// Returns a Result containing the title on success, or an Error on failure.
     /// </summary>
     /// <param name="url">YouTube video URL</param>
-    /// <returns>The video title</returns>
-    /// <exception cref="ArgumentException">Thrown if URL is not a valid YouTube URL</exception>
-    public Task<string> GetVideoTitleAsync(string url) => downloadService.GetVideoTitleAsync(new YouTubeUrl(url).Value);
+    /// <returns>Result containing the video title, or error details if fetch fails</returns>
+    public async Task<Result<string>> GetVideoTitleAsync(string url)
+    {
+        // Validate URL format using value object
+        var youtubeUrlResult = YouTubeUrl.Create(url);
+        if (!youtubeUrlResult.IsSuccess)
+            return Result<string>.Failure(Errors.YouTube.InvalidUrl(url));
+
+        return await downloadService.GetVideoTitleAsync(youtubeUrlResult.Value.Value);
+    }
 }
