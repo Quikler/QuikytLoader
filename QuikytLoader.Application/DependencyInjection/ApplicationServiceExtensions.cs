@@ -18,6 +18,7 @@ public static class ApplicationServiceExtensions
         services.AddTransient<CheckDuplicateUseCase>();
         services.AddTransient<GetVideoInfoUseCase>();
         services.AddTransient<ManageSettingsUseCase>();
+        services.AddTransient<ValidateYouTubeUrlUseCase>();
 
         return services;
     }

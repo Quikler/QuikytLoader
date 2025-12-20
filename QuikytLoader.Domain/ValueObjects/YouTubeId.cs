@@ -36,19 +36,6 @@ public record YouTubeId
         return new YouTubeId(value);
     }
 
-    /// <summary>
-    /// Attempts to create a YouTubeId instance. Useful for performance-sensitive UI scenarios.
-    /// </summary>
-    /// <param name="value">The YouTube ID string to validate</param>
-    /// <param name="youtubeId">The created YouTubeId if successful, null otherwise</param>
-    /// <returns>True if the ID is valid and YouTubeId was created, false otherwise</returns>
-    public static bool TryCreate(string value, out YouTubeId? youtubeId)
-    {
-        var result = Create(value);
-        youtubeId = result.IsSuccess ? result.Value : null;
-        return result.IsSuccess;
-    }
-
     public static implicit operator string(YouTubeId id) => id.Value;
     public override string ToString() => Value;
 }

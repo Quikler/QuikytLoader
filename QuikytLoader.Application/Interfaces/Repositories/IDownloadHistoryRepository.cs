@@ -11,9 +11,9 @@ public interface IDownloadHistoryRepository
     /// <summary>
     /// Saves a download history record. Updates existing record if YouTubeId already exists.
     /// </summary>
-    /// <param name="record">The record to save</param>
+    /// <param name="downloadEntity">The record to save</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    Task SaveAsync(DownloadRecord record, CancellationToken cancellationToken = default);
+    Task SaveAsync(DownloadEntity downloadEntity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a download record by YouTube ID
@@ -21,14 +21,14 @@ public interface IDownloadHistoryRepository
     /// <param name="id">The YouTube video ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The record if found, otherwise null</returns>
-    Task<DownloadRecord?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default);
+    Task<DownloadEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all download records
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Collection of all download records</returns>
-    Task<IEnumerable<DownloadRecord>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<DownloadEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the thumbnail URL for a YouTube video

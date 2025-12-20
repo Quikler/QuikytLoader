@@ -27,8 +27,6 @@ public class DownloadAndSendUseCase(
         if (!youtubeIdResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
 
-        var youtubeId = youtubeIdResult.Value;
-
         // 2. Download video
         var downloadResult = customTitle != null
             ? await downloadService.DownloadAsync(url, customTitle, progress, cancellationToken)
@@ -37,34 +35,25 @@ public class DownloadAndSendUseCase(
         if (!downloadResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(downloadResult.Error);
 
-        var result = downloadResult.Value;
+        var downloadResultValue = downloadResult.Value;
 
         // 3. Send to Telegram
         var sendResult = await telegramService.SendAudioAsync(
-            result.TempMediaFilePath,
-            result.TempThumbnailPath);
+            downloadResultValue.TempMediaFilePath,
+            downloadResultValue.TempThumbnailPath);
 
         if (!sendResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(sendResult.Error);
 
         // 4. Save to history (non-critical - don't fail entire operation on error)
-        try
-        {
-            var record = new DownloadRecord
-            {
-                YouTubeId = youtubeId,
-                VideoTitle = customTitle ?? result.VideoTitle,
-                DownloadedAt = DateTime.UtcNow.ToString("o")
-            };
-            await historyRepo.SaveAsync(record, cancellationToken);
-        }
-        catch (Exception)
-        {
-            // Silently fail - history save is non-critical
-            // Caller still gets successful result
-        }
+        await historyRepo.SaveAsync(
+            new DownloadEntity(
+                youtubeIdResult.Value,
+                customTitle ?? downloadResultValue.VideoTitle,
+                DateTime.UtcNow.ToString("o")),
+            cancellationToken);
 
         // 5. Return success with DTO
-        return Result<DownloadResultDto>.Success(result);
+        return Result<DownloadResultDto>.Success(downloadResultValue);
     }
 }

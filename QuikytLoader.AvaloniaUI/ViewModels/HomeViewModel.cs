@@ -4,7 +4,6 @@ using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Models;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Enums;
-using QuikytLoader.Domain.ValueObjects;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -21,7 +20,8 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 public partial class HomeViewModel(
     DownloadAndSendUseCase downloadAndSendUseCase,
     CheckDuplicateUseCase checkDuplicateUseCase,
-    GetVideoInfoUseCase getVideoInfoUseCase) : ViewModelBase
+    GetVideoInfoUseCase getVideoInfoUseCase,
+    ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase) : ViewModelBase
 {
     [ObservableProperty]
     private string _youtubeUrl = string.Empty;
@@ -257,13 +257,8 @@ public partial class HomeViewModel(
 
     private bool CanExecuteAddToQueue() => ValidateUrl();
 
-    private bool ValidateUrl()
-    {
-        if (string.IsNullOrWhiteSpace(YoutubeUrl))
-            return false;
-
-        return YouTubeUrl.TryCreate(YoutubeUrl, out _);
-    }
+    private bool ValidateUrl() =>
+        !string.IsNullOrWhiteSpace(YoutubeUrl) && validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 
     private void SetProcessingState(bool isProcessing)
     {

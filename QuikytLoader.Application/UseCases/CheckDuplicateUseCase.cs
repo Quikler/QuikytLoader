@@ -19,13 +19,13 @@ public class CheckDuplicateUseCase(
     /// <param name="url">YouTube video URL</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Result containing the download record if found, null if no duplicate exists, or error details if extraction fails</returns>
-    public async Task<Result<DownloadRecord?>> GetExistingRecordAsync(string url, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadEntity?>> GetExistingRecordAsync(string url, CancellationToken cancellationToken = default)
     {
         var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
-            return Result<DownloadRecord?>.Failure(youtubeIdResult.Error);
+            return Result<DownloadEntity?>.Failure(youtubeIdResult.Error);
 
-        var record = await historyRepo.GetByIdAsync(youtubeIdResult.Value, cancellationToken);
-        return Result<DownloadRecord?>.Success(record);
+        var downloadEntity = await historyRepo.GetByIdAsync(youtubeIdResult.Value, cancellationToken);
+        return Result<DownloadEntity?>.Success(downloadEntity);
     }
 }

@@ -11,7 +11,7 @@ namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 /// </summary>
 internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactory) : IDownloadHistoryRepository
 {
-    public async Task SaveAsync(DownloadRecord record, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(DownloadEntity downloadEntity, CancellationToken cancellationToken = default)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
 
@@ -24,14 +24,14 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         await connection.ExecuteAsync(
             new CommandDefinition(upsertSql, new
             {
-                YouTubeId = record.YouTubeId.Value,
-                record.VideoTitle,
-                record.DownloadedAt
+                YouTubeId = downloadEntity.YouTubeId.Value,
+                downloadEntity.VideoTitle,
+                downloadEntity.DownloadedAt
             }, cancellationToken: cancellationToken)
         );
     }
 
-    public async Task<DownloadRecord?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default)
+    public async Task<DownloadEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
 
@@ -47,21 +47,10 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
 
         if (result is null) return null;
 
-        // Database values are assumed valid, but we still validate defensively
-        var youtubeIdResult = YouTubeId.Create(result.YouTubeId);
-        if (!youtubeIdResult.IsSuccess)
-            throw new InvalidOperationException(
-                $"Invalid YouTube ID from database: {youtubeIdResult.Error.Message}");
-
-        return new DownloadRecord
-        {
-            YouTubeId = youtubeIdResult.Value,
-            VideoTitle = result.VideoTitle,
-            DownloadedAt = result.DownloadedAt
-        };
+        return DownloadEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
     }
 
-    public async Task<IEnumerable<DownloadRecord>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DownloadEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
 
@@ -76,20 +65,7 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         );
 
         return results.Select(r =>
-        {
-            // Database values are assumed valid, but we still validate defensively
-            var youtubeIdResult = YouTubeId.Create(r.YouTubeId);
-            if (!youtubeIdResult.IsSuccess)
-                throw new InvalidOperationException(
-                    $"Invalid YouTube ID from database: {youtubeIdResult.Error.Message}");
-
-            return new DownloadRecord
-            {
-                YouTubeId = youtubeIdResult.Value,
-                VideoTitle = r.VideoTitle,
-                DownloadedAt = r.DownloadedAt
-            };
-        });
+            DownloadEntity.Create(r.YouTubeId, r.VideoTitle, r.DownloadedAt));
     }
 
     public async Task<string> GetThumbnailUrlAsync(YouTubeId youtubeId, CancellationToken cancellationToken = default)
