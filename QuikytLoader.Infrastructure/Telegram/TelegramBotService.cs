@@ -161,22 +161,13 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
             catch (Exception ex) when (ex.GetType().Namespace?.StartsWith("Telegram.Bot") == true)
             {
                 // Telegram API error during initialization
-                return Errors.Telegram.InitializationFailed(MaskToken(_currentBotToken), ex.Message);
+                return Errors.Telegram.InitializationFailed(ex.Message);
             }
         }
         finally
         {
             _initLock.Release();
         }
-    }
-
-    /// <summary>
-    /// Masks sensitive token for logging: "1234567890:AAH..." -> "123...AAH"
-    /// </summary>
-    private static string MaskToken(string token)
-    {
-        if (token.Length < 10) return "***";
-        return $"{token[..3]}...{token[^3..]}";
     }
 
     /// <summary>

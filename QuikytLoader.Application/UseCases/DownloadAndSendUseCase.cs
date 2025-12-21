@@ -11,7 +11,7 @@ namespace QuikytLoader.Application.UseCases;
 /// Orchestrates multiple services to complete the workflow
 /// </summary>
 public class DownloadAndSendUseCase(
-    IYouTubeDownloadService downloadService,
+    IYoutubeDownloadService youtubeDownloadService,
     IDownloadHistoryRepository historyRepo,
     ITelegramBotService telegramService,
     IYoutubeExtractorService youtubeExtractorService)
@@ -28,9 +28,7 @@ public class DownloadAndSendUseCase(
             return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
 
         // 2. Download video
-        var downloadResult = customTitle != null
-            ? await downloadService.DownloadAsync(url, customTitle, progress, cancellationToken)
-            : await downloadService.DownloadAsync(url, progress, cancellationToken);
+        var downloadResult = await youtubeDownloadService.DownloadAudioAsync(url, customTitle, progress, cancellationToken);
 
         if (!downloadResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(downloadResult.Error);
@@ -45,8 +43,8 @@ public class DownloadAndSendUseCase(
         if (!sendResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(sendResult.Error);
 
-        // 4. Save to history (non-critical - don't fail entire operation on error)
-        await historyRepo.SaveAsync(
+        // 4. Save to history
+        await historyRepo.UpsertAsync(
             new DownloadEntity(
                 youtubeIdResult.Value,
                 customTitle ?? downloadResultValue.VideoTitle,

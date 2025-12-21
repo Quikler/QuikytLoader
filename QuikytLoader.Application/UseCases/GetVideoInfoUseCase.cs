@@ -8,7 +8,7 @@ namespace QuikytLoader.Application.UseCases;
 /// Use case: Fetch video information without downloading
 /// Validates URL before fetching to ensure domain integrity
 /// </summary>
-public class GetVideoInfoUseCase(IYouTubeDownloadService downloadService)
+public class GetVideoInfoUseCase(IYoutubeExtractorService extractorService)
 {
     /// <summary>
     /// Gets the video title from YouTube without downloading the video.
@@ -24,6 +24,6 @@ public class GetVideoInfoUseCase(IYouTubeDownloadService downloadService)
         if (!youtubeUrlResult.IsSuccess)
             return Result<string>.Failure(Errors.YouTube.InvalidUrl(url));
 
-        return await downloadService.GetVideoTitleAsync(youtubeUrlResult.Value.Value);
+        return await extractorService.GetVideoTitleAsync(youtubeUrlResult.Value.Value);
     }
 }

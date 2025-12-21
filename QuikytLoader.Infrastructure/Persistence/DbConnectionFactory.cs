@@ -6,7 +6,6 @@ namespace QuikytLoader.Infrastructure.Persistence;
 
 /// <summary>
 /// Factory for managing SQLite database connections and schema initialization.
-/// Database file is created automatically by SQLite when first connection is opened.
 /// </summary>
 internal class DbConnectionFactory : IDbConnectionFactory
 {
@@ -46,10 +45,6 @@ internal class DbConnectionFactory : IDbConnectionFactory
         return connection;
     }
 
-    /// <summary>
-    /// Initializes the database schema.
-    /// CREATE TABLE IF NOT EXISTS is idempotent and fast when table already exists.
-    /// </summary>
     private static async Task InitializeSchemaAsync(SqliteConnection connection)
     {
         const string createTableSql = """

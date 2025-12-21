@@ -105,7 +105,7 @@ public partial class HomeViewModel(
             // Error occurred during duplicate check (e.g., invalid URL or extraction failure)
             var error = duplicateCheckResult.Error;
             Console.WriteLine($"Duplicate check failed: {error.Code} - {error.Message}");
-            UpdateStatus($"Warning: {GetUserFriendlyErrorMessage(error)}");
+            UpdateStatus($"Warning: {error.Message}");
             // Continue with download despite the error
         }
         else if (duplicateCheckResult.Value is not null)
@@ -179,7 +179,7 @@ public partial class HomeViewModel(
                     var error = downloadResult.Error;
                     nextItem.Status = DownloadStatus.Failed;
                     nextItem.StatusMessage = "Failed";
-                    nextItem.ErrorMessage = GetUserFriendlyErrorMessage(error);
+                    nextItem.ErrorMessage = error.Message;
                     nextItem.Progress = 0;
 
                     Console.WriteLine($"Download failed: {error.Code} - {error.Message}");
@@ -315,7 +315,7 @@ public partial class HomeViewModel(
         if (!titleResult.IsSuccess)
         {
             var error = titleResult.Error;
-            TitleFetchStatus = $"Failed to fetch title: {GetUserFriendlyErrorMessage(error)}";
+            TitleFetchStatus = $"Failed to fetch title: {error.Message}";
             IsTitleFetched = false;
             Console.WriteLine($"Title fetch failed: {error.Code} - {error.Message}");
         }
@@ -325,26 +325,5 @@ public partial class HomeViewModel(
             IsTitleFetched = true;
             TitleFetchStatus = "Edit the title above if needed";
         }
-    }
-
-    /// <summary>
-    /// Maps error codes to user-friendly error messages.
-    /// </summary>
-    private static string GetUserFriendlyErrorMessage(Error error)
-    {
-        return error.Code switch
-        {
-            "YouTube.InvalidUrl" => "Invalid YouTube URL. Please check the link and try again.",
-            "YouTube.VideoIdExtractionFailed" => "Unable to process YouTube URL. Please verify the link is correct.",
-            "YouTube.DownloadFailed" => "Failed to download video. Please check your internet connection and try again.",
-            "YouTube.TitleFetchFailed" => "Unable to fetch video information. Please check the URL and try again.",
-            "YouTube.FileNotFound" => "Downloaded file not found. The download may have failed.",
-            "YouTube.ProcessStartFailed" => "Failed to start download process. Please ensure yt-dlp is installed.",
-            "Telegram.BotTokenNotConfigured" => "Telegram bot not configured. Please set bot token in Settings.",
-            "Telegram.ChatIdNotConfigured" => "Telegram chat not configured. Please set chat ID in Settings.",
-            "Telegram.SendFailed" => "Failed to send to Telegram. Please verify your bot configuration in Settings.",
-            "Telegram.InitializationFailed" => "Failed to initialize Telegram bot. Please check your bot token in Settings.",
-            _ => $"An error occurred: {error.Message}"
-        };
     }
 }

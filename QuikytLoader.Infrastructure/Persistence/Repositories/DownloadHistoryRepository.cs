@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Dapper;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Domain.Entities;
@@ -11,7 +10,7 @@ namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 /// </summary>
 internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactory) : IDownloadHistoryRepository
 {
-    public async Task SaveAsync(DownloadEntity downloadEntity, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(DownloadEntity downloadEntity, CancellationToken cancellationToken = default)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
 
@@ -66,54 +65,6 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
 
         return results.Select(r =>
             DownloadEntity.Create(r.YouTubeId, r.VideoTitle, r.DownloadedAt));
-    }
-
-    public async Task<string> GetThumbnailUrlAsync(YouTubeId youtubeId, CancellationToken cancellationToken = default)
-    {
-        // Try to get thumbnail URL from yt-dlp
-        var thumbnailUrl = await TryGetThumbnailFromYtDlpAsync(youtubeId.Value, cancellationToken);
-        if (!string.IsNullOrEmpty(thumbnailUrl))
-            return thumbnailUrl;
-
-        // Fallback to default YouTube thumbnail URLs
-        // Try maxresdefault first (highest quality), then fallback to hqdefault
-        return $"https://img.youtube.com/vi/{youtubeId.Value}/maxresdefault.jpg";
-    }
-
-    private static async Task<string?> TryGetThumbnailFromYtDlpAsync(string youtubeId, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "yt-dlp",
-                Arguments = $"--print thumbnail --skip-download \"https://youtube.com/watch?v={youtubeId}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            if (process == null)
-                return null;
-
-            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
-
-            if (process.ExitCode != 0)
-                return null;
-
-            var output = await outputTask;
-            var url = output.Trim();
-
-            // Validate it's a proper URL
-            return Uri.TryCreate(url, UriKind.Absolute, out _) ? url : null;
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     /// <summary>

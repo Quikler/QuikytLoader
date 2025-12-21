@@ -3,6 +3,7 @@ using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Infrastructure.Persistence;
 using QuikytLoader.Infrastructure.Persistence.Repositories;
+using QuikytLoader.Infrastructure.Services;
 using QuikytLoader.Infrastructure.Telegram;
 using QuikytLoader.Infrastructure.YouTube;
 
@@ -19,8 +20,12 @@ public static class InfrastructureServiceExtensions
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
         // YouTube services
-        services.AddSingleton<IYouTubeDownloadService, YouTubeDownloadService>();
+        services.AddSingleton<IYtDlpService, YtDlpService>();
+        services.AddSingleton<IYoutubeDownloadService, YoutubeDownloadService>();
         services.AddSingleton<IYoutubeExtractorService, YoutubeExtractorService>();
+
+        // Thumbnail service
+        services.AddSingleton<IThumbnailService, ThumbnailService>();
 
         // Telegram services
         services.AddSingleton<ITelegramBotService, TelegramBotService>();
