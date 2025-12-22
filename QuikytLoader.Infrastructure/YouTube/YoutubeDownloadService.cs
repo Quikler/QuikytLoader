@@ -1,6 +1,7 @@
-using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
+using QuikytLoader.Domain.Entities;
+using QuikytLoader.Domain.ValueObjects;
 
 namespace QuikytLoader.Infrastructure.YouTube;
 
@@ -12,45 +13,39 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
     /// Downloads a video from YouTube and converts it to MP3 format
     /// Files are kept in temp directory for sending to Telegram
     /// </summary>
-    public async Task<Result<DownloadResultDto>> DownloadAudioAsync(string url, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(string url, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
-        EnsureTempDirectoryExists();
+        if (!Directory.Exists(_tempDownloadDirectory))
+            Directory.CreateDirectory(_tempDownloadDirectory);
 
-        var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
+        var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
+            return Result<DownloadResultEntity>.Failure(youtubeIdResult.Error);
 
         var youtubeId = youtubeIdResult.Value;
 
         var runResult = await ytDlpService.DownloadAudioAsync(url, _tempDownloadDirectory, customTitle: customTitle, progress: progress, cancellationToken: cancellationToken);
         if (!runResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(runResult.Error);
+            return Result<DownloadResultEntity>.Failure(runResult.Error);
 
-        var findResult = FindDownloadedFiles(youtubeId.Value);
+        var findResult = FindDownloadedFiles(youtubeId);
         if (!findResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(findResult.Error);
+            return Result<DownloadResultEntity>.Failure(findResult.Error);
 
         var result = findResult.Value;
         Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
-
-        return Result<DownloadResultDto>.Success(result);
+        return result;
     }
 
     private static string NormalizeWhitespace(string filename)
         => string.Join(" ", filename.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-
-    private void EnsureTempDirectoryExists()
-    {
-        if (!Directory.Exists(_tempDownloadDirectory))
-            Directory.CreateDirectory(_tempDownloadDirectory);
-    }
 
     /// <summary>
     /// Finds downloaded files in temp directory and normalizes filenames
     /// Returns both the audio file path and thumbnail path (if available)
     /// Files remain in temp directory for sending to Telegram
     /// </summary>
-    private Result<DownloadResultDto> FindDownloadedFiles(string youtubeId)
+    private Result<DownloadResultEntity> FindDownloadedFiles(YouTubeId youtubeId)
     {
         // Find and normalize MP3 file
         var tempMp3File = Directory.GetFiles(_tempDownloadDirectory, "*.mp3")
@@ -105,17 +100,10 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
             tempThumbnailPath = jpegThumbnailPath;
         }
 
-        // Extract video title from filename (without extension)
-        var videoTitle = Path.GetFileNameWithoutExtension(tempMp3File);
-
-        var downloadResult = new DownloadResultDto
-        {
-            YouTubeId = youtubeId,
-            VideoTitle = videoTitle,
-            TempMediaFilePath = tempMp3File,
-            TempThumbnailPath = tempThumbnailPath
-        };
-
-        return Result<DownloadResultDto>.Success(downloadResult);
+        return new DownloadResultEntity(
+            youtubeId,
+            Path.GetFileNameWithoutExtension(tempMp3File),
+            tempMp3File,
+            tempThumbnailPath);
     }
 }

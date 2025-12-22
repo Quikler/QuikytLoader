@@ -9,11 +9,11 @@ public record YouTubeId
 {
     private const int ValidLength = 11;
 
-    public string Value { get; }
+    public string Id { get; }
 
     private YouTubeId(string value)
     {
-        Value = value;
+        Id = value;
     }
 
     /// <summary>
@@ -36,6 +36,6 @@ public record YouTubeId
         return new YouTubeId(value);
     }
 
-    public static implicit operator string(YouTubeId id) => id.Value;
-    public override string ToString() => Value;
+    public static implicit operator string(YouTubeId id) => id.Id;
+    public override string ToString() => Id;
 }

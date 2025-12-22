@@ -11,9 +11,15 @@ public interface IDownloadHistoryRepository
     /// <summary>
     /// Upserts a download history record. Inserts new record or updates existing record if YouTubeId already exists.
     /// </summary>
-    Task UpsertAsync(DownloadEntity downloadEntity, CancellationToken cancellationToken = default);
+    Task UpsertAsync(DownloadHistoryEntity downloadEntity, CancellationToken cancellationToken = default);
 
-    Task<DownloadEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets a download record by YouTube ID.
+    /// </summary>
+    Task<DownloadHistoryEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<DownloadEntity>> GetAllAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets all download records.
+    /// </summary>
+    Task<IEnumerable<DownloadHistoryEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 }

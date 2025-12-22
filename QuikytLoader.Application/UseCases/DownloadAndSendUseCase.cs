@@ -8,7 +8,6 @@ namespace QuikytLoader.Application.UseCases;
 
 /// <summary>
 /// Use case: Download YouTube video, save to history, send to Telegram
-/// Orchestrates multiple services to complete the workflow
 /// </summary>
 public class DownloadAndSendUseCase(
     IYoutubeDownloadService youtubeDownloadService,
@@ -23,7 +22,7 @@ public class DownloadAndSendUseCase(
         CancellationToken cancellationToken = default)
     {
         // 1. Extract YouTube ID
-        var youtubeIdResult = await youtubeExtractorService.ExtractVideoIdAsync(url, cancellationToken);
+        var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
 
@@ -33,25 +32,27 @@ public class DownloadAndSendUseCase(
         if (!downloadResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(downloadResult.Error);
 
-        var downloadResultValue = downloadResult.Value;
+        var entity = downloadResult.Value;
 
         // 3. Send to Telegram
         var sendResult = await telegramService.SendAudioAsync(
-            downloadResultValue.TempMediaFilePath,
-            downloadResultValue.TempThumbnailPath);
+            entity.TempMediaFilePath,
+            entity.TempThumbnailPath);
 
         if (!sendResult.IsSuccess)
             return Result<DownloadResultDto>.Failure(sendResult.Error);
 
         // 4. Save to history
         await historyRepo.UpsertAsync(
-            new DownloadEntity(
-                youtubeIdResult.Value,
-                customTitle ?? downloadResultValue.VideoTitle,
+            new DownloadHistoryEntity(
+                entity.YouTubeId,
+                customTitle ?? entity.VideoTitle,
                 DateTime.UtcNow.ToString("o")),
             cancellationToken);
 
-        // 5. Return success with DTO
-        return Result<DownloadResultDto>.Success(downloadResultValue);
+        // 5. Map domain entity to DTO and return
+        var dto = new DownloadResultDto(entity.YouTubeId.Id, entity.VideoTitle, entity.TempMediaFilePath, entity.TempThumbnailPath);
+
+        return Result<DownloadResultDto>.Success(dto);
     }
 }

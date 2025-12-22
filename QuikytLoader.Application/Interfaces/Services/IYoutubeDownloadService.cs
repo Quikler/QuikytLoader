@@ -1,5 +1,5 @@
-using QuikytLoader.Application.DTOs;
 using QuikytLoader.Domain.Common;
+using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.Interfaces.Services;
 
@@ -12,5 +12,5 @@ public interface IYoutubeDownloadService
     /// Downloads a video from YouTube and converts it to MP3 format.
     /// </summary>
     /// <param name="customTitle">Optional custom filename (without extension)</param>
-    Task<Result<DownloadResultDto>> DownloadAudioAsync(string url, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default);
+    Task<Result<DownloadResultEntity>> DownloadAudioAsync(string url, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default);
 }

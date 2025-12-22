@@ -16,7 +16,7 @@ internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYo
     [GeneratedRegex(@"(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})", RegexOptions.IgnoreCase)]
     private static partial Regex YoutubeIdRegex();
 
-    public async Task<Result<YouTubeId>> ExtractVideoIdAsync(string url, CancellationToken cancellationToken = default)
+    public async Task<Result<YouTubeId>> GetVideoIdAsync(string url, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(url))
             return Errors.YouTube.InvalidUrl(url);

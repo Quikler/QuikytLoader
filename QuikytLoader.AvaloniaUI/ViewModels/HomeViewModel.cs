@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Models;
-using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Enums;
 using System;
 using System.Collections.ObjectModel;

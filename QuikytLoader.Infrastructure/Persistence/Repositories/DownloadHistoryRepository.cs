@@ -10,7 +10,7 @@ namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 /// </summary>
 internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactory) : IDownloadHistoryRepository
 {
-    public async Task UpsertAsync(DownloadEntity downloadEntity, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(DownloadHistoryEntity downloadEntity, CancellationToken cancellationToken = default)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
 
@@ -23,14 +23,14 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         await connection.ExecuteAsync(
             new CommandDefinition(upsertSql, new
             {
-                YouTubeId = downloadEntity.YouTubeId.Value,
+                YouTubeId = downloadEntity.YouTubeId.Id,
                 downloadEntity.VideoTitle,
                 downloadEntity.DownloadedAt
             }, cancellationToken: cancellationToken)
         );
     }
 
-    public async Task<DownloadEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default)
+    public async Task<DownloadHistoryEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
 
@@ -41,15 +41,15 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
             """;
 
         var result = await connection.QuerySingleOrDefaultAsync<DownloadRecordDto>(
-            new CommandDefinition(query, new { YouTubeId = id.Value }, cancellationToken: cancellationToken)
+            new CommandDefinition(query, new { YouTubeId = id.Id }, cancellationToken: cancellationToken)
         );
 
         if (result is null) return null;
 
-        return DownloadEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
+        return DownloadHistoryEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
     }
 
-    public async Task<IEnumerable<DownloadEntity>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DownloadHistoryEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
 
@@ -64,7 +64,7 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         );
 
         return results.Select(r =>
-            DownloadEntity.Create(r.YouTubeId, r.VideoTitle, r.DownloadedAt));
+            DownloadHistoryEntity.Create(r.YouTubeId, r.VideoTitle, r.DownloadedAt));
     }
 
     /// <summary>
