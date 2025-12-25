@@ -58,8 +58,8 @@
 
                     <!-- Edit Title Section -->
                     <StackPanel Spacing="8">
-                        <CheckBox IsChecked="{Binding EditTitle, Mode=TwoWay}"
-                                  Content="Edit title"
+                        <CheckBox IsChecked="{Binding UseCustomTitle, Mode=TwoWay}"
+                                  Content="Use custom title"
                                   FontSize="14"/>
 
                         <TextBox Text="{Binding CustomTitle, Mode=TwoWay}"
@@ -67,8 +67,7 @@
                                  FontSize="14"
                                  Height="40"
                                  VerticalContentAlignment="Center"
-                                 IsVisible="{Binding IsWaitingForProceed}"
-                                 IsEnabled="{Binding IsTitleFetched}"/>
+                                 IsVisible="{Binding IsWaitingForProceed}"/>
 
                         <TextBlock Text="{Binding TitleFetchStatus}"
                                    FontSize="12"

@@ -42,68 +42,36 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
 
     /// <summary>
     /// Finds downloaded files in temp directory and normalizes filenames
-    /// Returns both the audio file path and thumbnail path (if available)
     /// Files remain in temp directory for sending to Telegram
     /// </summary>
     private Result<DownloadResultEntity> FindDownloadedFiles(YouTubeId youtubeId)
     {
-        // Find and normalize MP3 file
-        var tempMp3File = Directory.GetFiles(_tempDownloadDirectory, "*.mp3")
+        var files = Directory.EnumerateFiles(_tempDownloadDirectory)
+            .Where(f => f.EndsWith(".mp3") || f.EndsWith(".jpg"))
             .OrderByDescending(File.GetCreationTime)
-            .FirstOrDefault();
+            .ToList();
 
-        if (tempMp3File == null)
-            return Errors.YouTube.FileNotFound(_tempDownloadDirectory);
+        var tempMp3File = files.Find(f => f.EndsWith(".mp3"));
+        if (tempMp3File is null) return Errors.YouTube.FileNotFound(_tempDownloadDirectory);
 
-        var normalizedMp3Name = NormalizeWhitespace(Path.GetFileName(tempMp3File));
-        var normalizedMp3Path = Path.Combine(_tempDownloadDirectory, normalizedMp3Name);
+        var tempThumbnailFile = files.Find(f => f.EndsWith(".jpg"));
+        if (tempThumbnailFile is null) return Errors.Thumbnail.FileNotFound(_tempDownloadDirectory);
 
-        // Rename if needed
-        if (tempMp3File != normalizedMp3Path)
-        {
-            File.Move(tempMp3File, normalizedMp3Path, overwrite: true);
-            tempMp3File = normalizedMp3Path;
-        }
+        var normalizedMp3Path = Path.Combine(_tempDownloadDirectory, NormalizeWhitespace(Path.GetFileName(tempMp3File)));
+        File.Move(tempMp3File, normalizedMp3Path, overwrite: true);
 
-        // Find and normalize thumbnail (optional - may not exist)
-        string? tempThumbnailPath = null;
-        var tempThumbnailFile = Directory.GetFiles(_tempDownloadDirectory, "*.jpg")
-            .OrderByDescending(File.GetCreationTime)
-            .FirstOrDefault();
+        // Normalize whitespace and convert to .jpeg for Telegram compatibility
+        var normalizedThumbnailPath = Path.Combine(_tempDownloadDirectory, $"{NormalizeWhitespace(Path.GetFileNameWithoutExtension(tempThumbnailFile))}.jpeg");
+        File.Move(tempThumbnailFile, normalizedThumbnailPath, overwrite: true);
 
-        if (tempThumbnailFile != null)
-        {
-            var normalizedThumbnailName = NormalizeWhitespace(Path.GetFileName(tempThumbnailFile));
-            var normalizedThumbnailPath = Path.Combine(_tempDownloadDirectory, normalizedThumbnailName);
-
-            // Rename if needed
-            if (tempThumbnailFile != normalizedThumbnailPath)
-            {
-                File.Move(tempThumbnailFile, normalizedThumbnailPath, overwrite: true);
-                tempThumbnailFile = normalizedThumbnailPath;
-            }
-
-            // Convert .jpg to .jpeg for Telegram compatibility
-            var jpegThumbnailPath = Path.ChangeExtension(tempThumbnailFile, ".jpeg");
-            File.Move(tempThumbnailFile, jpegThumbnailPath, overwrite: true);
-
-            // Process thumbnail for Telegram (crop to square, resize to 320x320 max)
-            var processResult = thumbnailService.ProcessForTelegram(jpegThumbnailPath);
-            if (!processResult.IsSuccess)
-            {
-                Console.WriteLine($"Warning: Failed to process thumbnail: {processResult.Error.Message}");
-                // Continue without processed thumbnail
-            }
-
-            // Keep thumbnail in temp directory for Telegram to use
-            // It will be cleaned up after sending
-            tempThumbnailPath = jpegThumbnailPath;
-        }
+        var processResult = thumbnailService.ProcessForTelegram(normalizedThumbnailPath);
+        if (!processResult.IsSuccess)
+            return Result<DownloadResultEntity>.Failure(processResult.Error);
 
         return new DownloadResultEntity(
             youtubeId,
-            Path.GetFileNameWithoutExtension(tempMp3File),
-            tempMp3File,
-            tempThumbnailPath);
+            Path.GetFileNameWithoutExtension(normalizedMp3Path),
+            normalizedMp3Path,
+            normalizedThumbnailPath);
     }
 }

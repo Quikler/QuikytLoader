@@ -24,14 +24,10 @@ public record YouTubeId
     public static Result<YouTubeId> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Error.Validation(
-                "YouTubeId.Empty",
-                "YouTube ID cannot be empty");
+            return new Error("YouTube ID cannot be empty");
 
         if (value.Length != ValidLength)
-            return Error.Validation(
-                "YouTubeId.InvalidLength",
-                $"YouTube ID must be exactly {ValidLength} characters");
+            return new Error($"YouTube ID must be exactly {ValidLength} characters");
 
         return new YouTubeId(value);
     }

@@ -6,7 +6,7 @@ using QuikytLoader.Domain.ValueObjects;
 namespace QuikytLoader.Infrastructure.YouTube;
 
 /// <summary>
-/// Service for extracting YouTube video IDs from URLs.
+/// Service for extracting YouTube info.
 /// Uses regex for fast extraction, with yt-dlp fallback for edge cases.
 /// </summary>
 internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYoutubeExtractorService
@@ -37,7 +37,5 @@ internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYo
     }
 
     public async Task<Result<string>> GetVideoTitleAsync(string url, CancellationToken cancellationToken = default)
-    {
-        return await ytDlpService.GetVideoTitleAsync(url, cancellationToken);
-    }
+        => await ytDlpService.GetVideoTitleAsync(url, cancellationToken);
 }

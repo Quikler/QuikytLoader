@@ -62,16 +62,13 @@ internal partial class YtDlpService : IYtDlpService
             };
 
             using var process = Process.Start(startInfo);
-            if (process == null)
-                return Errors.YouTube.YtDlpStartFailed();
+            if (process is null) return Errors.YouTube.YtDlpStartFailed();
 
             var outputBuilder = new System.Text.StringBuilder();
             process.OutputDataReceived += (sender, e) =>
             {
                 if (!string.IsNullOrWhiteSpace(e.Data))
-                {
                     outputBuilder.AppendLine(e.Data);
-                }
             };
 
             process.BeginOutputReadLine();
@@ -162,8 +159,7 @@ internal partial class YtDlpService : IYtDlpService
 
     private static void HandleOutput(string? data, IProgress<double>? progress)
     {
-        if (string.IsNullOrWhiteSpace(data) || progress == null)
-            return;
+        if (string.IsNullOrWhiteSpace(data) || progress is null) return;
 
         var progressValue = ExtractProgress(data);
         if (progressValue.HasValue)

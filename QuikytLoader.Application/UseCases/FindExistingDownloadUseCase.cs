@@ -6,13 +6,13 @@ using QuikytLoader.Domain.Common;
 namespace QuikytLoader.Application.UseCases;
 
 /// <summary>
-/// Use case: Check if a YouTube video has already been downloaded
+/// Use case: Finds exising download
 /// </summary>
-public class CheckDuplicateUseCase(
+public class FindExistingDownloadUseCase(
     IDownloadHistoryRepository historyRepo,
     IYoutubeExtractorService youtubeExtractorService)
 {
-    public async Task<Result<DownloadHistoryDto?>> GetExistingRecordAsync(string youtubeUrl, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadHistoryDto?>> FindAsync(string youtubeUrl, CancellationToken cancellationToken = default)
     {
         var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(youtubeUrl, cancellationToken);
         if (!youtubeIdResult.IsSuccess)

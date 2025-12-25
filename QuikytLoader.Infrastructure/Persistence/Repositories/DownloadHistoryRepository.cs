@@ -49,24 +49,6 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         return DownloadHistoryEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
     }
 
-    public async Task<IEnumerable<DownloadHistoryEntity>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
-
-        const string query = """
-            SELECT YouTubeId, VideoTitle, DownloadedAt
-            FROM DownloadHistory
-            ORDER BY DownloadedAt DESC
-            """;
-
-        var results = await connection.QueryAsync<DownloadRecordDto>(
-            new CommandDefinition(query, cancellationToken: cancellationToken)
-        );
-
-        return results.Select(r =>
-            DownloadHistoryEntity.Create(r.YouTubeId, r.VideoTitle, r.DownloadedAt));
-    }
-
     /// <summary>
     /// Internal DTO for Dapper mapping from database
     /// </summary>

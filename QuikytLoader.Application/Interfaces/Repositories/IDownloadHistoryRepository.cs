@@ -17,9 +17,4 @@ public interface IDownloadHistoryRepository
     /// Gets a download record by YouTube ID.
     /// </summary>
     Task<DownloadHistoryEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets all download records.
-    /// </summary>
-    Task<IEnumerable<DownloadHistoryEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 }

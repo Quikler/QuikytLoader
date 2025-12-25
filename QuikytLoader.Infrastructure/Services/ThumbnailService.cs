@@ -17,11 +17,8 @@ internal class ThumbnailService : IThumbnailService
     /// </summary>
     public Result ProcessForTelegram(string thumbnailPath)
     {
-        // Validate file exists
         if (!File.Exists(thumbnailPath))
-        {
             return Result.Failure(Errors.Thumbnail.FileNotFound(thumbnailPath));
-        }
 
         try
         {
@@ -55,8 +52,6 @@ internal class ThumbnailService : IThumbnailService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to process thumbnail: {ex.Message}");
-            // Non-critical error, continue without processed thumbnail
             return Result.Failure(Errors.Thumbnail.ProcessingFailed(ex.Message));
         }
     }

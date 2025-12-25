@@ -20,24 +20,16 @@ public record YouTubeUrl
     public static Result<YouTubeUrl> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Error.Validation(
-                "YouTubeUrl.Empty",
-                "YouTube URL cannot be empty");
+            return new Error("YouTube URL cannot be empty");
 
         if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
-            return Error.Validation(
-                "YouTubeUrl.InvalidFormat",
-                "Invalid URL format");
+            return new Error("Invalid URL format");
 
         if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
-            return Error.Validation(
-                "YouTubeUrl.InvalidScheme",
-                "URL must use HTTP or HTTPS");
+            return new Error("URL must use HTTP or HTTPS");
 
         if (!IsYouTubeHost(uri))
-            return Error.Validation(
-                "YouTubeUrl.InvalidDomain",
-                "URL must be from youtube.com or youtu.be");
+            return new Error("URL must be from youtube.com or youtu.be");
 
         return new YouTubeUrl(value);
     }

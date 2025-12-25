@@ -18,8 +18,8 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 /// </summary>
 public partial class HomeViewModel(
     DownloadAndSendUseCase downloadAndSendUseCase,
-    CheckDuplicateUseCase checkDuplicateUseCase,
-    GetVideoInfoUseCase getVideoInfoUseCase,
+    FindExistingDownloadUseCase findExistingDownloadUseCase,
+    GetVideoTitleUseCase getVideoTitleUseCase,
     ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase) : ViewModelBase
 {
     [ObservableProperty]
@@ -38,13 +38,10 @@ public partial class HomeViewModel(
     private bool _isProgressVisible = false;
 
     [ObservableProperty]
-    private bool _editTitle = false;
+    private bool _useCustomTitle = false;
 
     [ObservableProperty]
     private string _customTitle = string.Empty;
-
-    [ObservableProperty]
-    private bool _isTitleFetched = false;
 
     [ObservableProperty]
     private string _titleFetchStatus = string.Empty;
@@ -66,50 +63,55 @@ public partial class HomeViewModel(
     private CancellationTokenSource? _cancellationTokenSource;
 
     /// <summary>
-    /// Command to add URL to download queue
-    /// Two-step process when EditTitle is checked:
+    /// Command to add URL to download queue.
+    /// Two-step process when UseCustomTitle is checked:
     /// 1. First click: Fetch title and wait for user to edit
     /// 2. Second click (Proceed): Add to queue with custom title
-    /// Includes duplicate detection: prompts user if video was already downloaded
+    /// Includes duplicate detection: prompts user if video was already downloaded.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteAddToQueue))]
     private async Task AddToQueue()
     {
-        if (!ValidateUrl())
+        if (!validateYouTubeUrlUseCase.IsValid(YoutubeUrl))
         {
             UpdateStatus("Invalid YouTube URL");
             return;
         }
 
-        // If EditTitle is checked and we haven't fetched the title yet
-        if (EditTitle && !IsWaitingForProceed)
+        // If UseCustomTitle is checked and we haven't fetched the title yet
+        if (UseCustomTitle && !IsWaitingForProceed)
         {
             // Step 1: Fetch title and wait for user to edit
-            await FetchVideoTitleAsync();
+            TitleFetchStatus = "Fetching video title...";
 
-            if (IsTitleFetched)
+            var titleResult = await getVideoTitleUseCase.GetVideoTitleAsync(YoutubeUrl);
+            if (!titleResult.IsSuccess)
             {
-                // Change button to "Proceed" state
-                IsWaitingForProceed = true;
-                AddToQueueButtonText = "Proceed";
-                IsProceedButtonState = true;
+                TitleFetchStatus = $"Failed to fetch title: {titleResult.Error.Message}";
+                Console.WriteLine($"Title fetch failed: {titleResult.Error.Message}");
+                return;
             }
+
+            CustomTitle = titleResult.Value;
+            TitleFetchStatus = "Edit the title above if needed";
+
+            // Change button to "Proceed" state
+            IsWaitingForProceed = true;
+            AddToQueueButtonText = "Proceed";
+            IsProceedButtonState = true;
             return;
         }
 
-        // Check for duplicates before adding to queue
-        var duplicateCheckResult = await checkDuplicateUseCase.GetExistingRecordAsync(YoutubeUrl);
+        var duplicateCheckResult = await findExistingDownloadUseCase.FindAsync(YoutubeUrl);
         if (!duplicateCheckResult.IsSuccess)
         {
-            // Error occurred during duplicate check (e.g., invalid URL or extraction failure)
-            var error = duplicateCheckResult.Error;
-            Console.WriteLine($"Duplicate check failed: {error.Code} - {error.Message}");
-            UpdateStatus($"Warning: {error.Message}");
-            // Continue with download despite the error
+            UpdateStatus($"Error: {duplicateCheckResult.Error.Message}");
+            Console.WriteLine($"Duplicate check failed: {duplicateCheckResult.Error.Message}");
+            return;
         }
-        else if (duplicateCheckResult.Value is not null)
+
+        if (duplicateCheckResult.Value is not null)
         {
-            // Duplicate found - show warning
             var existingRecord = duplicateCheckResult.Value;
             var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
                           $"Title: {existingRecord.VideoTitle}\n\n" +
@@ -123,13 +125,13 @@ public partial class HomeViewModel(
         }
         // If duplicateCheckResult.Value is null, no duplicate exists - continue silently
 
-        // Step 2: Proceed with adding to queue (either EditTitle is unchecked or user clicked Proceed)
+        // Step 2: Proceed with adding to queue
         var queueItem = new DownloadQueueItem
         {
             Url = YoutubeUrl,
             Status = DownloadStatus.Pending,
             StatusMessage = "Pending",
-            CustomTitle = EditTitle && IsTitleFetched ? CustomTitle : null
+            CustomTitle = UseCustomTitle ? CustomTitle : null
         };
 
         QueueItems.Add(queueItem);
@@ -138,41 +140,31 @@ public partial class HomeViewModel(
         ResetButtonState();
         UpdateStatus($"Added to queue. {QueueItems.Count(i => i.Status == DownloadStatus.Pending)} items pending.");
 
-        // Start processing queue if not already running
         if (!_isQueueProcessing)
-        {
             _ = ProcessQueueAsync();
-        }
     }
 
     private async Task ProcessQueueAsync()
     {
         _isQueueProcessing = true;
-
         while (QueueItems.Any(i => i.Status == DownloadStatus.Pending))
         {
             var nextItem = QueueItems.First(i => i.Status == DownloadStatus.Pending);
-
-            // Update item status to Downloading
             nextItem.Status = DownloadStatus.Downloading;
             nextItem.StatusMessage = "Starting download...";
 
-            // Create new cancellation token source for this download
             _cancellationTokenSource = new CancellationTokenSource();
             SetProcessingState(true);
 
             try
             {
-                // Use the DownloadAndSendUseCase to orchestrate the entire workflow
                 var progress = new Progress<double>(value => nextItem.Progress = value);
-
                 var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
                     nextItem.Url,
                     nextItem.CustomTitle,
                     progress,
                     _cancellationTokenSource.Token);
 
-                // Handle result using pattern matching
                 if (!downloadResult.IsSuccess)
                 {
                     var error = downloadResult.Error;
@@ -181,11 +173,10 @@ public partial class HomeViewModel(
                     nextItem.ErrorMessage = error.Message;
                     nextItem.Progress = 0;
 
-                    Console.WriteLine($"Download failed: {error.Code} - {error.Message}");
+                    Console.WriteLine($"Download failed: {error.Message}");
                 }
                 else
                 {
-                    // Success!
                     nextItem.DownloadResult = downloadResult.Value;
                     nextItem.Status = DownloadStatus.Completed;
                     nextItem.StatusMessage = "✓ Completed";
@@ -200,40 +191,12 @@ public partial class HomeViewModel(
             }
             finally
             {
-                // Cleanup temp files after processing this item
-                if (nextItem.DownloadResult != null)
+                if (nextItem.DownloadResult is not null)
                 {
-                    // Cleanup media file
-                    try
-                    {
-                        if (File.Exists(nextItem.DownloadResult.TempMediaFilePath))
-                        {
-                            File.Delete(nextItem.DownloadResult.TempMediaFilePath);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to cleanup temp media file: {ex.Message}");
-                    }
-
-                    // Cleanup thumbnail
-                    if (nextItem.DownloadResult.TempThumbnailPath != null)
-                    {
-                        try
-                        {
-                            if (File.Exists(nextItem.DownloadResult.TempThumbnailPath))
-                            {
-                                File.Delete(nextItem.DownloadResult.TempThumbnailPath);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Failed to cleanup temp thumbnail: {ex.Message}");
-                        }
-                    }
+                    File.Delete(nextItem.DownloadResult.TempMediaFilePath);
+                    File.Delete(nextItem.DownloadResult.TempThumbnailPath);
                 }
 
-                // Dispose and clear the cancellation token source
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
 
@@ -254,10 +217,7 @@ public partial class HomeViewModel(
 
     private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource != null;
 
-    private bool CanExecuteAddToQueue() => ValidateUrl();
-
-    private bool ValidateUrl() =>
-        !string.IsNullOrWhiteSpace(YoutubeUrl) && validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
+    private bool CanExecuteAddToQueue() => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 
     private void SetProcessingState(bool isProcessing)
     {
@@ -271,9 +231,8 @@ public partial class HomeViewModel(
 
     private void ClearTitleEdit()
     {
-        EditTitle = false;
+        UseCustomTitle = false;
         CustomTitle = string.Empty;
-        IsTitleFetched = false;
         TitleFetchStatus = string.Empty;
     }
 
@@ -288,41 +247,13 @@ public partial class HomeViewModel(
     {
         AddToQueueCommand.NotifyCanExecuteChanged();
 
-        IsTitleFetched = false;
         CustomTitle = string.Empty;
         TitleFetchStatus = string.Empty;
-
         ResetButtonState();
     }
 
-    partial void OnEditTitleChanged(bool value)
+    partial void OnUseCustomTitleChanged(bool value)
     {
-        if (!value)
-        {
-            // Reset button state when unchecking EditTitle
-            ResetButtonState();
-        }
-    }
-
-    private async Task FetchVideoTitleAsync()
-    {
-        TitleFetchStatus = "Fetching video title...";
-        IsTitleFetched = false;
-
-        var titleResult = await getVideoInfoUseCase.GetVideoTitleAsync(YoutubeUrl);
-
-        if (!titleResult.IsSuccess)
-        {
-            var error = titleResult.Error;
-            TitleFetchStatus = $"Failed to fetch title: {error.Message}";
-            IsTitleFetched = false;
-            Console.WriteLine($"Title fetch failed: {error.Code} - {error.Message}");
-        }
-        else
-        {
-            CustomTitle = titleResult.Value;
-            IsTitleFetched = true;
-            TitleFetchStatus = "Edit the title above if needed";
-        }
+        if (!value) ResetButtonState();
     }
 }

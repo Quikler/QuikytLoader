@@ -52,7 +52,6 @@ public class DownloadAndSendUseCase(
 
         // 5. Map domain entity to DTO and return
         var dto = new DownloadResultDto(entity.YouTubeId.Id, entity.VideoTitle, entity.TempMediaFilePath, entity.TempThumbnailPath);
-
         return Result<DownloadResultDto>.Success(dto);
     }
 }

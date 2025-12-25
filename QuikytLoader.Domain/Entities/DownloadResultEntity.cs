@@ -11,4 +11,4 @@ public record DownloadResultEntity(
     YouTubeId YouTubeId,
     string VideoTitle,
     string TempMediaFilePath,
-    string? TempThumbnailPath);
+    string TempThumbnailPath);
