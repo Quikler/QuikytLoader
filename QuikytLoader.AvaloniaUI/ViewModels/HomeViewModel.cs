@@ -148,9 +148,9 @@ public partial class HomeViewModel(
         _isQueueProcessing = true;
         try
         {
-            while (QueueItems.Any(i => i.Status == DownloadStatus.Pending))
+            DownloadQueueItem? nextItem;
+            while ((nextItem = QueueItems.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
             {
-                var nextItem = QueueItems.First(i => i.Status == DownloadStatus.Pending);
                 nextItem.Status = DownloadStatus.Downloading;
                 nextItem.StatusMessage = "Starting download...";
 
