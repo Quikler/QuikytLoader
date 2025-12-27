@@ -40,7 +40,7 @@ QuikytLoader.Startup (exe)        <- Entry point & DI composition
 
 QuikytLoader.AvaloniaUI (library) <- UI layer (class library)
 ├── References: Application only  <- No Infrastructure reference
-└── App.axaml.cs: Uses static ServiceProvider/Host from Startup
+└── App.axaml.cs: Receives IServiceProvider/IHost via constructor injection
 
 QuikytLoader.Application          <- Use cases and interfaces
 ├── References: Domain only
@@ -145,7 +145,7 @@ services.AddAvaloniaUIServices();       // ViewModels (Transient)
 **AvaloniaUI Layer** (AvaloniaUIServiceExtensions.cs):
 - AppViewModel, HomeViewModel, SettingsViewModel (Transient)
 
-Constructor injection used throughout - never use ServiceProvider directly (except static App.ServiceProvider set by Startup).
+Constructor injection is used throughout. Avoid using the service provider directly outside of the composition root.
 App shutdown handler calls Host.StopAsync() to properly dispose async disposable services.
 
 ### UI Structure
