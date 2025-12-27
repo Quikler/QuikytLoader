@@ -14,7 +14,6 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 /// <summary>
 /// ViewModel for the Home page (YouTube download functionality)
-/// Uses Application layer Use Cases to orchestrate business logic
 /// </summary>
 public partial class HomeViewModel(
     DownloadAndSendUseCase downloadAndSendUseCase,
@@ -147,67 +146,78 @@ public partial class HomeViewModel(
     private async Task ProcessQueueAsync()
     {
         _isQueueProcessing = true;
-        while (QueueItems.Any(i => i.Status == DownloadStatus.Pending))
+        try
         {
-            var nextItem = QueueItems.First(i => i.Status == DownloadStatus.Pending);
-            nextItem.Status = DownloadStatus.Downloading;
-            nextItem.StatusMessage = "Starting download...";
-
-            _cancellationTokenSource = new CancellationTokenSource();
-            SetProcessingState(true);
-
-            try
+            while (QueueItems.Any(i => i.Status == DownloadStatus.Pending))
             {
-                var progress = new Progress<double>(value => nextItem.Progress = value);
-                var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
-                    nextItem.Url,
-                    nextItem.CustomTitle,
-                    progress,
-                    _cancellationTokenSource.Token);
+                var nextItem = QueueItems.First(i => i.Status == DownloadStatus.Pending);
+                nextItem.Status = DownloadStatus.Downloading;
+                nextItem.StatusMessage = "Starting download...";
 
-                if (!downloadResult.IsSuccess)
+                _cancellationTokenSource = new CancellationTokenSource();
+                SetProcessingState(true);
+
+                try
                 {
-                    var error = downloadResult.Error;
-                    nextItem.Status = DownloadStatus.Failed;
-                    nextItem.StatusMessage = "Failed";
-                    nextItem.ErrorMessage = error.Message;
+                    var progress = new Progress<double>(value => nextItem.Progress = value);
+                    var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
+                        nextItem.Url,
+                        nextItem.CustomTitle,
+                        progress,
+                        _cancellationTokenSource.Token);
+
+                    if (!downloadResult.IsSuccess)
+                    {
+                        var error = downloadResult.Error;
+                        nextItem.Status = DownloadStatus.Failed;
+                        nextItem.StatusMessage = "Failed";
+                        nextItem.ErrorMessage = error.Message;
+                        nextItem.Progress = 0;
+
+                        Console.WriteLine($"Download failed: {error.Message}");
+                    }
+                    else
+                    {
+                        nextItem.DownloadResult = downloadResult.Value;
+                        nextItem.Status = DownloadStatus.Completed;
+                        nextItem.StatusMessage = "✓ Completed";
+                        nextItem.Progress = 100;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    nextItem.Status = DownloadStatus.Cancelled;
+                    nextItem.StatusMessage = "Cancelled";
                     nextItem.Progress = 0;
-
-                    Console.WriteLine($"Download failed: {error.Message}");
                 }
-                else
+                finally
                 {
-                    nextItem.DownloadResult = downloadResult.Value;
-                    nextItem.Status = DownloadStatus.Completed;
-                    nextItem.StatusMessage = "✓ Completed";
-                    nextItem.Progress = 100;
+                    // Cleanup temp files - failure is non-critical (OS cleans /tmp anyway)
+                    // and must not kill the queue loop or prevent remaining items from processing
+                    if (nextItem.DownloadResult is not null)
+                    {
+                        try { File.Delete(nextItem.DownloadResult.TempMediaFilePath); } catch { }
+                        try { File.Delete(nextItem.DownloadResult.TempThumbnailPath); } catch { }
+                    }
+
+                    _cancellationTokenSource?.Dispose();
+                    _cancellationTokenSource = null;
+
+                    SetProcessingState(false);
                 }
             }
-            catch (OperationCanceledException)
-            {
-                nextItem.Status = DownloadStatus.Cancelled;
-                nextItem.StatusMessage = "Cancelled";
-                nextItem.Progress = 0;
-            }
-            finally
-            {
-                // Cleanup temp files - failure is non-critical (OS cleans /tmp anyway)
-                // and must not kill the queue loop or prevent remaining items from processing
-                if (nextItem.DownloadResult is not null)
-                {
-                    try { File.Delete(nextItem.DownloadResult.TempMediaFilePath); } catch { }
-                    try { File.Delete(nextItem.DownloadResult.TempThumbnailPath); } catch { }
-                }
 
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = null;
-
-                SetProcessingState(false);
-            }
+            UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
         }
-
-        _isQueueProcessing = false;
-        UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
+        catch (Exception ex)
+        {
+            UpdateStatus($"Queue error: {ex.Message}");
+            Console.WriteLine($"Queue processing failed: {ex}");
+        }
+        finally
+        {
+            _isQueueProcessing = false;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteCancel))]

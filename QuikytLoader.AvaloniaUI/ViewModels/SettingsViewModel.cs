@@ -20,9 +20,13 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    public async Task InitializeAsync() => await LoadSettingsAsync();
-
-    private async Task LoadSettingsAsync()
+    /// <summary>
+    /// Loads settings from disk. Called on every navigation to Settings page
+    /// to ensure UI reflects persisted state (discards any unsaved edits).
+    /// TODO: Consider adding "Discard unsaved changes?" confirmation dialog
+    /// to prevent user confusion where they might mistake unsaved edits for persisted settings.
+    /// </summary>
+    public async Task InitializeAsync()
     {
         var settings = await manageSettingsUseCase.LoadSettingsAsync();
         BotToken = settings.BotToken;
@@ -32,13 +36,13 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     [RelayCommand]
     private async Task SaveSettingsAsync()
     {
-        var settings = new AppSettingsDto
-        {
-            BotToken = BotToken,
-            ChatId = ChatId
-        };
+        await manageSettingsUseCase.SaveSettingsAsync(
+            new AppSettingsDto
+            {
+                BotToken = BotToken,
+                ChatId = ChatId
+            });
 
-        await manageSettingsUseCase.SaveSettingsAsync(settings);
         StatusMessage = "Settings saved successfully!";
     }
 }

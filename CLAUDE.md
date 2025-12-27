@@ -12,14 +12,14 @@ QuikytLoader is an Avalonia UI desktop application for downloading YouTube video
 # Build the project
 dotnet build
 
-# Run the application
-dotnet run
+# Run the application (from Startup project)
+dotnet run --project QuikytLoader.Startup
 
 # Build for release (self-contained)
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
+dotnet publish QuikytLoader.Startup -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
 
 # Output location after publish:
-# bin/Release/net9.0/linux-x64/publish/QuikytLoader
+# QuikytLoader.Startup/bin/Release/net9.0/linux-x64/publish/QuikytLoader.Startup
 ```
 
 ## External Dependencies
@@ -28,6 +28,33 @@ dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=tru
 - Used by YouTubeDownloadService to download and convert YouTube videos to MP3
 
 ## Architecture Overview
+
+### Clean Architecture with Separate Composition Root
+
+The solution follows strict Clean Architecture with a dedicated Startup project as the composition root:
+
+```
+QuikytLoader.Startup (exe)        <- Entry point & DI composition
+├── References: Application, Infrastructure, AvaloniaUI
+└── Program.cs: CreateHostBuilder with all DI registrations
+
+QuikytLoader.AvaloniaUI (library) <- UI layer (class library)
+├── References: Application only  <- No Infrastructure reference
+└── App.axaml.cs: Uses static ServiceProvider/Host from Startup
+
+QuikytLoader.Application          <- Use cases and interfaces
+├── References: Domain only
+└── DependencyInjection/ApplicationServiceExtensions.cs
+
+QuikytLoader.Infrastructure       <- External service implementations
+├── References: Application, Domain
+└── DependencyInjection/InfrastructureServiceExtensions.cs
+
+QuikytLoader.Domain               <- Core entities and value objects
+└── No external dependencies
+```
+
+This achieves architectural purity: UI layer only depends on Application layer, with Infrastructure reference isolated to the Startup composition root.
 
 ### MVVM Pattern with Navigation
 
@@ -96,8 +123,18 @@ The app uses a layered navigation system:
 
 ### Dependency Injection
 
-All services and ViewModels registered in App.axaml.cs:
-- AppViewModel, HomeViewModel, SettingsViewModel, MainWindowViewModel (Transient)
+DI registration is split across layer-specific extension methods, composed in Startup/Program.cs:
+
+```csharp
+services.AddApplicationServices();      // Use cases (Transient)
+services.AddInfrastructureServices();   // External services (Singleton)
+services.AddAvaloniaUIServices();       // ViewModels (Transient)
+```
+
+**Application Layer** (ApplicationServiceExtensions.cs):
+- DownloadAndSendUseCase, FindExistingDownloadUseCase, GetVideoTitleUseCase, etc.
+
+**Infrastructure Layer** (InfrastructureServiceExtensions.cs):
 - ISettingsManager -> SettingsManager (Singleton)
 - IYouTubeDownloadService -> YouTubeDownloadService (Singleton)
 - ITelegramBotService -> TelegramBotService (Singleton)
@@ -105,8 +142,11 @@ All services and ViewModels registered in App.axaml.cs:
 - IDbConnectionService -> DbConnectionService (Singleton)
 - IDownloadHistoryService -> DownloadHistoryService (Singleton)
 
-Constructor injection used throughout - never use ServiceProvider directly.
-App shutdown handler calls host.StopAsync() to properly dispose async disposable services.
+**AvaloniaUI Layer** (AvaloniaUIServiceExtensions.cs):
+- AppViewModel, HomeViewModel, SettingsViewModel (Transient)
+
+Constructor injection used throughout - never use ServiceProvider directly (except static App.ServiceProvider set by Startup).
+App shutdown handler calls Host.StopAsync() to properly dispose async disposable services.
 
 ### UI Structure
 
