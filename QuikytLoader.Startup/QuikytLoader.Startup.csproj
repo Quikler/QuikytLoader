@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\QuikytLoader.Application\QuikytLoader.Application.csproj" />
+    <ProjectReference Include="..\QuikytLoader.Infrastructure\QuikytLoader.Infrastructure.csproj" />
+    <ProjectReference Include="..\QuikytLoader.AvaloniaUI\QuikytLoader.AvaloniaUI.csproj" />
+  </ItemGroup>
+</Project>

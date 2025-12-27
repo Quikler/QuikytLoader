@@ -14,7 +14,6 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 /// <summary>
 /// ViewModel for the Home page (YouTube download functionality)
-/// Uses Application layer Use Cases to orchestrate business logic
 /// </summary>
 public partial class HomeViewModel(
     DownloadAndSendUseCase downloadAndSendUseCase,
@@ -147,9 +146,10 @@ public partial class HomeViewModel(
     private async Task ProcessQueueAsync()
     {
         _isQueueProcessing = true;
-        while (QueueItems.Any(i => i.Status == DownloadStatus.Pending))
+
+        DownloadQueueItem? nextItem;
+        while ((nextItem = QueueItems.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
         {
-            var nextItem = QueueItems.First(i => i.Status == DownloadStatus.Pending);
             nextItem.Status = DownloadStatus.Downloading;
             nextItem.StatusMessage = "Starting download...";
 
@@ -158,22 +158,21 @@ public partial class HomeViewModel(
 
             try
             {
-                var progress = new Progress<double>(value => nextItem.Progress = value);
                 var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
                     nextItem.Url,
                     nextItem.CustomTitle,
-                    progress,
+                    new Progress<double>(value => nextItem.Progress = value),
                     _cancellationTokenSource.Token);
 
                 if (!downloadResult.IsSuccess)
                 {
-                    var error = downloadResult.Error;
+                    var errorMessage = downloadResult.Error.Message;
                     nextItem.Status = DownloadStatus.Failed;
                     nextItem.StatusMessage = "Failed";
-                    nextItem.ErrorMessage = error.Message;
+                    nextItem.ErrorMessage = errorMessage;
                     nextItem.Progress = 0;
 
-                    Console.WriteLine($"Download failed: {error.Message}");
+                    Console.WriteLine($"Download failed: {errorMessage}");
                 }
                 else
                 {
@@ -206,8 +205,8 @@ public partial class HomeViewModel(
             }
         }
 
-        _isQueueProcessing = false;
         UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
+        _isQueueProcessing = false;
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
@@ -217,7 +216,7 @@ public partial class HomeViewModel(
         UpdateStatus("Cancelling download...");
     }
 
-    private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource != null;
+    private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource is not null;
 
     private bool CanExecuteAddToQueue() => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -38,8 +39,9 @@ public partial class AppViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void NavigateToSettings()
+    private async Task NavigateToSettingsAsync()
     {
+        await SettingsViewModel.InitializeAsync();
         CurrentView = SettingsViewModel;
         IsHomeSelected = false;
         IsSettingsSelected = true;
