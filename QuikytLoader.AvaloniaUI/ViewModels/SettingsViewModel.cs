@@ -28,9 +28,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
         var settings = await manageSettingsUseCase.LoadSettingsAsync();
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
-
-        _savedBotToken = BotToken;
-        _savedChatId = ChatId;
+        MarkAsSaved();
     }
 
     [RelayCommand]
@@ -43,9 +41,13 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
                 ChatId = ChatId
             });
 
+        MarkAsSaved();
+        StatusMessage = "Settings saved successfully!";
+    }
+
+    private void MarkAsSaved()
+    {
         _savedBotToken = BotToken;
         _savedChatId = ChatId;
-
-        StatusMessage = "Settings saved successfully!";
     }
 }

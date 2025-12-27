@@ -10,13 +10,12 @@ public partial class AppViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHomeSelected))]
+    [NotifyPropertyChangedFor(nameof(IsSettingsSelected))]
     private ViewModelBase _currentView;
 
-    [ObservableProperty]
-    private bool _isHomeSelected = true;
-
-    [ObservableProperty]
-    private bool _isSettingsSelected = false;
+    public bool IsHomeSelected => CurrentView == HomeViewModel;
+    public bool IsSettingsSelected => CurrentView == SettingsViewModel;
 
     public HomeViewModel HomeViewModel { get; }
     public SettingsViewModel SettingsViewModel { get; }
@@ -46,8 +45,6 @@ public partial class AppViewModel : ViewModelBase
         }
 
         CurrentView = HomeViewModel;
-        IsHomeSelected = true;
-        IsSettingsSelected = false;
     }
 
     [RelayCommand]
@@ -55,7 +52,5 @@ public partial class AppViewModel : ViewModelBase
     {
         await SettingsViewModel.InitializeAsync();
         CurrentView = SettingsViewModel;
-        IsHomeSelected = false;
-        IsSettingsSelected = true;
     }
 }
