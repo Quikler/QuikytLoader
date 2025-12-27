@@ -191,10 +191,12 @@ public partial class HomeViewModel(
             }
             finally
             {
+                // Cleanup temp files - failure is non-critical (OS cleans /tmp anyway)
+                // and must not kill the queue loop or prevent remaining items from processing
                 if (nextItem.DownloadResult is not null)
                 {
-                    File.Delete(nextItem.DownloadResult.TempMediaFilePath);
-                    File.Delete(nextItem.DownloadResult.TempThumbnailPath);
+                    try { File.Delete(nextItem.DownloadResult.TempMediaFilePath); } catch { }
+                    try { File.Delete(nextItem.DownloadResult.TempThumbnailPath); } catch { }
                 }
 
                 _cancellationTokenSource?.Dispose();
