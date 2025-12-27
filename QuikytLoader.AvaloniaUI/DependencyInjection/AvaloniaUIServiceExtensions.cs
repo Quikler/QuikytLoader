@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.ViewModels;
 
 namespace QuikytLoader.AvaloniaUI.DependencyInjection;
@@ -13,7 +14,8 @@ public static class AvaloniaUIServiceExtensions
     /// </summary>
     public static IServiceCollection AddAvaloniaUIServices(this IServiceCollection services)
     {
-        // Register ViewModels
+        services.AddSingleton<IDialogService, DialogService>();
+
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SettingsViewModel>();
