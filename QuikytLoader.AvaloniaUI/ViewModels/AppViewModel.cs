@@ -30,6 +30,13 @@ public partial class AppViewModel : ViewModelBase
         _currentView = HomeViewModel;
     }
 
+    /// <summary>
+    /// Switches the active view to the home view.
+    /// </summary>
+    /// <remarks>
+    /// Sets <see cref="HomeViewModel"/> as <see cref="CurrentView"/> and updates selection flags:
+    /// sets <see cref="IsHomeSelected"/> to true and <see cref="IsSettingsSelected"/> to false.
+    /// </remarks>
     [RelayCommand]
     private void NavigateToHome()
     {
@@ -38,6 +45,12 @@ public partial class AppViewModel : ViewModelBase
         IsSettingsSelected = false;
     }
 
+    /// <summary>
+    /// Navigates the application to the Settings view, ensuring the Settings view model is initialized first.
+    /// </summary>
+    /// <remarks>
+    /// Initializes <c>SettingsViewModel</c>, sets <c>CurrentView</c> to it, and updates the selection flags (<c>IsHomeSelected</c> and <c>IsSettingsSelected</c>).
+    /// </remarks>
     [RelayCommand]
     private async Task NavigateToSettingsAsync()
     {

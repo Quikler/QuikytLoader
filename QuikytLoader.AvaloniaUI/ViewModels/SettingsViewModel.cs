@@ -25,7 +25,10 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     /// to ensure UI reflects persisted state (discards any unsaved edits).
     /// TODO: Consider adding "Discard unsaved changes?" confirmation dialog
     /// to prevent user confusion where they might mistake unsaved edits for persisted settings.
+    /// <summary>
+    /// Loads persisted bot settings and updates the view model's BotToken and ChatId.
     /// </summary>
+    /// <returns>A task that completes after settings have been loaded and the properties have been updated.</returns>
     public async Task InitializeAsync()
     {
         var settings = await manageSettingsUseCase.LoadSettingsAsync();
@@ -33,6 +36,9 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
         ChatId = settings.ChatId;
     }
 
+    /// <summary>
+    /// Persists the current bot configuration (BotToken and ChatId) to storage and updates the StatusMessage on success.
+    /// </summary>
     [RelayCommand]
     private async Task SaveSettingsAsync()
     {

@@ -10,7 +10,11 @@ public static class AvaloniaUIServiceExtensions
 {
     /// <summary>
     /// Registers all AvaloniaUI layer services (ViewModels)
+    /// <summary>
+    /// Registers Avalonia UI view-model services into the given service collection.
     /// </summary>
+    /// <param name="services">The service collection to add the view-model registrations to.</param>
+    /// <returns>The same <see cref="IServiceCollection"/> instance after registering the view-models.</returns>
     public static IServiceCollection AddAvaloniaUIServices(this IServiceCollection services)
     {
         // Register ViewModels

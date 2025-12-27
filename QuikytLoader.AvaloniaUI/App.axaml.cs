@@ -10,8 +10,18 @@ namespace QuikytLoader.AvaloniaUI;
 
 public partial class App(IServiceProvider serviceProvider, IHost host) : Avalonia.Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    /// <summary>
+/// Loads the application's XAML resources and visual tree defined for this Application instance.
+/// </summary>
+public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
+    /// <summary>
+    /// Initializes the desktop application's main window and registers shutdown handling after Avalonia framework initialization.
+    /// </summary>
+    /// <remarks>
+    /// If the application lifetime is a classic desktop lifetime, this method sets the desktop MainWindow with its DataContext
+    /// resolved from the provided service provider and subscribes to the desktop ShutdownRequested event to stop and dispose the provided host.
+    /// </remarks>
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

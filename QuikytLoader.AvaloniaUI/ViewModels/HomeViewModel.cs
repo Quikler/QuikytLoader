@@ -143,6 +143,15 @@ public partial class HomeViewModel(
             _ = ProcessQueueAsync();
     }
 
+    /// <summary>
+    /// Processes the download queue by sequentially downloading each pending item and updating item and overall queue state.
+    /// </summary>
+    /// <remarks>
+    /// For each pending queue item this method sets the item to downloading, reports progress, invokes the download/send use case,
+    /// and updates the item's status to Completed, Failed, or Cancelled. Temporary files produced by a finished download are deleted
+    /// in a best-effort manner. The method updates the view-model's processing flags and the aggregate queue status, and it handles
+    /// unexpected errors by updating the status message without throwing exceptions to callers.
+    /// </remarks>
     private async Task ProcessQueueAsync()
     {
         _isQueueProcessing = true;
@@ -220,6 +229,12 @@ public partial class HomeViewModel(
         }
     }
 
+    /// <summary>
+    /// Requests cancellation of the currently active operation and updates the status message.
+    /// </summary>
+    /// <remarks>
+    /// If no active cancellation token exists, the method has no effect.
+    /// </remarks>
     [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
     private void Cancel()
     {
