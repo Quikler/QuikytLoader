@@ -1,5 +1,6 @@
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Domain.Common;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -22,57 +23,85 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
     /// Sends an audio file to the configured Telegram chat with optional thumbnail
     /// Automatically initializes the bot on first use (lazy initialization)
     /// </summary>
-    public async Task SendAudioAsync(string audioFilePath, string? thumbnailPath = null)
+    public async Task<Result> SendAudioAsync(string audioFilePath, string? thumbnailPath = null)
     {
         // Ensure bot is initialized (lazy initialization)
-        await EnsureInitializedAsync();
+        var initResult = await EnsureInitializedAsync();
+        if (!initResult.IsSuccess)
+            return initResult;
 
         if (string.IsNullOrWhiteSpace(_currentChatId))
         {
-            throw new InvalidOperationException("Chat ID is not configured. Please set it in Settings.");
+            return Errors.Telegram.ChatIdNotConfigured();
         }
 
         if (!File.Exists(audioFilePath))
         {
-            throw new FileNotFoundException($"Audio file not found: {audioFilePath}");
+            return Errors.Telegram.AudioFileNotFound(audioFilePath);
         }
 
-        var chatId = new ChatId(long.Parse(_currentChatId));
+        // Validate chat ID format
+        if (!long.TryParse(_currentChatId, out var chatIdValue))
+        {
+            return Errors.Telegram.InvalidChatIdFormat(_currentChatId);
+        }
 
-        await using var audioStream = File.OpenRead(audioFilePath);
-        var fileName = Path.GetFileName(audioFilePath);
-        var audioInputFile = InputFile.FromStream(audioStream, fileName);
-
-        // Prepare thumbnail if available
-        InputFile? thumbnailInputFile = null;
-        FileStream? thumbnailStream = null;
+        var chatId = new ChatId(chatIdValue);
 
         try
         {
-            if (thumbnailPath != null && File.Exists(thumbnailPath))
+            await using var audioStream = File.OpenRead(audioFilePath);
+            var fileName = Path.GetFileName(audioFilePath);
+            var audioInputFile = InputFile.FromStream(audioStream, fileName);
+
+            // Prepare thumbnail if available
+            InputFile? thumbnailInputFile = null;
+            FileStream? thumbnailStream = null;
+
+            try
             {
-                thumbnailStream = File.OpenRead(thumbnailPath);
-                var thumbnailFileName = Path.GetFileName(thumbnailPath);
-                thumbnailInputFile = InputFile.FromStream(thumbnailStream, thumbnailFileName);
+                if (thumbnailPath != null && File.Exists(thumbnailPath))
+                {
+                    thumbnailStream = File.OpenRead(thumbnailPath);
+                    var thumbnailFileName = Path.GetFileName(thumbnailPath);
+                    thumbnailInputFile = InputFile.FromStream(thumbnailStream, thumbnailFileName);
+                }
+
+                // Wrap Telegram API call to catch exceptions
+                await _botClient!.SendAudio(
+                    chatId: chatId,
+                    audio: audioInputFile,
+                    thumbnail: thumbnailInputFile,
+                    cancellationToken: _cts?.Token ?? CancellationToken.None
+                );
+
+                Console.WriteLine($"Audio file sent to Telegram: {fileName}" +
+                                (thumbnailInputFile != null ? " (with thumbnail)" : ""));
+
+                return Result.Success();
             }
-
-            await _botClient!.SendAudio(
-                chatId: chatId,
-                audio: audioInputFile,
-                thumbnail: thumbnailInputFile,
-                cancellationToken: _cts?.Token ?? CancellationToken.None
-            );
-
-            Console.WriteLine($"Audio file sent to Telegram: {fileName}" +
-                            (thumbnailInputFile != null ? " (with thumbnail)" : ""));
+            catch (OperationCanceledException)
+            {
+                throw; // Cancellation is exceptional - propagate
+            }
+            catch (Exception ex) when (ex.GetType().Namespace?.StartsWith("Telegram.Bot") == true)
+            {
+                // Telegram API error - operational failure
+                return Errors.Telegram.SendFailed(ex.Message);
+            }
+            finally
+            {
+                // Clean up thumbnail stream
+                if (thumbnailStream != null)
+                {
+                    await thumbnailStream.DisposeAsync();
+                }
+            }
         }
-        finally
+        catch (IOException ex)
         {
-            // Clean up thumbnail stream
-            if (thumbnailStream != null)
-            {
-                await thumbnailStream.DisposeAsync();
-            }
+            // File system error reading audio/thumbnail
+            return Errors.Telegram.FileReadError(audioFilePath, thumbnailPath, ex.Message);
         }
     }
 
@@ -81,7 +110,7 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
     /// Reloads settings on each call to pick up configuration changes
     /// Thread-safe with semaphore to prevent race conditions
     /// </summary>
-    private async Task EnsureInitializedAsync()
+    private async Task<Result> EnsureInitializedAsync()
     {
         await _initLock.WaitAsync();
         try
@@ -89,9 +118,10 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
             // Always reload settings to pick up changes made in Settings page
             var settings = await settingsRepository.LoadAsync();
 
+            // Validate bot token is configured
             if (string.IsNullOrWhiteSpace(settings.BotToken))
             {
-                throw new InvalidOperationException("Bot token is not configured. Please set it in Settings.");
+                return Errors.Telegram.BotTokenNotConfigured();
             }
 
             // If bot token changed, need to recreate client
@@ -101,7 +131,7 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
             {
                 // Already initialized with same token, just update settings
                 _currentChatId = settings.ChatId;
-                return;
+                return Result.Success();
             }
 
             // Dispose existing resources if reinitializing
@@ -115,11 +145,24 @@ internal class TelegramBotService(ISettingsRepository settingsRepository) : ITel
             _botClient = new TelegramBotClient(_currentBotToken);
             _cts = new CancellationTokenSource();
 
-            // Verify bot connection
-            var me = await _botClient.GetMe(_cts.Token);
-            Console.WriteLine($"Telegram bot initialized: @{me.Username}");
+            try
+            {
+                // Verify bot connection
+                var me = await _botClient.GetMe(_cts.Token);
+                Console.WriteLine($"Telegram bot initialized: @{me.Username}");
 
-            _isInitialized = true;
+                _isInitialized = true;
+                return Result.Success();
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // Cancellation is exceptional
+            }
+            catch (Exception ex) when (ex.GetType().Namespace?.StartsWith("Telegram.Bot") == true)
+            {
+                // Telegram API error during initialization
+                return Errors.Telegram.InitializationFailed(ex.Message);
+            }
         }
         finally
         {

@@ -8,7 +8,6 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 /// <summary>
 /// ViewModel for the Settings page (Telegram bot configuration)
-/// Uses Application layer Use Cases to manage settings
 /// </summary>
 public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCase) : ViewModelBase
 {
@@ -21,17 +20,8 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    /// <summary>
-    /// Loads settings from storage on initialization
-    /// </summary>
-    public async Task InitializeAsync()
-    {
-        await LoadSettingsAsync();
-    }
+    public async Task InitializeAsync() => await LoadSettingsAsync();
 
-    /// <summary>
-    /// Loads settings from storage asynchronously
-    /// </summary>
     private async Task LoadSettingsAsync()
     {
         var settings = await manageSettingsUseCase.LoadSettingsAsync();
@@ -39,9 +29,6 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
         ChatId = settings.ChatId;
     }
 
-    /// <summary>
-    /// Saves settings to storage asynchronously
-    /// </summary>
     [RelayCommand]
     private async Task SaveSettingsAsync()
     {

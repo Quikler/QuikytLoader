@@ -133,12 +133,12 @@ MainWindow contains:
 - Temp files (media + thumbnail) automatically cleaned up after each queue item completes
 
 ### Custom Title Editing Workflow
-- Two-step process when EditTitle checkbox is checked:
-  1. First click "Add to Queue": fetches video title via GetVideoTitleAsync, populates CustomTitle field
+- Two-step process when UseCustomTitle checkbox is checked:
+  1. First click "Add to Queue": fetches video title via GetVideoTitleUseCase, populates CustomTitle field
   2. User edits title, clicks "Proceed": adds to queue with custom title
 - Button text dynamically changes: "Add to Queue" -> "Proceed"
 - IsProceedButtonState flag tracks button state for UI styling
-- State resets when: URL changes, EditTitle unchecked, or item added to queue
+- State resets when: URL changes, UseCustomTitle unchecked, or item added to queue
 
 ### File Handling and Cleanup
 - YouTubeDownloadService uses sanitized video titles as filenames via `%(title)s` template

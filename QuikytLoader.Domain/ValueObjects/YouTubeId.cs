@@ -1,3 +1,5 @@
+using QuikytLoader.Domain.Common;
+
 namespace QuikytLoader.Domain.ValueObjects;
 
 /// <summary>
@@ -7,19 +9,29 @@ public record YouTubeId
 {
     private const int ValidLength = 11;
 
-    public string Value { get; }
+    public string Id { get; }
 
-    public YouTubeId(string value)
+    private YouTubeId(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("YouTube ID cannot be empty", nameof(value));
-
-        if (value.Length != ValidLength)
-            throw new ArgumentException($"YouTube ID must be exactly {ValidLength} characters", nameof(value));
-
-        Value = value;
+        Id = value;
     }
 
-    public static implicit operator string(YouTubeId id) => id.Value;
-    public override string ToString() => Value;
+    /// <summary>
+    /// Creates a YouTubeId instance with validation.
+    /// </summary>
+    /// <param name="value">The YouTube ID string to validate</param>
+    /// <returns>Result containing the YouTubeId or validation error</returns>
+    public static Result<YouTubeId> Create(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return new Error("YouTube ID cannot be empty");
+
+        if (value.Length != ValidLength)
+            return new Error($"YouTube ID must be exactly {ValidLength} characters");
+
+        return new YouTubeId(value);
+    }
+
+    public static implicit operator string(YouTubeId id) => id.Id;
+    public override string ToString() => Id;
 }

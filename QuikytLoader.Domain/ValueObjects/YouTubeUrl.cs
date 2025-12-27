@@ -1,3 +1,5 @@
+using QuikytLoader.Domain.Common;
+
 namespace QuikytLoader.Domain.ValueObjects;
 
 /// <summary>
@@ -7,31 +9,34 @@ public record YouTubeUrl
 {
     public string Value { get; }
 
-    public YouTubeUrl(string value)
+    private YouTubeUrl(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("YouTube URL cannot be empty", nameof(value));
-
-        if (!IsValidYouTubeUrl(value))
-            throw new ArgumentException("Invalid YouTube URL format", nameof(value));
-
         Value = value;
     }
 
-    private static bool IsValidYouTubeUrl(string url)
+    /// <summary>
+    /// Creates a validated YouTubeUrl instance.
+    /// </summary>
+    public static Result<YouTubeUrl> Create(string value)
     {
-        // Validate URL format and ensure it's a legitimate YouTube domain
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-            return false;
+        if (string.IsNullOrWhiteSpace(value))
+            return new Error("YouTube URL cannot be empty");
 
-        // Validate scheme (must be http or https)
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+            return new Error("Invalid URL format");
+
         if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
-            return false;
+            return new Error("URL must use HTTP or HTTPS");
 
-        // Validate host (must be youtube.com subdomain or youtu.be)
-        return uri.Host.EndsWith("youtube.com", StringComparison.OrdinalIgnoreCase) ||
-               uri.Host.Equals("youtu.be", StringComparison.OrdinalIgnoreCase);
+        if (!IsYouTubeHost(uri))
+            return new Error("URL must be from youtube.com or youtu.be");
+
+        return new YouTubeUrl(value);
     }
+
+    private static bool IsYouTubeHost(Uri uri) =>
+        uri.Host.EndsWith("youtube.com", StringComparison.OrdinalIgnoreCase) ||
+        uri.Host.Equals("youtu.be", StringComparison.OrdinalIgnoreCase);
 
     public static implicit operator string(YouTubeUrl url) => url.Value;
     public override string ToString() => Value;
