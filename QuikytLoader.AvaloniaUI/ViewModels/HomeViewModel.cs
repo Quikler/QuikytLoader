@@ -146,78 +146,67 @@ public partial class HomeViewModel(
     private async Task ProcessQueueAsync()
     {
         _isQueueProcessing = true;
-        try
+
+        DownloadQueueItem? nextItem;
+        while ((nextItem = QueueItems.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
         {
-            DownloadQueueItem? nextItem;
-            while ((nextItem = QueueItems.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
+            nextItem.Status = DownloadStatus.Downloading;
+            nextItem.StatusMessage = "Starting download...";
+
+            _cancellationTokenSource = new CancellationTokenSource();
+            SetProcessingState(true);
+
+            try
             {
-                nextItem.Status = DownloadStatus.Downloading;
-                nextItem.StatusMessage = "Starting download...";
+                var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
+                    nextItem.Url,
+                    nextItem.CustomTitle,
+                    new Progress<double>(value => nextItem.Progress = value),
+                    _cancellationTokenSource.Token);
 
-                _cancellationTokenSource = new CancellationTokenSource();
-                SetProcessingState(true);
-
-                try
+                if (!downloadResult.IsSuccess)
                 {
-                    var progress = new Progress<double>(value => nextItem.Progress = value);
-                    var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
-                        nextItem.Url,
-                        nextItem.CustomTitle,
-                        progress,
-                        _cancellationTokenSource.Token);
-
-                    if (!downloadResult.IsSuccess)
-                    {
-                        var error = downloadResult.Error;
-                        nextItem.Status = DownloadStatus.Failed;
-                        nextItem.StatusMessage = "Failed";
-                        nextItem.ErrorMessage = error.Message;
-                        nextItem.Progress = 0;
-
-                        Console.WriteLine($"Download failed: {error.Message}");
-                    }
-                    else
-                    {
-                        nextItem.DownloadResult = downloadResult.Value;
-                        nextItem.Status = DownloadStatus.Completed;
-                        nextItem.StatusMessage = "✓ Completed";
-                        nextItem.Progress = 100;
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    nextItem.Status = DownloadStatus.Cancelled;
-                    nextItem.StatusMessage = "Cancelled";
+                    var errorMessage = downloadResult.Error.Message;
+                    nextItem.Status = DownloadStatus.Failed;
+                    nextItem.StatusMessage = "Failed";
+                    nextItem.ErrorMessage = errorMessage;
                     nextItem.Progress = 0;
+
+                    Console.WriteLine($"Download failed: {errorMessage}");
                 }
-                finally
+                else
                 {
-                    // Cleanup temp files - failure is non-critical (OS cleans /tmp anyway)
-                    // and must not kill the queue loop or prevent remaining items from processing
-                    if (nextItem.DownloadResult is not null)
-                    {
-                        try { File.Delete(nextItem.DownloadResult.TempMediaFilePath); } catch { }
-                        try { File.Delete(nextItem.DownloadResult.TempThumbnailPath); } catch { }
-                    }
-
-                    _cancellationTokenSource?.Dispose();
-                    _cancellationTokenSource = null;
-
-                    SetProcessingState(false);
+                    nextItem.DownloadResult = downloadResult.Value;
+                    nextItem.Status = DownloadStatus.Completed;
+                    nextItem.StatusMessage = "✓ Completed";
+                    nextItem.Progress = 100;
                 }
             }
+            catch (OperationCanceledException)
+            {
+                nextItem.Status = DownloadStatus.Cancelled;
+                nextItem.StatusMessage = "Cancelled";
+                nextItem.Progress = 0;
+            }
+            finally
+            {
+                // Cleanup temp files - failure is non-critical (OS cleans /tmp anyway)
+                // and must not kill the queue loop or prevent remaining items from processing
+                if (nextItem.DownloadResult is not null)
+                {
+                    try { File.Delete(nextItem.DownloadResult.TempMediaFilePath); } catch { }
+                    try { File.Delete(nextItem.DownloadResult.TempThumbnailPath); } catch { }
+                }
 
-            UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+
+                SetProcessingState(false);
+            }
         }
-        catch (Exception ex)
-        {
-            UpdateStatus($"Queue error: {ex.Message}");
-            Console.WriteLine($"Queue processing failed: {ex}");
-        }
-        finally
-        {
-            _isQueueProcessing = false;
-        }
+
+        UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
+        _isQueueProcessing = false;
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
@@ -227,7 +216,7 @@ public partial class HomeViewModel(
         UpdateStatus("Cancelling download...");
     }
 
-    private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource != null;
+    private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource is not null;
 
     private bool CanExecuteAddToQueue() => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 
