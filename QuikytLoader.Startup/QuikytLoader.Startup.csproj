@@ -3,8 +3,57 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <AssemblyName>QuikytLoader</AssemblyName>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <!--===========================================-->
+  <!--  GENERIC PUBLISH SETTINGS (AOT + Trimmed) -->
+  <!--===========================================-->
+  <PropertyGroup>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <!-- Include necessary .so files into bundle -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- No reflection used - aggressive optimizations -->
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EventSourceSupport>false</EventSourceSupport>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <TrimUnusedDependencies>true</TrimUnusedDependencies>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <!-- Exclude debug files in Release -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AllowedReferenceRelatedFileExtensions>-.pdb</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+  <!--===========================================-->
+  <!--  NATIVE AOT (~60 MB, faster startup)      -->
+  <!--  Uncomment this block, comment Trimmed    -->
+  <!--===========================================-->
+  <!--<PropertyGroup>
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+  </PropertyGroup>-->
+
+  <!--===========================================-->
+  <!--  TRIMMED ONLY (~40 MB, JIT at runtime)    -->
+  <!--  Comment this block to use AOT            -->
+  <!--===========================================-->
+  <PropertyGroup>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
