@@ -6,31 +6,31 @@ using System.Threading.Tasks;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-/// <summary>
-/// ViewModel for the Settings page (Telegram bot configuration)
-/// </summary>
 public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCase) : ViewModelBase
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
     private string _botToken = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
     private string _chatId = string.Empty;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    /// <summary>
-    /// Loads settings from disk. Called on every navigation to Settings page
-    /// to ensure UI reflects persisted state (discards any unsaved edits).
-    /// TODO: Consider adding "Discard unsaved changes?" confirmation dialog
-    /// to prevent user confusion where they might mistake unsaved edits for persisted settings.
-    /// </summary>
+    private string _savedBotToken = string.Empty;
+    private string _savedChatId = string.Empty;
+
+    public bool HasUnsavedChanges =>
+        BotToken != _savedBotToken || ChatId != _savedChatId;
+
     public async Task InitializeAsync()
     {
         var settings = await manageSettingsUseCase.LoadSettingsAsync();
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
+        MarkAsSaved();
     }
 
     [RelayCommand]
@@ -43,6 +43,14 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
                 ChatId = ChatId
             });
 
+        MarkAsSaved();
         StatusMessage = "Settings saved successfully!";
+    }
+
+    private void MarkAsSaved()
+    {
+        _savedBotToken = BotToken;
+        _savedChatId = ChatId;
+        OnPropertyChanged(nameof(HasUnsavedChanges));
     }
 }

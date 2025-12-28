@@ -1,41 +1,50 @@
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuikytLoader.AvaloniaUI.Services;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-/// <summary>
-/// Root ViewModel for the application
-/// Handles navigation between Home and Settings pages
-/// </summary>
 public partial class AppViewModel : ViewModelBase
 {
+    private readonly IDialogService _dialogService;
+
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHomeSelected))]
+    [NotifyPropertyChangedFor(nameof(IsSettingsSelected))]
     private ViewModelBase _currentView;
 
-    [ObservableProperty]
-    private bool _isHomeSelected = true;
-
-    [ObservableProperty]
-    private bool _isSettingsSelected = false;
+    public bool IsHomeSelected => CurrentView == HomeViewModel;
+    public bool IsSettingsSelected => CurrentView == SettingsViewModel;
 
     public HomeViewModel HomeViewModel { get; }
     public SettingsViewModel SettingsViewModel { get; }
 
-    public AppViewModel(HomeViewModel homeViewModel, SettingsViewModel settingsViewModel)
+    public AppViewModel(
+        HomeViewModel homeViewModel,
+        SettingsViewModel settingsViewModel,
+        IDialogService dialogService)
     {
         HomeViewModel = homeViewModel;
         SettingsViewModel = settingsViewModel;
+        _dialogService = dialogService;
 
         _currentView = HomeViewModel;
     }
 
     [RelayCommand]
-    private void NavigateToHome()
+    private async Task NavigateToHomeAsync()
     {
+        if (CurrentView == SettingsViewModel && SettingsViewModel.HasUnsavedChanges)
+        {
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Unsaved Changes",
+                "You have unsaved changes that will be lost. Continue?");
+
+            if (!confirmed) return;
+        }
+
         CurrentView = HomeViewModel;
-        IsHomeSelected = true;
-        IsSettingsSelected = false;
     }
 
     [RelayCommand]
@@ -43,7 +52,5 @@ public partial class AppViewModel : ViewModelBase
     {
         await SettingsViewModel.InitializeAsync();
         CurrentView = SettingsViewModel;
-        IsHomeSelected = false;
-        IsSettingsSelected = true;
     }
 }

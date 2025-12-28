@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.UseCases;
+using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.Models;
 using QuikytLoader.Domain.Enums;
 using System;
@@ -19,7 +20,8 @@ public partial class HomeViewModel(
     DownloadAndSendUseCase downloadAndSendUseCase,
     FindExistingDownloadUseCase findExistingDownloadUseCase,
     GetVideoTitleUseCase getVideoTitleUseCase,
-    ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase) : ViewModelBase
+    ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase,
+    IDialogService dialogService) : ViewModelBase
 {
     [ObservableProperty]
     private string _youtubeUrl = string.Empty;
@@ -116,11 +118,12 @@ public partial class HomeViewModel(
                           $"Title: {existingRecord.VideoTitle}\n\n" +
                           $"Do you want to download it again?";
 
-            Console.WriteLine($"[DUPLICATE DETECTED] {message}");
-
-            // TODO: Show user dialog and get confirmation
-            // For now, we'll continue with the download
-            UpdateStatus($"Warning: Video already downloaded on {existingRecord.DownloadedAt}");
+            var confirmed = await dialogService.ShowConfirmationAsync("Duplicate Detected", message);
+            if (!confirmed)
+            {
+                UpdateStatus("Download cancelled - video already exists");
+                return;
+            }
         }
         // If duplicateCheckResult.Value is null, no duplicate exists - continue silently
 
