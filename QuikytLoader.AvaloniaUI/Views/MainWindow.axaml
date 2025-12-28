@@ -50,11 +50,6 @@
                 <StackPanel Grid.Row="1"
                             Spacing="4"
                             Margin="8,12">
-                    <StackPanel.Styles>
-                        <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="{Binding $parent[Button].Background} "/>
-                        </Style>
-                    </StackPanel.Styles>
 
                     <!-- Home Tab -->
                     <Button Command="{Binding NavigateToHomeCommand}"
