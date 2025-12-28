@@ -90,6 +90,7 @@
                     <StackPanel Spacing="12">
                         <Button Content="Save Settings"
                                 Command="{Binding SaveSettingsCommand}"
+                                IsEnabled="{Binding HasUnsavedChanges}"
                                 HorizontalAlignment="Left"
                                 Height="40"
                                 Padding="24,0"

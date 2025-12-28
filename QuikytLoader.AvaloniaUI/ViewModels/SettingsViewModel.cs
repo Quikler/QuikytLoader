@@ -9,9 +9,11 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCase) : ViewModelBase
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
     private string _botToken = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
     private string _chatId = string.Empty;
 
     [ObservableProperty]
@@ -49,5 +51,6 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     {
         _savedBotToken = BotToken;
         _savedChatId = ChatId;
+        OnPropertyChanged(nameof(HasUnsavedChanges));
     }
 }
