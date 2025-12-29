@@ -1,4 +1,4 @@
-.PHONY: aot trimmed clean
+.PHONY: all aot trimmed clean
 
 # Default target
 all: trimmed
