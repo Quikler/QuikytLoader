@@ -8,13 +8,16 @@ namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// Repository for managing download history using SQLite database with Dapper ORM.
-/// Uses simple Dapper overloads (not CommandDefinition) for Dapper.AOT compatibility.
 /// </summary>
+/// <remarks>
+/// CancellationToken not supported in Dapper queries - Dapper.AOT doesn't intercept CommandDefinition yet.
+/// Tracking: https://github.com/DapperLib/DapperAOT/pull/153
+/// </remarks>
 internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactory) : IDownloadHistoryRepository
 {
-    public async Task UpsertAsync(DownloadHistoryEntity downloadEntity, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(DownloadHistoryEntity downloadEntity)
     {
-        await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
+        await using var connection = await dbConnectionFactory.GetConnectionAsync();
         const string upsertSql = """
             INSERT OR REPLACE INTO DownloadHistory (YouTubeId, VideoTitle, DownloadedAt)
             VALUES (@YouTubeId, @VideoTitle, @DownloadedAt)
@@ -28,9 +31,9 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         });
     }
 
-    public async Task<DownloadHistoryEntity?> GetByIdAsync(YouTubeId id, CancellationToken cancellationToken = default)
+    public async Task<DownloadHistoryEntity?> GetByIdAsync(YouTubeId id)
     {
-        await using var connection = await dbConnectionFactory.GetConnectionAsync(cancellationToken);
+        await using var connection = await dbConnectionFactory.GetConnectionAsync();
         const string query = """
             SELECT YouTubeId, VideoTitle, DownloadedAt
             FROM DownloadHistory

@@ -18,7 +18,7 @@ public class FindExistingDownloadUseCase(
         if (!youtubeIdResult.IsSuccess)
             return Result<DownloadHistoryDto?>.Failure(youtubeIdResult.Error);
 
-        var downloadEntity = await historyRepo.GetByIdAsync(youtubeIdResult.Value, cancellationToken);
+        var downloadEntity = await historyRepo.GetByIdAsync(youtubeIdResult.Value);
         if (downloadEntity is null)
             return Result<DownloadHistoryDto?>.Success(null);
 
