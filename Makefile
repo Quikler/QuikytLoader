@@ -1,3 +1,5 @@
+.PHONY: aot trimmed clean
+
 # IN OUR CASE
 # aot: 53.9 MB
 # trimmed: 25.1 MB
@@ -11,4 +13,5 @@ aot:
 	dotnet publish QuikytLoader.Startup -r linux-x64 -c Release -p:PublishAot=true -p:OptimizationPreference=Size
 
 clean:
-	find . -type d \( -name "bin" -o -name "obj" \) -exec rm -rf {} +
+	# Do not descend into bin/obj; delete them directly
+	find . \( -name bin -o -name obj \) -type d -prune -exec rm -rf {} +

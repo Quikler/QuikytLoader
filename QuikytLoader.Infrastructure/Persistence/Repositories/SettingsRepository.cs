@@ -11,11 +11,6 @@ namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 /// </summary>
 internal class SettingsRepository : ISettingsRepository
 {
-    private static readonly JsonSerializerOptions s_jsonOptions = new()
-    {
-        TypeInfoResolver = AppJsonSerializerContext.Default
-    };
-
     private readonly string _settingsPath;
 
     public SettingsRepository()
@@ -54,7 +49,7 @@ internal class SettingsRepository : ISettingsRepository
         try
         {
             var json = await File.ReadAllTextAsync(_settingsPath, cancellationToken);
-            return JsonSerializer.Deserialize<AppSettingsDto>(json, s_jsonOptions) ?? new AppSettingsDto();
+            return JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.AppSettingsDto) ?? new AppSettingsDto();
         }
         catch (JsonException)
         {
@@ -70,7 +65,7 @@ internal class SettingsRepository : ISettingsRepository
     /// </summary>
     public async Task SaveAsync(AppSettingsDto settings, CancellationToken cancellationToken = default)
     {
-        var json = JsonSerializer.Serialize(settings, s_jsonOptions);
+        var json = JsonSerializer.Serialize(settings, AppJsonSerializerContext.Default.AppSettingsDto);
 
         // Atomic write: write to temp file, then rename
         var tempPath = _settingsPath + ".tmp";
