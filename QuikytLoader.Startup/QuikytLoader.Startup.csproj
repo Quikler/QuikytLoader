@@ -3,8 +3,54 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AssemblyName>QuikytLoader</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+
+  </PropertyGroup>
+
+  <!-- Required for Avalonia on Windows (COM interop for clipboard, drag-drop, etc.). Default is false (-374 bytes). -->
+  <PropertyGroup Condition="$(RuntimeIdentifier.Contains('win'))">
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <!--===========================================-->
+  <!--  GENERIC PUBLISH SETTINGS (AOT + Trimmed) -->
+  <!--===========================================-->
+  <PropertyGroup>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <!-- Include necessary .so files into bundle -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- No reflection used - aggressive optimizations -->
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EnableUnsafeBinaryFormatterInDesigntimeLicenseContextSerialization>false</EnableUnsafeBinaryFormatterInDesigntimeLicenseContextSerialization>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <CustomResourceTypesSupport>false</CustomResourceTypesSupport>
+    <EnableCppCLIHostActivation>false</EnableCppCLIHostActivation>
+    <StartupHookSupport>false</StartupHookSupport>
+    <MetricsSupport>false</MetricsSupport>
+    <XmlResolverIsNetworkingEnabledByDefault>false</XmlResolverIsNetworkingEnabledByDefault>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EventSourceSupport>false</EventSourceSupport>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <TrimUnusedDependencies>true</TrimUnusedDependencies>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <!--Aggressive optimization that significantly hinders debugging (-30 bytes)-->
+    <!--<StackTraceSupport>false</StackTraceSupport>-->
+    <!--<IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>-->
+  </PropertyGroup>
+
+  <!-- Exclude debug files in Release -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
+    <AllowedReferenceRelatedFileExtensions>-.pdb</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
 
   <ItemGroup>

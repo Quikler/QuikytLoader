@@ -47,8 +47,7 @@ public class DownloadAndSendUseCase(
             new DownloadHistoryEntity(
                 entity.YouTubeId,
                 customTitle ?? entity.VideoTitle,
-                DateTime.UtcNow.ToString("o")),
-            cancellationToken);
+                DateTime.UtcNow.ToString("o")));
 
         // 5. Map domain entity to DTO and return
         var dto = new DownloadResultDto(entity.YouTubeId.Id, entity.VideoTitle, entity.TempMediaFilePath, entity.TempThumbnailPath);
