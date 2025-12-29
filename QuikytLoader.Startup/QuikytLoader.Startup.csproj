@@ -25,9 +25,7 @@
     <EnableCppCLIHostActivation>false</EnableCppCLIHostActivation>
     <StartupHookSupport>false</StartupHookSupport>
     <MetricsSupport>false</MetricsSupport>
-    <StackTraceSupport>false</StackTraceSupport>
     <XmlResolverIsNetworkingEnabledByDefault>false</XmlResolverIsNetworkingEnabledByDefault>
-    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
@@ -36,6 +34,10 @@
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <TrimUnusedDependencies>true</TrimUnusedDependencies>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <!--Aggressive optimization that significantly hinders debugging (-30 bytes)-->
+    <!--<StackTraceSupport>false</StackTraceSupport>-->
+    <!--<IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>-->
   </PropertyGroup>
 
   <!-- Exclude debug files in Release -->
