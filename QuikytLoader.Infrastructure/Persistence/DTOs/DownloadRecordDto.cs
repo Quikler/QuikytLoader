@@ -6,7 +6,7 @@ namespace QuikytLoader.Infrastructure.Persistence.DTOs;
 /// </summary>
 internal class DownloadRecordDto
 {
-    public string YouTubeId { get; set; } = string.Empty;
-    public string VideoTitle { get; set; } = string.Empty;
-    public string DownloadedAt { get; set; } = string.Empty;
+    public string YouTubeId { get; init; } = string.Empty;
+    public string VideoTitle { get; init; } = string.Empty;
+    public string DownloadedAt { get; init; } = string.Empty;
 }
