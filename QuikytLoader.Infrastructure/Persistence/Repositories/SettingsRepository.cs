@@ -1,7 +1,7 @@
 using System.Text.Json;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Repositories;
-using QuikytLoader.Infrastructure.Json;
+using QuikytLoader.Infrastructure.Persistence.Json;
 
 namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 

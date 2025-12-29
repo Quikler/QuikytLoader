@@ -1,5 +1,8 @@
 .PHONY: aot trimmed clean
 
+# Default target
+all: trimmed
+
 RID ?= linux-x64
 PROJECT = QuikytLoader.Startup
 PUBLISH_BASE_CMD = dotnet publish $(PROJECT) -r $(RID) -c Release

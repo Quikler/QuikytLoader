@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using QuikytLoader.Application.DTOs;
 
-namespace QuikytLoader.Infrastructure.Json;
+namespace QuikytLoader.Infrastructure.Persistence.Json;
 
 /// <summary>
 /// Source-generated JSON serialization context for AOT compatibility
