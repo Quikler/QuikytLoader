@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.UseCases;
-using System.Threading.Tasks;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
@@ -25,19 +24,19 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     public bool HasUnsavedChanges =>
         BotToken != _savedBotToken || ChatId != _savedChatId;
 
-    public async Task InitializeAsync()
+    public void Initialize()
     {
-        var settings = await manageSettingsUseCase.LoadSettingsAsync();
+        var settings = manageSettingsUseCase.LoadSettings();
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
         MarkAsSaved();
     }
 
     [RelayCommand]
-    private async Task SaveSettingsAsync()
+    private void SaveSettings()
     {
-        await manageSettingsUseCase.SaveSettingsAsync(
-            new AppSettingsDto
+        manageSettingsUseCase.SaveSettings(
+            new UserSettingsDto
             {
                 BotToken = BotToken,
                 ChatId = ChatId

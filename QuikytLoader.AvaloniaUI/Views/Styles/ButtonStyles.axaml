@@ -1,8 +1,45 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+    <!-- Override default Avalonia template behavior to preserve button colors -->
     <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <!-- Override default Avalonia behavior on pointerover to preserve the colors -->
-        <Setter Property="Background" Value="{Binding $parent[Button].Background} "/>
+        <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
         <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
+        <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
+    </Style>
+
+    <!-- Navigation button styles (order matters: generic first, specific last) -->
+    <Style Selector="Button.navButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.navButton.selected">
+        <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+    </Style>
+    <Style Selector="Button.navButton.selected ui|SymbolIcon">
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.navButton.selected TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.navButton.selected:pointerover">
+        <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+    </Style>
+    <Style Selector="Button.navButton.selected:pressed">
+        <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+    </Style>
+    <!-- :disabled styles last for highest priority -->
+    <Style Selector="Button.navButton.selected:disabled">
+        <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="Button.navButton.selected:disabled ui|SymbolIcon">
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.navButton.selected:disabled TextBlock">
+        <Setter Property="Foreground" Value="White"/>
     </Style>
 </Styles>

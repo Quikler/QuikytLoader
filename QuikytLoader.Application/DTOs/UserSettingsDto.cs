@@ -1,9 +1,9 @@
 namespace QuikytLoader.Application.DTOs;
 
 /// <summary>
-/// Data transfer object for application settings
+/// Data transfer object for user settings (Telegram configuration)
 /// </summary>
-public class AppSettingsDto
+public class UserSettingsDto
 {
     /// <summary>
     /// Telegram bot token from @BotFather

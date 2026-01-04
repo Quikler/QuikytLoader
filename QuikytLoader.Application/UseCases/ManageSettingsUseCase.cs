@@ -1,13 +1,10 @@
 using QuikytLoader.Application.DTOs;
-using QuikytLoader.Application.Interfaces.Repositories;
+using QuikytLoader.Application.Interfaces.Settings;
 
 namespace QuikytLoader.Application.UseCases;
 
-public class ManageSettingsUseCase(ISettingsRepository settingsRepo)
+public class ManageSettingsUseCase(IUserSettings userSettings)
 {
-    public Task<AppSettingsDto> LoadSettingsAsync(CancellationToken cancellationToken = default)
-        => settingsRepo.LoadAsync(cancellationToken);
-
-    public Task SaveSettingsAsync(AppSettingsDto settings, CancellationToken cancellationToken = default)
-        => settingsRepo.SaveAsync(settings, cancellationToken);
+    public UserSettingsDto LoadSettings() => userSettings.Load();
+    public void SaveSettings(UserSettingsDto settings) => userSettings.Save(settings);
 }
