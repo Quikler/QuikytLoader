@@ -1,2 +1,3 @@
 APP_NAME=QuikytLoader
-export APP_NAME
+TFM=net9.0
+export APP_NAME TFM

@@ -3,8 +3,8 @@
 # Default target
 all: trimmed
 
+TFM := $(shell . ./config.sh && echo $$TFM)
 RID ?= linux-x64
-TFM = net9.0
 PROJECT = QuikytLoader.Startup
 PUBLISH_BASE_CMD = dotnet publish $(PROJECT) -r $(RID) -c Release
 
