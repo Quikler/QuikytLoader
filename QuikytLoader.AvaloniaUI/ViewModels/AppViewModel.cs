@@ -40,7 +40,6 @@ public partial class AppViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanNavigateToHome))]
     private async Task NavigateToHomeAsync()
     {
-        System.Console.WriteLine("Teset");
         if (SettingsViewModel.HasUnsavedChanges)
         {
             var confirmed = await _dialogService.ShowConfirmationAsync(
