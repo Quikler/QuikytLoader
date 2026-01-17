@@ -482,3 +482,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Claude helper specific files and folders
+/prompts/
+TO-DOS.md
