@@ -6,7 +6,9 @@
         <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
         <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
     </Style>
-    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+
+    <!-- Preserve button colors for disabled navButtons only -->
+    <Style Selector="Button.navButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
         <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
     </Style>
