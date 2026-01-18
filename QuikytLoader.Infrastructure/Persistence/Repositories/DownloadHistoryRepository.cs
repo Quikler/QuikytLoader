@@ -2,7 +2,6 @@ using Dapper;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.ValueObjects;
-using QuikytLoader.Infrastructure.Persistence.DTOs;
 
 namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 
@@ -40,9 +39,12 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
             WHERE YouTubeId = @YouTubeId
             """;
 
-        var result = await connection.QuerySingleOrDefaultAsync<DownloadRecordDto>(query, new { YouTubeId = id.Id });
+        var result = await connection.QuerySingleOrDefaultAsync<DownloadHistoryDto>(query, new { YouTubeId = id.Id });
         if (result is null) return null;
 
         return DownloadHistoryEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
     }
+
+    // Should be internal for Dapper.AOT compatibility
+    internal record DownloadHistoryDto(string YouTubeId, string VideoTitle, string DownloadedAt);
 }

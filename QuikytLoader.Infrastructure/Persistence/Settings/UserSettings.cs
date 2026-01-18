@@ -1,19 +1,19 @@
 using System.Text.Json;
 using QuikytLoader.Application.DTOs;
-using QuikytLoader.Application.Interfaces.Repositories;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Infrastructure.Persistence.Json;
 
-namespace QuikytLoader.Infrastructure.Persistence.Repositories;
+namespace QuikytLoader.Infrastructure.Persistence.Settings;
 
 /// <summary>
-/// Repository for application settings persistence using JSON file storage
+/// User settings persistence using JSON file storage
 /// Follows XDG Base Directory specification on Linux (~/.config/QuikytLoader)
 /// </summary>
-internal class SettingsRepository : ISettingsRepository
+internal class UserSettings : IUserSettings
 {
     private readonly string _settingsPath;
 
-    public SettingsRepository()
+    public UserSettings()
     {
         // Use XDG_CONFIG_HOME or fallback to ~/.config on Linux
         var configDir = Path.Combine(
@@ -33,43 +33,43 @@ internal class SettingsRepository : ISettingsRepository
     }
 
     /// <summary>
-    /// Loads settings from JSON file asynchronously
+    /// Loads settings from JSON file
     /// Creates default settings file if it doesn't exist
     /// Returns defaults if file is corrupted
     /// </summary>
-    public async Task<AppSettingsDto> LoadAsync(CancellationToken cancellationToken = default)
+    public UserSettingsDto Load()
     {
         if (!File.Exists(_settingsPath))
         {
-            var defaultSettings = new AppSettingsDto();
-            await SaveAsync(defaultSettings, cancellationToken);
+            var defaultSettings = new UserSettingsDto();
+            Save(defaultSettings);
             return defaultSettings;
         }
 
         try
         {
-            var json = await File.ReadAllTextAsync(_settingsPath, cancellationToken);
-            return JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.AppSettingsDto) ?? new AppSettingsDto();
+            var json = File.ReadAllText(_settingsPath);
+            return JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.UserSettingsDto) ?? new UserSettingsDto();
         }
         catch (JsonException)
         {
             // Corrupted file, return defaults
-            return new AppSettingsDto();
+            return new UserSettingsDto();
         }
     }
 
     /// <summary>
-    /// Saves settings to JSON file asynchronously using atomic write operation
+    /// Saves settings to JSON file using atomic write operation
     /// Writes to temporary file first, then renames to prevent corruption
     /// Sets restrictive file permissions on Linux (mode 600)
     /// </summary>
-    public async Task SaveAsync(AppSettingsDto settings, CancellationToken cancellationToken = default)
+    public void Save(UserSettingsDto settings)
     {
-        var json = JsonSerializer.Serialize(settings, AppJsonSerializerContext.Default.AppSettingsDto);
+        var json = JsonSerializer.Serialize(settings, AppJsonSerializerContext.Default.UserSettingsDto);
 
         // Atomic write: write to temp file, then rename
         var tempPath = _settingsPath + ".tmp";
-        await File.WriteAllTextAsync(tempPath, json, cancellationToken);
+        File.WriteAllText(tempPath, json);
 
         if (OperatingSystem.IsLinux())
         {

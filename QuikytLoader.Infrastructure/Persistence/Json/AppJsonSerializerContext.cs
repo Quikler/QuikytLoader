@@ -10,5 +10,5 @@ namespace QuikytLoader.Infrastructure.Persistence.Json;
 [JsonSourceGenerationOptions(
     WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-[JsonSerializable(typeof(AppSettingsDto))]
+[JsonSerializable(typeof(UserSettingsDto))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;

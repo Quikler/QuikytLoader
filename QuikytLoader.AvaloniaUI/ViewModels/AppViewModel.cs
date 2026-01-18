@@ -12,7 +12,12 @@ public partial class AppViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsHomeSelected))]
     [NotifyPropertyChangedFor(nameof(IsSettingsSelected))]
+    [NotifyCanExecuteChangedFor(nameof(NavigateToHomeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NavigateToSettingsCommand))]
     private ViewModelBase _currentView;
+
+    private bool CanNavigateToHome => !IsHomeSelected;
+    private bool CanNavigateToSettings => !IsSettingsSelected;
 
     public bool IsHomeSelected => CurrentView == HomeViewModel;
     public bool IsSettingsSelected => CurrentView == SettingsViewModel;
@@ -32,10 +37,10 @@ public partial class AppViewModel : ViewModelBase
         _currentView = HomeViewModel;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanNavigateToHome))]
     private async Task NavigateToHomeAsync()
     {
-        if (CurrentView == SettingsViewModel && SettingsViewModel.HasUnsavedChanges)
+        if (SettingsViewModel.HasUnsavedChanges)
         {
             var confirmed = await _dialogService.ShowConfirmationAsync(
                 "Unsaved Changes",
@@ -47,10 +52,11 @@ public partial class AppViewModel : ViewModelBase
         CurrentView = HomeViewModel;
     }
 
-    [RelayCommand]
-    private async Task NavigateToSettingsAsync()
+
+    [RelayCommand(CanExecute = nameof(CanNavigateToSettings))]
+    private void NavigateToSettings()
     {
-        await SettingsViewModel.InitializeAsync();
+        SettingsViewModel.Initialize();
         CurrentView = SettingsViewModel;
     }
 }

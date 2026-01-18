@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Infrastructure.Persistence;
 using QuikytLoader.Infrastructure.Persistence.Repositories;
+using QuikytLoader.Infrastructure.Persistence.Settings;
 using QuikytLoader.Infrastructure.Services;
 using QuikytLoader.Infrastructure.Telegram;
 using QuikytLoader.Infrastructure.YouTube;
@@ -33,7 +35,7 @@ public static class InfrastructureServiceExtensions
         // Persistence
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         services.AddSingleton<IDownloadHistoryRepository, DownloadHistoryRepository>();
-        services.AddSingleton<ISettingsRepository, SettingsRepository>();
+        services.AddSingleton<IUserSettings, UserSettings>();
 
         return services;
     }

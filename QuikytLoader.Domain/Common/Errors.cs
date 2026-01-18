@@ -34,11 +34,10 @@ public static class Errors
         public static Error BotTokenNotConfigured() => new(
             "Telegram bot token is not configured. Please set it in Settings.");
 
-        public static Error ChatIdNotConfigured() => new(
-            "Telegram chat ID is not configured. Please set it in Settings.");
-
-        public static Error InvalidChatIdFormat(string chatId) => new(
-            $"Chat ID is not a valid number: {chatId}");
+        public static Error InvalidChatIdFormat(string? chatId) => new(
+            string.IsNullOrWhiteSpace(chatId)
+                ? "Telegram chat ID is not configured. Please set it in Settings."
+                : $"Chat ID is not a valid number: {chatId}");
 
         public static Error AudioFileNotFound(string path) => new(
             $"Audio file not found at path: {path}");

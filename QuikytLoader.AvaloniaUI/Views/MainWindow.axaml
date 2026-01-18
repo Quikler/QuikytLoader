@@ -53,35 +53,14 @@
 
                     <!-- Home Tab -->
                     <Button Command="{Binding NavigateToHomeCommand}"
+                            Classes="navButton"
+                            Classes.selected="{Binding IsHomeSelected}"
                             Width="64"
                             Height="64"
                             Padding="0"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
-                            CornerRadius="8"
-                            Classes.selected="{Binding IsHomeSelected}">
-                        <Button.Styles>
-                            <Style Selector="Button">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                            <Style Selector="Button.selected">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            </Style>
-                            <Style Selector="Button.selected:pointerover">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            </Style>
-                            <Style Selector="Button.selected:pressed">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            </Style>
-                            <Style Selector="Button.selected ui|SymbolIcon">
-                                <Setter Property="Foreground" Value="White"/>
-                            </Style>
-                            <Style Selector="Button.selected TextBlock">
-                                <Setter Property="Foreground" Value="White"/>
-                            </Style>
-                        </Button.Styles>
-
+                            CornerRadius="8">
                         <StackPanel Spacing="4">
                             <ui:SymbolIcon Symbol="Home"
                                            FontSize="24"/>
@@ -93,35 +72,14 @@
 
                     <!-- Settings Tab -->
                     <Button Command="{Binding NavigateToSettingsCommand}"
+                            Classes="navButton"
+                            Classes.selected="{Binding IsSettingsSelected}"
                             Width="64"
                             Height="64"
                             Padding="0"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
-                            CornerRadius="8"
-                            Classes.selected="{Binding IsSettingsSelected}">
-                        <Button.Styles>
-                            <Style Selector="Button">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                            <Style Selector="Button.selected">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            </Style>
-                            <Style Selector="Button.selected:pointerover">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            </Style>
-                            <Style Selector="Button.selected:pressed">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            </Style>
-                            <Style Selector="Button.selected ui|SymbolIcon">
-                                <Setter Property="Foreground" Value="White"/>
-                            </Style>
-                            <Style Selector="Button.selected TextBlock">
-                                <Setter Property="Foreground" Value="White"/>
-                            </Style>
-                        </Button.Styles>
-
+                            CornerRadius="8">
                         <StackPanel Spacing="4">
                             <ui:SymbolIcon Symbol="Setting"
                                            FontSize="24"/>

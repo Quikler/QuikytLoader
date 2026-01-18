@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Microsoft.Extensions.Hosting;
 using QuikytLoader.Application.DependencyInjection;
@@ -11,15 +12,26 @@ namespace QuikytLoader.Startup;
 class Program
 {
     [STAThread]
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var host = CreateHostBuilder(args).Build();
-        BuildAvaloniaApp(host).StartWithClassicDesktopLifetime(args);
+
+        try
+        {
+            await host.StartAsync();
+            BuildAvaloniaApp(host).StartWithClassicDesktopLifetime(args);
+        }
+        finally
+        {
+            await host.StopAsync();
+            host.Dispose();
+        }
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
         return Host.CreateDefaultBuilder(args)
+            .UseConsoleLifetime(options => options.SuppressStatusMessages = true)
             .ConfigureServices((context, services) =>
             {
                 services.AddApplicationServices();
@@ -29,7 +41,7 @@ class Program
     }
 
     private static AppBuilder BuildAvaloniaApp(IHost host)
-        => AppBuilder.Configure(() => new App(host.Services, host))
+        => AppBuilder.Configure(() => new App(host.Services))
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();

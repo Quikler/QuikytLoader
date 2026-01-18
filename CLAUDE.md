@@ -25,7 +25,7 @@ dotnet publish QuikytLoader.Startup -c Release -r linux-x64 --self-contained -p:
 ## External Dependencies
 
 - **yt-dlp**: Must be installed on system (`sudo pacman -S yt-dlp` on Arch)
-- Used by YouTubeDownloadService to download and convert YouTube videos to MP3
+- Used by YtDlpService to download and convert YouTube videos to MP3
 
 ## Architecture Overview
 
@@ -40,7 +40,7 @@ QuikytLoader.Startup (exe)        <- Entry point & DI composition
 
 QuikytLoader.AvaloniaUI (library) <- UI layer (class library)
 ├── References: Application only  <- No Infrastructure reference
-└── App.axaml.cs: Receives IServiceProvider/IHost via constructor injection
+└── App.axaml.cs: Receives IServiceProvider via constructor injection (no IHost)
 
 QuikytLoader.Application          <- Use cases and interfaces
 ├── References: Domain only
@@ -72,22 +72,33 @@ The app uses a layered navigation system:
    - Status management and validation
 
 3. **SettingsViewModel** - Telegram bot configuration
-   - Manages bot token and chat ID via ISettingsManager
+   - Manages bot token and chat ID via IUserSettings
    - Provides save/load commands for settings persistence
 
 ### Service Layer
 
-**YouTubeDownloadService** - Core download logic
+**YouTubeDownloadService** - Download orchestration
+- Coordinates download workflow by delegating to specialized services
 - Downloads to system temp directory (`/tmp/QuikytLoader`) only - files not saved to user's Downloads
 - All files remain in temp directory for sending to Telegram, then cleaned up by HomeViewModel
-- Embeds comprehensive metadata (Artist, Album, Composer, Performer, Publisher, etc.)
-- Embeds video thumbnail as album art with automatic format conversion
-- Auto-normalizes filenames (removes extra whitespace)
-- Spawns yt-dlp process with arguments built in BuildYtDlpArguments (YouTubeDownloadService.cs:185)
-- Parses progress from yt-dlp output via regex
-- Supports custom title overrides via GetVideoTitleAsync and custom DownloadAsync overload
-- Returns DownloadResult with YouTubeId, TempMediaFilePath and TempThumbnailPath
+- Delegates yt-dlp execution to IYtDlpService
+- Delegates thumbnail processing to IThumbnailService
 - Uses IYoutubeExtractorService to extract video IDs from URLs
+- Returns DownloadResultEntity with YouTubeId, TempMediaFilePath and TempThumbnailPath
+
+**YtDlpService** - yt-dlp process wrapper
+- Executes yt-dlp process for audio downloads and metadata extraction
+- Builds command arguments via BuildAudioDownloadArguments method
+- Embeds comprehensive metadata (Artist, Album, Composer, Performer, Publisher, etc.)
+- Embeds video thumbnail as album art with automatic format conversion to JPG
+- Parses progress from yt-dlp output via regex
+- Process cancellation supported: kills yt-dlp process tree on CancellationToken
+- Auto-normalizes filenames (removes extra whitespace)
+
+**ThumbnailService** - Thumbnail processing
+- Processes thumbnails for Telegram requirements
+- Crops images to square aspect ratio
+- Resizes to 320x320 max dimensions for Telegram
 
 **YoutubeExtractorService** - YouTube ID extraction
 - Fast regex-based extraction for common YouTube URL formats (youtube.com/watch?v=ID, youtu.be/ID, etc.)
@@ -99,23 +110,23 @@ The app uses a layered navigation system:
 - Reloads settings on each send to pick up configuration changes
 - Sends MP3 files with optional thumbnail to configured chat ID
 - Uses Telegram.Bot library (v22.7.5)
-- Implements IAsyncDisposable for proper cleanup on app shutdown
+- Implements IDisposable for proper cleanup on app shutdown
 
-**DownloadHistoryService** - Download history tracking
+**DownloadHistoryRepository** - Download history tracking
 - Stores YouTube download history in SQLite database
 - Checks for duplicate downloads by YouTube ID
 - Saves download records with video title and timestamp
 - Uses INSERT OR REPLACE for upserts (updates DownloadedAt timestamp on re-downloads)
 - Provides GetThumbnailUrlAsync to derive thumbnail URLs from YouTube ID (via yt-dlp or YouTube CDN fallback)
 
-**DbConnectionService** - Database connection management
+**DbConnectionFactory** - Database connection management
 - Manages SQLite database at `~/.config/QuikytLoader/history.db`
 - SQLite automatically creates database file on first connection
 - Initializes schema with CREATE TABLE IF NOT EXISTS (idempotent, safe for concurrent calls)
 - Sets restrictive file permissions on Linux (mode 600 - user read/write only)
-- Provides connections to other services (currently used by DownloadHistoryService)
+- Provides connections to other services (currently used by DownloadHistoryRepository)
 
-**SettingsManager** - JSON-based settings persistence
+**UserSettings** - JSON-based settings persistence
 - Stores config in `~/.config/QuikytLoader/settings.json` (follows XDG Base Directory spec)
 - Atomic writes via temp file + rename to prevent corruption
 - Sets restrictive file permissions on Linux (mode 600 - user read/write only)
@@ -135,18 +146,25 @@ services.AddAvaloniaUIServices();       // ViewModels (Transient)
 - DownloadAndSendUseCase, FindExistingDownloadUseCase, GetVideoTitleUseCase, etc.
 
 **Infrastructure Layer** (InfrastructureServiceExtensions.cs):
-- ISettingsManager -> SettingsManager (Singleton)
+- IUserSettings -> UserSettings (Singleton)
 - IYouTubeDownloadService -> YouTubeDownloadService (Singleton)
+- IYtDlpService -> YtDlpService (Singleton)
+- IThumbnailService -> ThumbnailService (Singleton)
 - ITelegramBotService -> TelegramBotService (Singleton)
 - IYoutubeExtractorService -> YoutubeExtractorService (Singleton)
-- IDbConnectionService -> DbConnectionService (Singleton)
-- IDownloadHistoryService -> DownloadHistoryService (Singleton)
+- IDbConnectionFactory -> DbConnectionFactory (Singleton)
+- IDownloadHistoryRepository -> DownloadHistoryRepository (Singleton)
 
 **AvaloniaUI Layer** (AvaloniaUIServiceExtensions.cs):
 - AppViewModel, HomeViewModel, SettingsViewModel (Transient)
 
 Constructor injection is used throughout. Avoid using the service provider directly outside of the composition root.
-App shutdown handler calls Host.StopAsync() to properly dispose async disposable services.
+
+**Host Lifecycle** (Program.cs):
+- `host.StartAsync()` called before Avalonia starts
+- `StartWithClassicDesktopLifetime()` runs Avalonia event loop (blocking)
+- `host.StopAsync()` and `host.Dispose()` called in finally block after Avalonia exits
+- This ensures proper disposal of singleton services (e.g., TelegramBotService)
 
 ### UI Structure
 
@@ -181,19 +199,19 @@ MainWindow contains:
 - State resets when: URL changes, UseCustomTitle unchecked, or item added to queue
 
 ### File Handling and Cleanup
-- YouTubeDownloadService uses sanitized video titles as filenames via `%(title)s` template
+- YtDlpService uses sanitized video titles as filenames via `%(title)s` template
 - Custom titles sanitized via SanitizeFilename (replaces invalid chars with underscore)
 - All downloads stored in temp directory: `/tmp/QuikytLoader`
 - Files NOT saved to user's Downloads folder - only temporary for Telegram upload
-- Thumbnail processing: crops to square, resizes to 320x320 max for Telegram requirements
+- Thumbnail processing handled by ThumbnailService: crops to square, resizes to 320x320 max for Telegram
 - HomeViewModel handles cleanup: deletes both media file and thumbnail after sending to Telegram
 - Cleanup happens in finally block to ensure temp files removed even on errors
-- DownloadResult contains TempMediaFilePath and TempThumbnailPath properties
+- DownloadResultEntity contains TempMediaFilePath and TempThumbnailPath properties
 
 ### yt-dlp Integration
-- All yt-dlp arguments constructed in BuildYtDlpArguments method
+- All yt-dlp arguments constructed in YtDlpService.BuildAudioDownloadArguments method
 - Metadata mapping: YouTube fields -> MP3 ID3 tags
-- Progress extracted via regex from stdout/stderr
+- Progress extracted via regex from stdout/stderr in YtDlpService
 - Comprehensive metadata embedding including Artist, Album, Composer, Publisher, etc.
 - Thumbnail embedding with automatic format conversion to JPG
 - Process cancellation supported: kills yt-dlp process tree on CancellationToken
@@ -206,7 +224,7 @@ MainWindow contains:
 - NotifyCanExecuteChanged() called when conditions change (e.g., URL validity, processing state)
 
 ### Download History and Duplicate Detection
-- HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryService
+- HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryRepository
 - Duplicate detection extracts YouTube ID via IYoutubeExtractorService and queries SQLite database
 - Currently logs duplicate warning to console (UI dialog for user confirmation to be implemented)
 - After successful Telegram send, saves record to history with:
@@ -225,3 +243,4 @@ MainWindow contains:
 - TelegramBotService validates settings on each send (throws if BotToken or ChatId missing)
 - Bot token can be obtained from @BotFather on Telegram
 - Chat ID can be obtained from @userinfobot on Telegram
+
