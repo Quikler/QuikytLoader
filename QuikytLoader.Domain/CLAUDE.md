@@ -1,0 +1,40 @@
+# QuikytLoader.Domain
+
+Core domain layer with no external dependencies. Contains entities, value objects, and common types.
+
+## Entities
+
+**DownloadResultEntity** - Result of a YouTube download operation
+- Record type with YouTubeId, VideoTitle, TempMediaFilePath, TempThumbnailPath
+- Represents temporary files that should be cleaned up after use
+
+**DownloadHistoryEntity** - Download history record for persistence
+- Record type with YouTubeId, VideoTitle, DownloadedAt (ISO 8601 timestamp)
+- Factory method `Create()` validates YouTubeId before construction
+- Throws on invalid data (database integrity violation)
+
+## Value Objects
+
+**YouTubeId** - YouTube video ID (always 11 characters)
+- Private constructor with factory method `Create()` returning `Result<YouTubeId>`
+- Validates length and non-empty
+- Implicit conversion to string
+
+**YouTubeUrl** - Validated YouTube URL
+- Factory method `Create()` returning `Result<YouTubeUrl>`
+- Validates: non-empty, valid URI format, HTTP/HTTPS scheme, youtube.com or youtu.be host
+- Implicit conversion to string
+
+## Common Types
+
+**Result / Result&lt;T&gt;** - Railway-oriented error handling
+- `IsSuccess` property with `MemberNotNullWhen` attributes for null-state analysis
+- `Error` property contains failure reason
+- Implicit conversions from value (success) and Error (failure)
+- Usage: `return new Error("message")` for failure, `return value` for success
+
+**Error** - Error representation
+- Simple record type with Message property
+
+**Errors** - Predefined error constants
+- Static class with common error definitions
