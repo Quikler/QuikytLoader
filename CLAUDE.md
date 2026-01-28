@@ -70,3 +70,7 @@ Each project has its own CLAUDE.md with layer-specific guidance:
 - **[QuikytLoader.Infrastructure/CLAUDE.md](QuikytLoader.Infrastructure/CLAUDE.md)** - Service implementations, settings, security
 - **[QuikytLoader.AvaloniaUI/CLAUDE.md](QuikytLoader.AvaloniaUI/CLAUDE.md)** - ViewModels, MVVM patterns, UI structure, implementation notes
 - **[QuikytLoader.Startup/CLAUDE.md](QuikytLoader.Startup/CLAUDE.md)** - DI composition, host lifecycle
+
+## Anti-Patterns
+
+See [.claude/anti-patterns.md](.claude/anti-patterns.md) for common mistakes to avoid in this codebase. Includes architecture violations, DI misuse, MVVM anti-patterns, Result pattern misuse, and general C# anti-patterns with code examples.

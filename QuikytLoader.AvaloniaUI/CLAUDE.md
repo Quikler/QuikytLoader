@@ -6,7 +6,7 @@ UI layer (class library). References Application only - no Infrastructure refere
 
 The app uses a layered navigation system:
 
-1. **AppViewModel** (App.axaml.cs:27) - Root ViewModel managing navigation
+1. **AppViewModel** - Root ViewModel managing navigation
    - Injects HomeViewModel and SettingsViewModel
    - Handles view switching via NavigateToHome/NavigateToSettings commands
    - Maintains selected tab state
@@ -79,7 +79,6 @@ MainWindow contains:
 ### Download History and Duplicate Detection
 - HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryRepository
 - Duplicate detection extracts YouTube ID via IYoutubeExtractorService and queries SQLite
-- Currently logs duplicate warning to console (UI dialog to be implemented)
 - After successful Telegram send, saves record to history with:
   - YouTube video ID (11 chars, primary key)
   - Video title (custom or original from filename)
