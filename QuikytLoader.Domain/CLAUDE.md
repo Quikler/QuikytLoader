@@ -9,7 +9,7 @@ Core domain layer with no external dependencies. Contains entities, value object
 - Represents temporary files that should be cleaned up after use
 
 **DownloadHistoryEntity** - Download history record for persistence
-- Record type with YouTubeId, VideoTitle, DownloadedAt (ISO 8601 timestamp)
+- Record type with YouTubeId, VideoTitle, DownloadedAt (ISO 8601 UTC timestamp)
 - Factory method `Create()` returning `Result<DownloadHistoryEntity>`
 - Propagates failure from YouTubeId validation if invalid
 
