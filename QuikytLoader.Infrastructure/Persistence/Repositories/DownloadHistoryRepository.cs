@@ -42,7 +42,8 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
         var result = await connection.QuerySingleOrDefaultAsync<DownloadHistoryDto>(query, new { YouTubeId = id.Id });
         if (result is null) return null;
 
-        return DownloadHistoryEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
+        var createResult = DownloadHistoryEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
+        return createResult.IsSuccess ? createResult.Value : null;
     }
 
     // Should be internal for Dapper.AOT compatibility

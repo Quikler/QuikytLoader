@@ -179,8 +179,13 @@ private async void DownloadButton_Click(object sender, EventArgs e)
 // MainWindow.axaml
 <Button Command="{Binding DownloadCommand}" />
 
-// ViewModel handles logic
-public ICommand DownloadCommand => new RelayCommand(ExecuteDownload);
+// ViewModel uses [RelayCommand] attribute (CommunityToolkit.Mvvm)
+// Generates DownloadCommand property, instantiated once
+[RelayCommand]
+private void ExecuteDownload()
+{
+    // ... logic ...
+}
 ```
 
 ### Never manipulate UI directly in ViewModels
@@ -336,8 +341,10 @@ var outputPath = Path.Combine(
 
 **Right:**
 ```csharp
-// Use temp directory, send to Telegram, then cleanup
-var outputPath = Path.Combine("/tmp/QuikytLoader", $"{videoId}.mp3");
+// Use system temp directory (cross-platform), send to Telegram, then cleanup
+var tempDir = Path.Combine(Path.GetTempPath(), "QuikytLoader");
+Directory.CreateDirectory(tempDir); // Ensures directory exists
+var outputPath = Path.Combine(tempDir, $"{videoId}.mp3");
 // After sending to Telegram:
 File.Delete(outputPath);
 ```

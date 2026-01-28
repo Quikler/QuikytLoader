@@ -10,8 +10,8 @@ Core domain layer with no external dependencies. Contains entities, value object
 
 **DownloadHistoryEntity** - Download history record for persistence
 - Record type with YouTubeId, VideoTitle, DownloadedAt (ISO 8601 timestamp)
-- Factory method `Create()` validates YouTubeId before construction
-- Throws on invalid data (database integrity violation)
+- Factory method `Create()` returning `Result<DownloadHistoryEntity>`
+- Propagates failure from YouTubeId validation if invalid
 
 ## Value Objects
 

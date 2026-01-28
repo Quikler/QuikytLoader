@@ -66,7 +66,7 @@ MainWindow contains:
 - Thumbnail processing: crops to square, resizes to 320x320 max for Telegram
 - HomeViewModel handles cleanup: deletes both media file and thumbnail after sending
 - Cleanup happens in finally block to ensure temp files removed even on errors
-- DownloadResultEntity contains TempMediaFilePath and TempThumbnailPath properties
+- DownloadResultDto contains TempMediaFilePath and TempThumbnailPath properties
 
 ### yt-dlp Integration
 - All yt-dlp arguments constructed in YtDlpService.BuildAudioDownloadArguments method
@@ -78,7 +78,7 @@ MainWindow contains:
 
 ### Download History and Duplicate Detection
 - HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryRepository
-- Duplicate detection extracts YouTube ID via IYoutubeExtractorService and queries SQLite
+- Duplicate detection extracts YouTube ID via IYoutubeExtractorService and queries IDownloadHistoryRepository
 - After successful Telegram send, saves record to history with:
   - YouTube video ID (11 chars, primary key)
   - Video title (custom or original from filename)
