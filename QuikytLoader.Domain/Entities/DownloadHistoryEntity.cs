@@ -1,3 +1,4 @@
+using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.ValueObjects;
 
 namespace QuikytLoader.Domain.Entities;
@@ -13,15 +14,11 @@ public record DownloadHistoryEntity(
     string VideoTitle,
     string DownloadedAt)
 {
-    public static DownloadHistoryEntity Create(string youtubeId, string videoTitle, string downloadedAt)
+    public static Result<DownloadHistoryEntity> Create(string youtubeId, string videoTitle, string downloadedAt)
     {
         var youtubeIdResult = YouTubeId.Create(youtubeId);
-
-        if (!youtubeIdResult.IsSuccess)
-            throw new InvalidOperationException(
-                $"Database integrity violation: {youtubeIdResult.Error.Message}. " +
-                "This indicates database constraint enforcement failed.");
-
-        return new DownloadHistoryEntity(youtubeIdResult.Value, videoTitle, downloadedAt);
+        return youtubeIdResult.IsSuccess
+            ? new DownloadHistoryEntity(youtubeIdResult.Value, videoTitle, downloadedAt)
+            : youtubeIdResult.Error;
     }
 }
