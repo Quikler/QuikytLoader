@@ -36,11 +36,11 @@ The solution follows strict Clean Architecture with a dedicated Startup project 
 ```
 QuikytLoader.Startup (exe)        <- Entry point & DI composition
 ├── References: Application, Infrastructure, AvaloniaUI
-└── Program.cs: CreateHostBuilder with all DI registrations
+└── Program.cs: ServiceCollection with all DI registrations
 
 QuikytLoader.AvaloniaUI (library) <- UI layer (class library)
 ├── References: Application only  <- No Infrastructure reference
-└── App.axaml.cs: Receives IServiceProvider via constructor injection (no IHost)
+└── App.axaml.cs: Receives IServiceProvider via constructor injection
 
 QuikytLoader.Application          <- Use cases and interfaces
 ├── References: Domain only
@@ -69,7 +69,7 @@ Each project has its own CLAUDE.md with layer-specific guidance:
 - **[QuikytLoader.Application/CLAUDE.md](QuikytLoader.Application/CLAUDE.md)** - Use cases, interface definitions, DTOs
 - **[QuikytLoader.Infrastructure/CLAUDE.md](QuikytLoader.Infrastructure/CLAUDE.md)** - Service implementations, settings, security
 - **[QuikytLoader.AvaloniaUI/CLAUDE.md](QuikytLoader.AvaloniaUI/CLAUDE.md)** - ViewModels, MVVM patterns, UI structure, implementation notes
-- **[QuikytLoader.Startup/CLAUDE.md](QuikytLoader.Startup/CLAUDE.md)** - DI composition, host lifecycle
+- **[QuikytLoader.Startup/CLAUDE.md](QuikytLoader.Startup/CLAUDE.md)** - DI composition, entry point
 
 ## Anti-Patterns
 
