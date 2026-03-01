@@ -14,15 +14,14 @@ services.AddAvaloniaUIServices();       // ViewModels (Transient)
 
 This is the only project that references Infrastructure, achieving architectural purity where UI layer only depends on Application layer.
 
-## Host Lifecycle
+## Service Lifetime
 
-- `host.StartAsync()` called before Avalonia starts
+- `ServiceCollection` builds a `ServiceProvider` before Avalonia starts
 - `StartWithClassicDesktopLifetime()` runs Avalonia event loop (blocking)
-- `host.StopAsync()` and `host.Dispose()` called in finally block after Avalonia exits
-- This ensures proper disposal of singleton services (e.g., TelegramBotService)
+- `using var` ensures ServiceProvider is disposed after Avalonia exits (disposes singleton services like TelegramBotService)
 
 ## Entry Point
 
-App.axaml.cs receives IServiceProvider via constructor injection (no IHost). The Startup project creates the host and passes the service provider to App.
+App.axaml.cs receives IServiceProvider via constructor injection. The Startup project builds the ServiceProvider and passes it to App.
 
 Constructor injection is used throughout. Avoid using the service provider directly outside of this composition root.
