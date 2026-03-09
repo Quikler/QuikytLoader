@@ -18,10 +18,40 @@
                            FontSize="32"
                            FontWeight="Bold"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                <TextBlock Text="Configure your Telegram bot connection"
+                <TextBlock Text="Configure application theme and Telegram bot connection"
                            FontSize="14"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
+
+
+            <!-- Theme Configuration Card -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24">
+                <StackPanel Spacing="24">
+
+                    <!-- Card Title -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Theme Configuration"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="Choose your preferred application theme"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Theme Preferences -->
+                    <StackPanel Spacing="8">
+                        <ListBox
+                            ItemsSource="{Binding ThemeApplier.AvailableThemes}"
+                            SelectedItem="{Binding ThemePreference}"
+                            Classes="RadioButtonListBox" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
 
             <!-- Telegram Bot Configuration Card -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
@@ -85,28 +115,28 @@
                             <Run Text="to find your chat ID"/>
                         </TextBlock>
                     </StackPanel>
-
-                    <!-- Save Button and Status -->
-                    <StackPanel Spacing="12">
-                        <Button Content="Save Settings"
-                                Command="{Binding SaveSettingsCommand}"
-                                IsEnabled="{Binding HasUnsavedChanges}"
-                                HorizontalAlignment="Left"
-                                Height="40"
-                                Padding="24,0"
-                                FontSize="14"
-                                FontWeight="SemiBold"
-                                Classes="accent"/>
-
-                        <!-- Status Message -->
-                        <TextBlock Text="{Binding StatusMessage}"
-                                   FontSize="13"
-                                   Foreground="{DynamicResource SystemFillColorSuccessBrush}"
-                                   IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                    </StackPanel>
-
                 </StackPanel>
             </Border>
+
+            <!-- Save Button and Status -->
+            <StackPanel Spacing="12">
+                <Button Content="Save Settings"
+                        Command="{Binding SaveSettingsCommand}"
+                        IsEnabled="{Binding HasUnsavedChanges}"
+                        HorizontalAlignment="Left"
+                        Height="40"
+                        Padding="24,0"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Classes="accent"/>
+
+                <!-- Status Message -->
+                <TextBlock Text="{Binding StatusMessage}"
+                           FontSize="13"
+                           Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+
 
             <!-- Help Card -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"

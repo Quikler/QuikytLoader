@@ -1,10 +1,19 @@
+using System.Text.Json.Serialization;
+using QuikytLoader.Domain.Enums;
+
 namespace QuikytLoader.Application.DTOs;
 
 /// <summary>
 /// Data transfer object for user settings (Telegram configuration)
 /// </summary>
-public class UserSettingsDto
+public record UserSettingsDto
 {
+    /// <summary>
+    /// User's preferred application theme. Stored as string in JSON - not integer (e.g., "Light" instead of 0)
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter<ThemePreference>))]
+    public ThemePreference ThemePreference { get; set; }
+
     /// <summary>
     /// Telegram bot token from @BotFather
     /// </summary>

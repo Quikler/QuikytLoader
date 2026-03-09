@@ -28,13 +28,16 @@ public partial class AppViewModel : ViewModelBase
     public AppViewModel(
         HomeViewModel homeViewModel,
         SettingsViewModel settingsViewModel,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IThemeApplier themeApplier)
     {
         HomeViewModel = homeViewModel;
         SettingsViewModel = settingsViewModel;
         _dialogService = dialogService;
 
         _currentView = HomeViewModel;
+
+        themeApplier.ApplyFromSettings();
     }
 
     [RelayCommand(CanExecute = nameof(CanNavigateToHome))]

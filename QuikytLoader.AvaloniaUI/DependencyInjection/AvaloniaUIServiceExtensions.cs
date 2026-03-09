@@ -15,6 +15,7 @@ public static class AvaloniaUIServiceExtensions
     public static IServiceCollection AddAvaloniaUIServices(this IServiceCollection services)
     {
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IThemeApplier, ThemeApplier>();
 
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();
