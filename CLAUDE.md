@@ -21,13 +21,13 @@ make trimmed
 # Build for release (NativeAOT)
 make aot
 
-# Output location after publish:
-# QuikytLoader.Startup/bin/Release/{TargetFramework}/{RuntimeIdentifier}/publish/QuikytLoader.Startup
+# Go to output location after publish:
+. output.sh
 ```
 
 ## External Dependencies
 
-- **yt-dlp**: Must be installed on system (`sudo pacman -S yt-dlp` on Arch)
+- **yt-dlp**: Must be installed on system (install via package manager, e.g. `sudo pacman -S yt-dlp` on Arch)
 
 ## Architecture Overview
 
