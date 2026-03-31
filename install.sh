@@ -1,6 +1,6 @@
 #!/bin/bash
 # Export config.sh with common variables (better to export it before '-u' option or before variable use)
-source "$(dirname "$0")/config.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 
 # '-e' exits on error to prevents scripts from silently continuing after a failure, '-u' exits on unset variables (protecting rm -rf /$APP_NAME if $APP_NAME is empty), and '-o pipefail' ensures errors in pipelines are caught.
 set -euo pipefail
@@ -19,7 +19,7 @@ RID=${RID:-linux-x64}
 # But before make sure to run 'make trimmed RID=YOUR_ARCHITECTURE' for trimmed app OR 'make aot RID=YOUR_ARCHITECTURE' for AOT app
 # YOUR_ARCHITECTURE=win-x64,linux-x64 etc
 mkdir -p /opt/$APP_NAME/
-cp "$(dirname "$0")/$APP_NAME.Startup/bin/Release/$TFM/$RID/publish/"* "$SOURCE_DIR"
+cp "$(dirname "${BASH_SOURCE[0]}")/$APP_NAME.Startup/bin/Release/$TFM/$RID/publish/"* "$SOURCE_DIR"
 
 # Only remove if it’s a symlink pointing to our app (safer than --force)
 if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SOURCE" ]; then
