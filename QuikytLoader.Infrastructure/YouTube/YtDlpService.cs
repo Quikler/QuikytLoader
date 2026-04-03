@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
 
@@ -83,6 +84,53 @@ internal partial class YtDlpService : IYtDlpService
                 return Errors.YouTube.TitleFetchFailed(url);
 
             return Result<string>.Success(title);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
+        }
+    }
+
+    public async Task<Result<VideoMetadataDto>> GetVideoMetadataAsync(string url, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return Errors.YouTube.InvalidUrl(url);
+
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "yt-dlp",
+                Arguments = $"--skip-download --no-playlist --print title --print channel --print duration_string --print thumbnail \"{url}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process is null) return Errors.YouTube.YtDlpStartFailed();
+
+            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            await process.WaitForExitAsync(cancellationToken);
+
+            if (process.ExitCode != 0)
+                return Errors.YouTube.MetadataFetchFailed(url);
+
+            var output = await outputTask;
+            var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            if (lines.Length < 4)
+                return Errors.YouTube.MetadataFetchFailed(url);
+
+            var metadata = new VideoMetadataDto(
+                Title: lines[0].Trim(),
+                Channel: lines[1].Trim(),
+                Duration: lines[2].Trim(),
+                ThumbnailUrl: lines[3].Trim()
+            );
+
+            return Result<VideoMetadataDto>.Success(metadata);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

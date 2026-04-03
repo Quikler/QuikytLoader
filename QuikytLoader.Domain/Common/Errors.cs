@@ -27,6 +27,9 @@ public static class Errors
 
         public static Error YtDlpException(string url, string exceptionType) => new(
             $"Unexpected error running yt-dlp for '{url}': {exceptionType}");
+
+        public static Error MetadataFetchFailed(string url) => new(
+            $"Failed to fetch video metadata from '{url}'");
     }
 
     public static class Telegram

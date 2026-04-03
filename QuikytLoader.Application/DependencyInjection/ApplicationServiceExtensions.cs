@@ -16,6 +16,7 @@ public static class ApplicationServiceExtensions
         // Register Use Cases
         services.AddTransient<DownloadAndSendUseCase>();
         services.AddTransient<FindExistingDownloadUseCase>();
+        services.AddTransient<GetVideoMetadataUseCase>();
         services.AddTransient<GetVideoTitleUseCase>();
         services.AddTransient<ManageSettingsUseCase>();
         services.AddTransient<ValidateYouTubeUrlUseCase>();

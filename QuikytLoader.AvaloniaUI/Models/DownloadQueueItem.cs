@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Domain.Enums;
 
@@ -45,7 +46,55 @@ public partial class DownloadQueueItem : ObservableObject
     /// Optional custom title for the output file (if null, uses video title)
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
     private string? _customTitle;
+
+    /// <summary>
+    /// Fetched video title (separate from CustomTitle which is user-edited)
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
+    private string? _videoTitle;
+
+    /// <summary>
+    /// YouTube channel name
+    /// </summary>
+    [ObservableProperty]
+    private string? _channelName;
+
+    /// <summary>
+    /// Formatted duration string (e.g., "3:45")
+    /// </summary>
+    [ObservableProperty]
+    private string? _duration;
+
+    /// <summary>
+    /// YouTube thumbnail URL for async image loading
+    /// </summary>
+    [ObservableProperty]
+    private string? _thumbnailUrl;
+
+    /// <summary>
+    /// Tracks whether metadata fetch completed (for UI loading state)
+    /// </summary>
+    [ObservableProperty]
+    private bool _isMetadataLoaded;
+
+    /// <summary>
+    /// Tracks whether metadata fetch failed (for error icon)
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasMetadataError;
+
+    /// <summary>
+    /// Display title: shows CustomTitle if set, otherwise VideoTitle
+    /// </summary>
+    public string? DisplayTitle => CustomTitle ?? VideoTitle;
+
+    /// <summary>
+    /// Command to proceed with download after title editing (set by HomeViewModel)
+    /// </summary>
+    public IRelayCommand? ProceedCommand { get; set; }
 
     /// <summary>
     /// Result of the download operation (populated when status is Completed)

@@ -19,7 +19,7 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 public partial class HomeViewModel(
     DownloadAndSendUseCase downloadAndSendUseCase,
     FindExistingDownloadUseCase findExistingDownloadUseCase,
-    GetVideoTitleUseCase getVideoTitleUseCase,
+    GetVideoMetadataUseCase getVideoMetadataUseCase,
     ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase,
     IDialogService dialogService) : ViewModelBase
 {
@@ -42,21 +42,6 @@ public partial class HomeViewModel(
     private bool _useCustomTitle = false;
 
     [ObservableProperty]
-    private string _customTitle = string.Empty;
-
-    [ObservableProperty]
-    private string _titleFetchStatus = string.Empty;
-
-    [ObservableProperty]
-    private bool _isWaitingForProceed = false;
-
-    [ObservableProperty]
-    private string _addToQueueButtonText = "Add to Queue";
-
-    [ObservableProperty]
-    private bool _isProceedButtonState = false;
-
-    [ObservableProperty]
     private ObservableCollection<DownloadQueueItem> _queueItems = [];
 
     private bool _isQueueProcessing = false;
@@ -65,9 +50,8 @@ public partial class HomeViewModel(
 
     /// <summary>
     /// Command to add URL to download queue.
-    /// Two-step process when UseCustomTitle is checked:
-    /// 1. First click: Fetch title and wait for user to edit
-    /// 2. Second click (Proceed): Add to queue with custom title
+    /// Adds item immediately, fetches metadata in parallel.
+    /// If UseCustomTitle is checked, item gets WaitingForEdits status.
     /// Includes duplicate detection: prompts user if video was already downloaded.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteAddToQueue))]
@@ -76,30 +60,6 @@ public partial class HomeViewModel(
         if (!validateYouTubeUrlUseCase.IsValid(YoutubeUrl))
         {
             UpdateStatus("Invalid YouTube URL");
-            return;
-        }
-
-        // If UseCustomTitle is checked and we haven't fetched the title yet
-        if (UseCustomTitle && !IsWaitingForProceed)
-        {
-            // Step 1: Fetch title and wait for user to edit
-            TitleFetchStatus = "Fetching video title...";
-
-            var titleResult = await getVideoTitleUseCase.GetVideoTitleAsync(YoutubeUrl);
-            if (!titleResult.IsSuccess)
-            {
-                TitleFetchStatus = $"Failed to fetch title: {titleResult.Error.Message}";
-                Console.WriteLine($"Title fetch failed: {titleResult.Error.Message}");
-                return;
-            }
-
-            CustomTitle = titleResult.Value;
-            TitleFetchStatus = "Edit the title above if needed";
-
-            // Change button to "Proceed" state
-            IsWaitingForProceed = true;
-            AddToQueueButtonText = "Proceed";
-            IsProceedButtonState = true;
             return;
         }
 
@@ -125,25 +85,58 @@ public partial class HomeViewModel(
                 return;
             }
         }
-        // If duplicateCheckResult.Value is null, no duplicate exists - continue silently
 
-        // Step 2: Proceed with adding to queue
         var queueItem = new DownloadQueueItem
         {
             Url = YoutubeUrl,
-            Status = DownloadStatus.Pending,
-            StatusMessage = "Pending",
-            CustomTitle = UseCustomTitle ? CustomTitle : null
+            Status = UseCustomTitle ? DownloadStatus.Editing : DownloadStatus.Pending,
+            StatusMessage = UseCustomTitle ? "Waiting for title edit" : "Pending"
         };
+
+        if (UseCustomTitle)
+        {
+            queueItem.ProceedCommand = new RelayCommand(() =>
+            {
+                queueItem.Status = DownloadStatus.Pending;
+                queueItem.StatusMessage = "Pending";
+
+                if (!_isQueueProcessing)
+                    _ = ProcessQueueAsync();
+            });
+        }
 
         QueueItems.Add(queueItem);
         ClearUrl();
-        ClearTitleEdit();
-        ResetButtonState();
         UpdateStatus($"Added to queue. {QueueItems.Count(i => i.Status == DownloadStatus.Pending)} items pending.");
 
-        if (!_isQueueProcessing)
+        // Fetch metadata in parallel (non-blocking)
+        _ = FetchMetadataAsync(queueItem);
+
+        if (!UseCustomTitle && !_isQueueProcessing)
             _ = ProcessQueueAsync();
+    }
+
+    private async Task FetchMetadataAsync(DownloadQueueItem item)
+    {
+        var result = await getVideoMetadataUseCase.GetMetadataAsync(item.Url);
+
+        if (result.IsSuccess)
+        {
+            item.VideoTitle = result.Value.Title;
+            item.ChannelName = result.Value.Channel;
+            item.Duration = result.Value.Duration;
+            item.ThumbnailUrl = result.Value.ThumbnailUrl;
+            item.IsMetadataLoaded = true;
+
+            // Populate editable title for custom title items
+            if (item.Status == DownloadStatus.Editing)
+                item.CustomTitle = result.Value.Title;
+        }
+        else
+        {
+            item.HasMetadataError = true;
+            Console.WriteLine($"Metadata fetch failed for {item.Url}: {result.Error.Message}");
+        }
     }
 
     private async Task ProcessQueueAsync()
@@ -208,7 +201,15 @@ public partial class HomeViewModel(
             }
         }
 
-        UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
+        var waitingCount = QueueItems.Count(i => i.Status == DownloadStatus.Editing);
+        var succeededCount = QueueItems.Count(i => i.Status == DownloadStatus.Completed);
+        var failedCount = QueueItems.Count(i => i.Status == DownloadStatus.Failed);
+
+        var statusParts = $"Queue processed. {succeededCount} succeeded, {failedCount} failed.";
+        if (waitingCount > 0)
+            statusParts += $" {waitingCount} items waiting for edits.";
+
+        UpdateStatus(statusParts);
         _isQueueProcessing = false;
     }
 
@@ -233,31 +234,8 @@ public partial class HomeViewModel(
 
     private void ClearUrl() => YoutubeUrl = string.Empty;
 
-    private void ClearTitleEdit()
-    {
-        UseCustomTitle = false;
-        CustomTitle = string.Empty;
-        TitleFetchStatus = string.Empty;
-    }
-
-    private void ResetButtonState()
-    {
-        IsWaitingForProceed = false;
-        AddToQueueButtonText = "Add to Queue";
-        IsProceedButtonState = false;
-    }
-
     partial void OnYoutubeUrlChanged(string value)
     {
         AddToQueueCommand.NotifyCanExecuteChanged();
-
-        CustomTitle = string.Empty;
-        TitleFetchStatus = string.Empty;
-        ResetButtonState();
-    }
-
-    partial void OnUseCustomTitleChanged(bool value)
-    {
-        if (!value) ResetButtonState();
     }
 }

@@ -6,6 +6,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:i="using:Avalonia.Xaml.Interactivity"
              xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+             xmlns:asyncImageLoader="using:AsyncImageLoader"
              x:Class="QuikytLoader.AvaloniaUI.Views.HomeView"
              x:DataType="vm:HomeViewModel">
 
@@ -56,60 +57,27 @@
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
 
-                    <!-- Edit Title Section -->
-                    <StackPanel Spacing="8">
-                        <CheckBox IsChecked="{Binding UseCustomTitle, Mode=TwoWay}"
-                                  Content="Use custom title"
-                                  FontSize="14"/>
+                    <!-- Custom Title Checkbox -->
+                    <CheckBox IsChecked="{Binding UseCustomTitle, Mode=TwoWay}"
+                              Content="Use custom title"
+                              FontSize="14"/>
 
-                        <TextBox Text="{Binding CustomTitle, Mode=TwoWay}"
-                                 Watermark="Video title will appear here..."
-                                 FontSize="14"
-                                 Height="40"
-                                 VerticalContentAlignment="Center"
-                                 IsVisible="{Binding IsWaitingForProceed}"/>
-
-                        <TextBlock Text="{Binding TitleFetchStatus}"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   IsVisible="{Binding IsWaitingForProceed}"/>
-                    </StackPanel>
-
-                    <!-- Add to Queue / Proceed Button -->
+                    <!-- Add to Queue Button -->
                     <Button Command="{Binding AddToQueueCommand}"
                             HorizontalAlignment="Stretch"
                             Height="48"
                             FontSize="16"
                             FontWeight="SemiBold"
-                            IsDefault="False"
-                            Classes.proceed="{Binding IsProceedButtonState}">
+                            IsDefault="False">
                         <Button.Styles>
                             <Style Selector="Button">
                                 <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Style>
-                            <Style Selector="Button.proceed">
-                                <Setter Property="Background" Value="#90EE90"/>
-                                <Setter Property="Foreground" Value="#2D5016"/>
-                            </Style>
-                            <Style Selector="Button.proceed:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#7FD87F"/>
-                            </Style>
-                            <Style Selector="Button.proceed:pressed /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#6FC76F"/>
-                            </Style>
                         </Button.Styles>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <!-- Add icon when in normal state -->
-                            <ui:SymbolIcon Symbol="Add"
-                                           FontSize="20"
-                                           IsVisible="{Binding !IsProceedButtonState}"/>
-                            <!-- Play icon when in Proceed state -->
-                            <ui:SymbolIcon Symbol="Play"
-                                           FontSize="20"
-                                           IsVisible="{Binding IsProceedButtonState}"/>
-                            <TextBlock Text="{Binding AddToQueueButtonText}"
-                                       VerticalAlignment="Center"/>
+                            <ui:SymbolIcon Symbol="Add" FontSize="20"/>
+                            <TextBlock Text="Add to Queue" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -145,37 +113,133 @@
                             <DataTemplate>
                                 <Border BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
                                         BorderThickness="0,0,0,1"
-                                        Padding="16,12">
-                                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                        Padding="16,12"
+                                        Background="Transparent"
+                                        ToolTip.Tip="{Binding Url}">
+                                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
 
-                                        <!-- URL -->
-                                        <TextBlock Grid.Row="0" Grid.Column="0"
-                                                   Text="{Binding Url}"
-                                                   FontSize="13"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                        <!-- Thumbnail with duration overlay -->
+                                        <Panel Grid.Row="0" Grid.Column="0"
+                                               Width="120" Height="68"
+                                               Margin="0,0,12,0"
+                                               IsVisible="{Binding IsMetadataLoaded}">
+                                            <Border CornerRadius="4" ClipToBounds="True">
+                                                <Image Width="120" Height="68"
+                                                       Stretch="UniformToFill"
+                                                       asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"/>
+                                            </Border>
+                                            <!-- Duration overlay -->
+                                            <Border Background="#CC000000"
+                                                    CornerRadius="3"
+                                                    Padding="4,2"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Bottom"
+                                                    Margin="0,0,4,4"
+                                                    IsVisible="{Binding Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                <TextBlock Text="{Binding Duration}"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"/>
+                                            </Border>
+                                        </Panel>
 
-                                        <!-- Status Badge -->
-                                        <Border Grid.Row="0" Grid.Column="1"
-                                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                        <!-- Placeholder when metadata not loaded -->
+                                        <Border Grid.Row="0" Grid.Column="0"
+                                                Width="120" Height="68"
+                                                Margin="0,0,12,0"
                                                 CornerRadius="4"
-                                                Padding="8,4"
-                                                Margin="8,0,0,0">
-                                            <TextBlock Text="{Binding Status}"
-                                                       FontSize="11"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="White"/>
+                                                Background="{DynamicResource LayerFillColorDefaultBrush}"
+                                                IsVisible="{Binding !IsMetadataLoaded}">
+                                            <ui:SymbolIcon Symbol="Video"
+                                                           FontSize="24"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
                                         </Border>
 
-                                        <!-- Status Message -->
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                                   Text="{Binding StatusMessage}"
-                                                   FontSize="12"
-                                                   Margin="0,4,0,0"
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <!-- Right side: title, channel, status -->
+                                        <Grid Grid.Row="0" Grid.Column="1"
+                                              RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
 
-                                        <!-- Progress Bar -->
-                                        <ProgressBar Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                            <!-- Video Title (static, when NOT WaitingForEdits) -->
+                                            <StackPanel Grid.Row="0" Grid.Column="0"
+                                                        Orientation="Horizontal" Spacing="6"
+                                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}">
+                                                <!-- Metadata error icon -->
+                                                <ui:SymbolIcon Symbol="Alert"
+                                                               FontSize="14"
+                                                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                               IsVisible="{Binding HasMetadataError}"/>
+                                                <TextBlock Text="{Binding DisplayTitle, FallbackValue=''}"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                           IsVisible="{Binding IsMetadataLoaded}"/>
+                                                <TextBlock Text="{Binding Url}"
+                                                           FontSize="13"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                           IsVisible="{Binding !IsMetadataLoaded}"/>
+                                            </StackPanel>
+
+                                            <!-- Editable title + Proceed button (when WaitingForEdits) -->
+                                            <Grid Grid.Row="0" Grid.Column="0"
+                                                  ColumnDefinitions="*,Auto"
+                                                  IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}">
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding CustomTitle, Mode=TwoWay}"
+                                                         Watermark="Edit title..."
+                                                         FontSize="13"
+                                                         Height="32"
+                                                         VerticalContentAlignment="Center"/>
+                                                <Button Grid.Column="1"
+                                                        Command="{Binding ProceedCommand}"
+                                                        Margin="8,0,0,0"
+                                                        Height="32"
+                                                        Padding="12,0"
+                                                        FontSize="12"
+                                                        FontWeight="SemiBold"
+                                                        Background="#90EE90"
+                                                        Foreground="#2D5016">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <ui:SymbolIcon Symbol="Play" FontSize="12"/>
+                                                        <TextBlock Text="Proceed" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+
+                                            <!-- Status Badge -->
+                                            <Border Grid.Row="0" Grid.Column="1"
+                                                    Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="8,4"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Status}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"/>
+                                            </Border>
+
+                                            <!-- Channel Name -->
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Text="{Binding ChannelName}"
+                                                       FontSize="12"
+                                                       Margin="0,2,0,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                       IsVisible="{Binding ChannelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                                            <!-- Status Message -->
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Text="{Binding StatusMessage}"
+                                                       FontSize="12"
+                                                       Margin="0,2,0,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        </Grid>
+
+                                        <!-- Progress Bar (full width under entire item) -->
+                                        <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                                      Value="{Binding Progress}"
                                                      Maximum="100"
                                                      Height="4"
