@@ -1,6 +1,5 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Domain.Enums;
 
@@ -100,11 +99,6 @@ public partial class DownloadQueueItem : ObservableObject
     /// Display title: shows CustomTitle if set, otherwise VideoTitle
     /// </summary>
     public string? DisplayTitle => CustomTitle ?? VideoTitle;
-
-    /// <summary>
-    /// Command to proceed with download after title editing (set by HomeViewModel)
-    /// </summary>
-    public IRelayCommand? ProceedCommand { get; set; }
 
     /// <summary>
     /// Result of the download operation (populated when status is Completed)

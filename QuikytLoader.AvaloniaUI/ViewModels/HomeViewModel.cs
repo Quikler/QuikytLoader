@@ -92,17 +92,6 @@ public partial class HomeViewModel(
             Status = UseCustomTitle ? DownloadStatus.Editing : DownloadStatus.Pending
         };
 
-        if (UseCustomTitle)
-        {
-            queueItem.ProceedCommand = new RelayCommand(() =>
-            {
-                queueItem.Status = DownloadStatus.Pending;
-
-                if (!_isQueueProcessing)
-                    _ = ProcessQueueAsync();
-            });
-        }
-
         QueueItems.Add(queueItem);
         ClearUrl();
         UpdateStatus($"Added to queue. {QueueItems.Count(i => i.Status == DownloadStatus.Pending)} items pending.");
@@ -205,6 +194,15 @@ public partial class HomeViewModel(
 
         UpdateStatus(statusParts);
         _isQueueProcessing = false;
+    }
+
+    [RelayCommand]
+    private void ProceedItem(DownloadQueueItem item)
+    {
+        item.Status = DownloadStatus.Pending;
+
+        if (!_isQueueProcessing)
+            _ = ProcessQueueAsync();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteCancel))]

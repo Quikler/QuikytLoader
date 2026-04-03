@@ -111,7 +111,7 @@
                     <ItemsControl ItemsSource="{Binding QueueItems}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <views:DownloadQueueItemView/>
+                                <views:DownloadQueueItemView ProceedCommand="{Binding ((vm:HomeViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:HomeView}}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
