@@ -1,3 +1,4 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
@@ -22,6 +23,7 @@ public partial class DownloadQueueItem : ObservableObject
     /// Current status of this download
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusMessage))]
     private DownloadStatus _status = DownloadStatus.Pending;
 
     /// <summary>
@@ -37,10 +39,18 @@ public partial class DownloadQueueItem : ObservableObject
     private string? _errorMessage;
 
     /// <summary>
-    /// Status message for display (e.g., "Downloading...", "Sending to Telegram...")
+    /// Status message derived from current Status
     /// </summary>
-    [ObservableProperty]
-    private string _statusMessage = "Pending";
+    public string StatusMessage => Status switch
+    {
+        DownloadStatus.Pending => "Pending",
+        DownloadStatus.Editing => "Waiting for title edit",
+        DownloadStatus.Downloading => "Starting download...",
+        DownloadStatus.Completed => "✓ Completed",
+        DownloadStatus.Failed => "Failed",
+        DownloadStatus.Cancelled => "Cancelled",
+        _ => throw new ArgumentOutOfRangeException(nameof(Status), Status, "Unhandled download status")
+    };
 
     /// <summary>
     /// Optional custom title for the output file (if null, uses video title)

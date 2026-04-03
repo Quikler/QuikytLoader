@@ -89,8 +89,7 @@ public partial class HomeViewModel(
         var queueItem = new DownloadQueueItem
         {
             Url = YoutubeUrl,
-            Status = UseCustomTitle ? DownloadStatus.Editing : DownloadStatus.Pending,
-            StatusMessage = UseCustomTitle ? "Waiting for title edit" : "Pending"
+            Status = UseCustomTitle ? DownloadStatus.Editing : DownloadStatus.Pending
         };
 
         if (UseCustomTitle)
@@ -98,7 +97,6 @@ public partial class HomeViewModel(
             queueItem.ProceedCommand = new RelayCommand(() =>
             {
                 queueItem.Status = DownloadStatus.Pending;
-                queueItem.StatusMessage = "Pending";
 
                 if (!_isQueueProcessing)
                     _ = ProcessQueueAsync();
@@ -147,7 +145,6 @@ public partial class HomeViewModel(
         while ((nextItem = QueueItems.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
         {
             nextItem.Status = DownloadStatus.Downloading;
-            nextItem.StatusMessage = "Starting download...";
 
             _cancellationTokenSource = new CancellationTokenSource();
             SetProcessingState(true);
@@ -164,7 +161,6 @@ public partial class HomeViewModel(
                 {
                     var errorMessage = downloadResult.Error.Message;
                     nextItem.Status = DownloadStatus.Failed;
-                    nextItem.StatusMessage = "Failed";
                     nextItem.ErrorMessage = errorMessage;
                     nextItem.Progress = 0;
 
@@ -174,14 +170,12 @@ public partial class HomeViewModel(
                 {
                     nextItem.DownloadResult = downloadResult.Value;
                     nextItem.Status = DownloadStatus.Completed;
-                    nextItem.StatusMessage = "✓ Completed";
                     nextItem.Progress = 100;
                 }
             }
             catch (OperationCanceledException)
             {
                 nextItem.Status = DownloadStatus.Cancelled;
-                nextItem.StatusMessage = "Cancelled";
                 nextItem.Progress = 0;
             }
             finally
