@@ -93,7 +93,7 @@
                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
-                IsVisible="{Binding QueueItems.Count}">
+                IsVisible="{Binding QueueManager.Items.Count}">
             <DockPanel>
                 <!-- Queue Header -->
                 <Border DockPanel.Dock="Top"
@@ -108,7 +108,7 @@
 
                 <!-- Queue Items -->
                 <ScrollViewer MaxHeight="400">
-                    <ItemsControl ItemsSource="{Binding QueueItems}">
+                    <ItemsControl ItemsSource="{Binding QueueManager.Items}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <views:DownloadQueueItemView ProceedCommand="{Binding ((vm:HomeViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:HomeView}}"/>

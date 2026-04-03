@@ -1,4 +1,3 @@
-using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
@@ -7,7 +6,7 @@ using QuikytLoader.Domain.Entities;
 namespace QuikytLoader.Application.UseCases;
 
 /// <summary>
-/// Use case: Download YouTube video, save to history, send to Telegram
+/// Use case: Download YouTube video, send to Telegram, save to history, cleanup temp files
 /// </summary>
 public class DownloadAndSendUseCase(
     IYoutubeDownloadService youtubeDownloadService,
@@ -15,7 +14,7 @@ public class DownloadAndSendUseCase(
     ITelegramBotService telegramService,
     IYoutubeExtractorService youtubeExtractorService)
 {
-    public async Task<Result<DownloadResultDto>> ExecuteAsync(
+    public async Task<Result> ExecuteAsync(
         string url,
         string? customTitle = null,
         IProgress<double>? progress = null,
@@ -24,33 +23,39 @@ public class DownloadAndSendUseCase(
         // 1. Extract YouTube ID
         var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(youtubeIdResult.Error);
+            return youtubeIdResult.Error;
 
         // 2. Download video
         var downloadResult = await youtubeDownloadService.DownloadAudioAsync(url, customTitle, progress, cancellationToken);
-
         if (!downloadResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(downloadResult.Error);
+            return downloadResult.Error;
 
         var entity = downloadResult.Value;
 
-        // 3. Send to Telegram
-        var sendResult = await telegramService.SendAudioAsync(
-            entity.TempMediaFilePath,
-            entity.TempThumbnailPath);
+        try
+        {
+            // 3. Send to Telegram
+            var sendResult = await telegramService.SendAudioAsync(
+                entity.TempMediaFilePath,
+                entity.TempThumbnailPath);
 
-        if (!sendResult.IsSuccess)
-            return Result<DownloadResultDto>.Failure(sendResult.Error);
+            if (!sendResult.IsSuccess)
+                return sendResult.Error;
 
-        // 4. Save to history
-        await historyRepo.UpsertAsync(
-            new DownloadHistoryEntity(
-                entity.YouTubeId,
-                customTitle ?? entity.VideoTitle,
-                DateTime.UtcNow.ToString("o")));
+            // 4. Save to history
+            await historyRepo.UpsertAsync(
+                new DownloadHistoryEntity(
+                    entity.YouTubeId,
+                    customTitle ?? entity.VideoTitle,
+                    DateTime.UtcNow.ToString("o")));
 
-        // 5. Map domain entity to DTO and return
-        var dto = new DownloadResultDto(entity.YouTubeId.Id, entity.VideoTitle, entity.TempMediaFilePath, entity.TempThumbnailPath);
-        return Result<DownloadResultDto>.Success(dto);
+            return Result.Success();
+        }
+        finally
+        {
+            // 5. Cleanup temp files — no longer needed after Telegram send
+            try { File.Delete(entity.TempMediaFilePath); } catch { }
+            try { File.Delete(entity.TempThumbnailPath); } catch { }
+        }
     }
 }

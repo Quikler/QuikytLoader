@@ -1,6 +1,5 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using QuikytLoader.Application.DTOs;
 using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.Models;
@@ -100,8 +99,4 @@ public partial class DownloadQueueItem : ObservableObject
     /// </summary>
     public string? DisplayTitle => CustomTitle ?? VideoTitle;
 
-    /// <summary>
-    /// Result of the download operation (populated when status is Completed)
-    /// </summary>
-    public DownloadResultDto? DownloadResult { get; set; }
 }
