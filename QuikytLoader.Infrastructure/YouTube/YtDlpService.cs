@@ -15,9 +15,9 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                Arguments = $"--print id --skip-download \"{url}\"",
+                ArgumentList = { "--print", "id", "--skip-download", url },
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -27,7 +27,7 @@ internal partial class YtDlpService : IYtDlpService
                 return Errors.YouTube.YtDlpStartFailed();
 
             var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
+            await WaitForProcessExit(process, cancellationToken);
 
             if (process.ExitCode != 0)
                 return Errors.YouTube.YtDlpExtractionFailed(url, process.ExitCode);
@@ -55,9 +55,9 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                Arguments = $"--get-title --no-playlist \"{url}\"",
+                ArgumentList = { "--get-title", "--no-playlist", url },
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -74,7 +74,7 @@ internal partial class YtDlpService : IYtDlpService
 
             process.BeginOutputReadLine();
 
-            await process.WaitForExitAsync(cancellationToken);
+            await WaitForProcessExit(process, cancellationToken);
 
             if (process.ExitCode != 0)
                 return Errors.YouTube.DownloadFailed(url, process.ExitCode);
