@@ -42,12 +42,12 @@ public partial class DownloadQueueItem : ObservableObject
     /// </summary>
     public string StatusMessage => Status switch
     {
-        DownloadStatus.Pending => "Pending",
-        DownloadStatus.Editing => "Waiting for title edit",
-        DownloadStatus.Downloading => "Starting download...",
+        DownloadStatus.Pending => "⏸ Pending",
+        DownloadStatus.Editing => "⚡ Waiting for title edit",
+        DownloadStatus.Downloading => "⏳ Downloading...",
         DownloadStatus.Completed => "✓ Completed",
-        DownloadStatus.Failed => "Failed",
-        DownloadStatus.Cancelled => "Cancelled",
+        DownloadStatus.Failed => "✗ Failed",
+        DownloadStatus.Cancelled => "⊘ Cancelled",
         _ => throw new ArgumentOutOfRangeException(nameof(Status), Status, "Unhandled download status")
     };
 
