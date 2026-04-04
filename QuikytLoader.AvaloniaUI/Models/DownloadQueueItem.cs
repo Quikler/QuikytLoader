@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using QuikytLoader.Application.DTOs;
 using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.Models;
@@ -99,4 +100,15 @@ public partial class DownloadQueueItem : ObservableObject
     /// </summary>
     public string? DisplayTitle => CustomTitle ?? VideoTitle;
 
+    public void ApplyMetadata(VideoMetadataDto metadata)
+    {
+        VideoTitle = metadata.Title;
+        ChannelName = metadata.Channel;
+        Duration = metadata.Duration;
+        ThumbnailUrl = metadata.ThumbnailUrl;
+        IsMetadataLoaded = true;
+
+        if (Status == DownloadStatus.Editing)
+            CustomTitle = metadata.Title;
+    }
 }

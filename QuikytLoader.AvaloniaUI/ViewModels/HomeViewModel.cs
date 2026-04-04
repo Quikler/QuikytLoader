@@ -87,24 +87,12 @@ public partial class HomeViewModel(
 
     private async Task FetchMetadataAsync(DownloadQueueItem item)
     {
-        var result = await getVideoMetadataUseCase.GetMetadataAsync(item.Url);
+        var videoMetadata = await getVideoMetadataUseCase.GetMetadataAsync(item.Url);
 
-        if (result.IsSuccess)
-        {
-            item.VideoTitle = result.Value.Title;
-            item.ChannelName = result.Value.Channel;
-            item.Duration = result.Value.Duration;
-            item.ThumbnailUrl = result.Value.ThumbnailUrl;
-            item.IsMetadataLoaded = true;
-
-            if (item.Status == DownloadStatus.Editing)
-                item.CustomTitle = result.Value.Title;
-        }
+        if (videoMetadata.IsSuccess)
+            item.ApplyMetadata(videoMetadata.Value);
         else
-        {
             item.HasMetadataError = true;
-            Console.WriteLine($"Metadata fetch failed for {item.Url}: {result.Error.Message}");
-        }
     }
 
     private bool CanExecuteCancel() => queueManager.IsProcessing;
