@@ -34,6 +34,7 @@ public partial class DownloadQueueManager(
         _ = ProcessQueueAsync();
     }
 
+    // TODO: Wire to per-item cancel button (see TO-DOS.md)
     public void CancelCurrent() => _currentCancellationTokenSource?.Cancel();
 
     public string GetStatusSummary()
@@ -51,46 +52,54 @@ public partial class DownloadQueueManager(
             return;
 
         IsProcessing = true;
-
-        DownloadQueueItem? currentItem;
-        while ((currentItem = Items.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
+        try
         {
-            currentItem.Status = DownloadStatus.Downloading;
-
-            _currentCancellationTokenSource = new CancellationTokenSource();
-
-            try
+            DownloadQueueItem? currentItem;
+            while ((currentItem = Items.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
             {
-                var result = await processQueueItem(
-                    currentItem,
-                    _currentCancellationTokenSource.Token);
+                currentItem.Status = DownloadStatus.Downloading;
 
-                if (!result.IsSuccess)
+                _currentCancellationTokenSource = new CancellationTokenSource();
+
+                try
+                {
+                    var result = await processQueueItem(
+                        currentItem,
+                        _currentCancellationTokenSource.Token);
+
+                    if (!result.IsSuccess)
+                    {
+                        currentItem.Status = DownloadStatus.Failed;
+                        currentItem.ErrorMessage = result.Error.Message;
+                        currentItem.Progress = 0;
+                    }
+                    else
+                    {
+                        currentItem.Status = DownloadStatus.Completed;
+                        currentItem.Progress = 100;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    currentItem.Status = DownloadStatus.Cancelled;
+                    currentItem.Progress = 0;
+                }
+                catch (Exception ex)
                 {
                     currentItem.Status = DownloadStatus.Failed;
-                    currentItem.ErrorMessage = result.Error.Message;
+                    currentItem.ErrorMessage = ex.Message;
                     currentItem.Progress = 0;
-
-                    Console.WriteLine($"Download failed: {result.Error.Message}");
                 }
-                else
+                finally
                 {
-                    currentItem.Status = DownloadStatus.Completed;
-                    currentItem.Progress = 100;
+                    _currentCancellationTokenSource?.Dispose();
+                    _currentCancellationTokenSource = null;
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                currentItem.Status = DownloadStatus.Cancelled;
-                currentItem.Progress = 0;
-            }
-            finally
-            {
-                _currentCancellationTokenSource?.Dispose();
-                _currentCancellationTokenSource = null;
             }
         }
-
-        IsProcessing = false;
+        finally
+        {
+            IsProcessing = false;
+        }
     }
 }

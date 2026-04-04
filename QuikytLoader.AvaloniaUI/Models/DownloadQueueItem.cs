@@ -98,7 +98,8 @@ public partial class DownloadQueueItem : ObservableObject
     /// <summary>
     /// Display title: shows CustomTitle if set, otherwise VideoTitle
     /// </summary>
-    public string? DisplayTitle => CustomTitle ?? VideoTitle;
+    public string? DisplayTitle =>
+        string.IsNullOrWhiteSpace(CustomTitle) ? VideoTitle : CustomTitle;
 
     public void ApplyMetadata(VideoMetadataDto metadata)
     {
@@ -108,7 +109,8 @@ public partial class DownloadQueueItem : ObservableObject
         ThumbnailUrl = metadata.ThumbnailUrl;
         IsMetadataLoaded = true;
 
-        if (Status == DownloadStatus.Editing)
+        // Only populate custom title if user hasn't started editing yet
+        if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = metadata.Title;
     }
 }

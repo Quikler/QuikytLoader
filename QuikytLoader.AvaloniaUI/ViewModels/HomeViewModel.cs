@@ -78,13 +78,6 @@ public partial class HomeViewModel(
     [RelayCommand]
     private void ProceedItem(DownloadQueueItem item) => queueManager.Proceed(item);
 
-    [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
-    private void Cancel()
-    {
-        queueManager.CancelCurrent();
-        UpdateStatus("Cancelling download...");
-    }
-
     private async Task FetchMetadataAsync(DownloadQueueItem item)
     {
         var videoMetadata = await getVideoMetadataUseCase.GetMetadataAsync(item.Url);
@@ -94,8 +87,6 @@ public partial class HomeViewModel(
         else
             item.HasMetadataError = true;
     }
-
-    private bool CanExecuteCancel() => queueManager.IsProcessing;
 
     private bool CanExecuteAddToQueue() => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 

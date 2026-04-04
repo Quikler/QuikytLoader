@@ -40,18 +40,27 @@
                 </Border>
             </Panel>
 
-            <!-- Placeholder when metadata not loaded -->
+            <!-- Placeholder when metadata loading -->
             <Border Grid.Row="0" Grid.Column="0"
                     Width="120" Height="68"
                     Margin="0,0,12,0"
                     CornerRadius="4"
                     Background="{DynamicResource LayerFillColorDefaultBrush}"
                     IsVisible="{Binding !IsMetadataLoaded}">
+                <!-- Loading placeholder -->
                 <ui:SymbolIcon Symbol="Video"
                                FontSize="24"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding !HasMetadataError}"/>
+                <!-- Error placeholder -->
+                <ui:SymbolIcon Symbol="Alert"
+                               FontSize="24"
+                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding HasMetadataError}"/>
             </Border>
 
             <!-- Right side: title, channel, status -->
@@ -62,22 +71,27 @@
                 <StackPanel Grid.Row="0" Grid.Column="0"
                             Orientation="Horizontal" Spacing="6"
                             IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}">
-                    <!-- Metadata error icon -->
-                    <ui:SymbolIcon Symbol="Alert"
-                                   FontSize="14"
-                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                   IsVisible="{Binding HasMetadataError}"/>
                     <TextBlock Text="{Binding DisplayTitle, FallbackValue=''}"
                                FontSize="13"
                                FontWeight="SemiBold"
                                TextTrimming="CharacterEllipsis"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                IsVisible="{Binding IsMetadataLoaded}"/>
+                    <!-- Loading: show URL as placeholder -->
                     <TextBlock Text="{Binding Url}"
                                FontSize="13"
                                TextTrimming="CharacterEllipsis"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                IsVisible="{Binding !IsMetadataLoaded}"/>
+                    <!-- Metadata fetch failed -->
+                    <ui:SymbolIcon Symbol="Alert"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                   IsVisible="{Binding HasMetadataError}"/>
+                    <TextBlock Text="Failed to load video info"
+                               FontSize="13"
+                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                               IsVisible="{Binding HasMetadataError}"/>
                 </StackPanel>
 
                 <!-- Editable title + Proceed button (when Editing) -->

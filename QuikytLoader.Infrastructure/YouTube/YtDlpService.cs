@@ -101,9 +101,9 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                Arguments = $"--skip-download --no-playlist --print title --print channel --print duration_string --print thumbnail \"{url}\"",
+                ArgumentList = { "--skip-download", "--no-playlist", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", url },
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -112,13 +112,13 @@ internal partial class YtDlpService : IYtDlpService
             if (process is null) return Errors.YouTube.YtDlpStartFailed();
 
             var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
+            await WaitForProcessExit(process, cancellationToken);
 
             if (process.ExitCode != 0)
                 return Errors.YouTube.MetadataFetchFailed(url);
 
             var output = await outputTask;
-            var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var lines = output.Split('\n');
 
             if (lines.Length < 4)
                 return Errors.YouTube.MetadataFetchFailed(url);
