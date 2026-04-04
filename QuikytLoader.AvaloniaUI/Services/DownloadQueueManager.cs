@@ -30,6 +30,8 @@ public partial class DownloadQueueManager(
 
     public void Proceed(DownloadQueueItem item)
     {
+        if (item.Status != DownloadStatus.Editing) return;
+
         item.Status = DownloadStatus.Pending;
         _ = ProcessQueueAsync();
     }

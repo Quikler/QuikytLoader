@@ -15,7 +15,7 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                ArgumentList = { "--print", "id", "--skip-download", url },
+                ArgumentList = { "--quiet", "--print", "id", "--skip-download", "--", url },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
                 UseShellExecute = false,
@@ -55,7 +55,7 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                ArgumentList = { "--get-title", "--no-playlist", url },
+                ArgumentList = { "--quiet", "--get-title", "--no-playlist", "--", url },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
                 UseShellExecute = false,
@@ -101,7 +101,7 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                ArgumentList = { "--skip-download", "--no-playlist", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", url },
+                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--", url },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
                 UseShellExecute = false,
