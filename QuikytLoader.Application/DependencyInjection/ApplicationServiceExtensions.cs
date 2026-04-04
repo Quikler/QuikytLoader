@@ -14,11 +14,12 @@ public static class ApplicationServiceExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Register Use Cases
-        services.AddTransient<DownloadAndSendUseCase>();
-        services.AddTransient<FindExistingDownloadUseCase>();
-        services.AddTransient<GetVideoTitleUseCase>();
-        services.AddTransient<ManageSettingsUseCase>();
-        services.AddTransient<ValidateYouTubeUrlUseCase>();
+        services.AddSingleton<DownloadAndSendUseCase>();
+        services.AddSingleton<FindExistingDownloadUseCase>();
+        services.AddSingleton<GetVideoMetadataUseCase>();
+        services.AddSingleton<GetVideoTitleUseCase>();
+        services.AddSingleton<ManageSettingsUseCase>();
+        services.AddSingleton<ValidateYouTubeUrlUseCase>();
 
         return services;
     }

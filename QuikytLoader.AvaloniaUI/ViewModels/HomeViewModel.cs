@@ -5,10 +5,6 @@ using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.Models;
 using QuikytLoader.Domain.Enums;
 using System;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
@@ -17,10 +13,10 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 /// ViewModel for the Home page (YouTube download functionality)
 /// </summary>
 public partial class HomeViewModel(
-    DownloadAndSendUseCase downloadAndSendUseCase,
     FindExistingDownloadUseCase findExistingDownloadUseCase,
-    GetVideoTitleUseCase getVideoTitleUseCase,
+    GetVideoMetadataUseCase getVideoMetadataUseCase,
     ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase,
+    DownloadQueueManager queueManager,
     IDialogService dialogService) : ViewModelBase
 {
     [ObservableProperty]
@@ -30,76 +26,16 @@ public partial class HomeViewModel(
     private string _statusMessage = "Ready";
 
     [ObservableProperty]
-    private bool _isProcessing = false;
-
-    [ObservableProperty]
-    private double _progressValue = 0;
-
-    [ObservableProperty]
-    private bool _isProgressVisible = false;
-
-    [ObservableProperty]
     private bool _useCustomTitle = false;
 
-    [ObservableProperty]
-    private string _customTitle = string.Empty;
+    public DownloadQueueManager QueueManager => queueManager;
 
-    [ObservableProperty]
-    private string _titleFetchStatus = string.Empty;
-
-    [ObservableProperty]
-    private bool _isWaitingForProceed = false;
-
-    [ObservableProperty]
-    private string _addToQueueButtonText = "Add to Queue";
-
-    [ObservableProperty]
-    private bool _isProceedButtonState = false;
-
-    [ObservableProperty]
-    private ObservableCollection<DownloadQueueItem> _queueItems = [];
-
-    private bool _isQueueProcessing = false;
-
-    private CancellationTokenSource? _cancellationTokenSource;
-
-    /// <summary>
-    /// Command to add URL to download queue.
-    /// Two-step process when UseCustomTitle is checked:
-    /// 1. First click: Fetch title and wait for user to edit
-    /// 2. Second click (Proceed): Add to queue with custom title
-    /// Includes duplicate detection: prompts user if video was already downloaded.
-    /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteAddToQueue))]
     private async Task AddToQueue()
     {
         if (!validateYouTubeUrlUseCase.IsValid(YoutubeUrl))
         {
             UpdateStatus("Invalid YouTube URL");
-            return;
-        }
-
-        // If UseCustomTitle is checked and we haven't fetched the title yet
-        if (UseCustomTitle && !IsWaitingForProceed)
-        {
-            // Step 1: Fetch title and wait for user to edit
-            TitleFetchStatus = "Fetching video title...";
-
-            var titleResult = await getVideoTitleUseCase.GetVideoTitleAsync(YoutubeUrl);
-            if (!titleResult.IsSuccess)
-            {
-                TitleFetchStatus = $"Failed to fetch title: {titleResult.Error.Message}";
-                Console.WriteLine($"Title fetch failed: {titleResult.Error.Message}");
-                return;
-            }
-
-            CustomTitle = titleResult.Value;
-            TitleFetchStatus = "Edit the title above if needed";
-
-            // Change button to "Proceed" state
-            IsWaitingForProceed = true;
-            AddToQueueButtonText = "Proceed";
-            IsProceedButtonState = true;
             return;
         }
 
@@ -125,139 +61,39 @@ public partial class HomeViewModel(
                 return;
             }
         }
-        // If duplicateCheckResult.Value is null, no duplicate exists - continue silently
 
-        // Step 2: Proceed with adding to queue
-        var queueItem = new DownloadQueueItem
+        var item = new DownloadQueueItem
         {
             Url = YoutubeUrl,
-            Status = DownloadStatus.Pending,
-            StatusMessage = "Pending",
-            CustomTitle = UseCustomTitle ? CustomTitle : null
+            Status = UseCustomTitle ? DownloadStatus.Editing : DownloadStatus.Pending
         };
 
-        QueueItems.Add(queueItem);
-        ClearUrl();
-        ClearTitleEdit();
-        ResetButtonState();
-        UpdateStatus($"Added to queue. {QueueItems.Count(i => i.Status == DownloadStatus.Pending)} items pending.");
+        queueManager.Enqueue(item);
+        _ = FetchMetadataAsync(item);
 
-        if (!_isQueueProcessing)
-            _ = ProcessQueueAsync();
+        YoutubeUrl = string.Empty;
+        UpdateStatus($"Added to queue. {queueManager.Items.Count} items in queue.");
     }
 
-    private async Task ProcessQueueAsync()
+    [RelayCommand]
+    private void ProceedItem(DownloadQueueItem item) => queueManager.Proceed(item);
+
+    private async Task FetchMetadataAsync(DownloadQueueItem item)
     {
-        _isQueueProcessing = true;
+        var videoMetadata = await getVideoMetadataUseCase.GetMetadataAsync(item.Url);
 
-        DownloadQueueItem? nextItem;
-        while ((nextItem = QueueItems.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
-        {
-            nextItem.Status = DownloadStatus.Downloading;
-            nextItem.StatusMessage = "Starting download...";
-
-            _cancellationTokenSource = new CancellationTokenSource();
-            SetProcessingState(true);
-
-            try
-            {
-                var downloadResult = await downloadAndSendUseCase.ExecuteAsync(
-                    nextItem.Url,
-                    nextItem.CustomTitle,
-                    new Progress<double>(value => nextItem.Progress = value),
-                    _cancellationTokenSource.Token);
-
-                if (!downloadResult.IsSuccess)
-                {
-                    var errorMessage = downloadResult.Error.Message;
-                    nextItem.Status = DownloadStatus.Failed;
-                    nextItem.StatusMessage = "Failed";
-                    nextItem.ErrorMessage = errorMessage;
-                    nextItem.Progress = 0;
-
-                    Console.WriteLine($"Download failed: {errorMessage}");
-                }
-                else
-                {
-                    nextItem.DownloadResult = downloadResult.Value;
-                    nextItem.Status = DownloadStatus.Completed;
-                    nextItem.StatusMessage = "✓ Completed";
-                    nextItem.Progress = 100;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                nextItem.Status = DownloadStatus.Cancelled;
-                nextItem.StatusMessage = "Cancelled";
-                nextItem.Progress = 0;
-            }
-            finally
-            {
-                // Cleanup temp files - failure is non-critical (OS cleans /tmp anyway)
-                // and must not kill the queue loop or prevent remaining items from processing
-                if (nextItem.DownloadResult is not null)
-                {
-                    try { File.Delete(nextItem.DownloadResult.TempMediaFilePath); } catch { }
-                    try { File.Delete(nextItem.DownloadResult.TempThumbnailPath); } catch { }
-                }
-
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = null;
-
-                SetProcessingState(false);
-            }
-        }
-
-        UpdateStatus($"Queue completed. {QueueItems.Count(i => i.Status == DownloadStatus.Completed)} succeeded, {QueueItems.Count(i => i.Status == DownloadStatus.Failed)} failed.");
-        _isQueueProcessing = false;
+        if (videoMetadata.IsSuccess)
+            item.ApplyMetadata(videoMetadata.Value);
+        else
+            item.HasMetadataError = true;
     }
-
-    [RelayCommand(CanExecute = nameof(CanExecuteCancel))]
-    private void Cancel()
-    {
-        _cancellationTokenSource?.Cancel();
-        UpdateStatus("Cancelling download...");
-    }
-
-    private bool CanExecuteCancel() => IsProcessing && _cancellationTokenSource is not null;
 
     private bool CanExecuteAddToQueue() => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 
-    private void SetProcessingState(bool isProcessing)
-    {
-        IsProcessing = isProcessing;
-        CancelCommand.NotifyCanExecuteChanged();
-    }
-
     private void UpdateStatus(string message) => StatusMessage = message;
-
-    private void ClearUrl() => YoutubeUrl = string.Empty;
-
-    private void ClearTitleEdit()
-    {
-        UseCustomTitle = false;
-        CustomTitle = string.Empty;
-        TitleFetchStatus = string.Empty;
-    }
-
-    private void ResetButtonState()
-    {
-        IsWaitingForProceed = false;
-        AddToQueueButtonText = "Add to Queue";
-        IsProceedButtonState = false;
-    }
 
     partial void OnYoutubeUrlChanged(string value)
     {
         AddToQueueCommand.NotifyCanExecuteChanged();
-
-        CustomTitle = string.Empty;
-        TitleFetchStatus = string.Empty;
-        ResetButtonState();
-    }
-
-    partial void OnUseCustomTitleChanged(bool value)
-    {
-        if (!value) ResetButtonState();
     }
 }

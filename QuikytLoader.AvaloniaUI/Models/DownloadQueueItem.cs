@@ -1,3 +1,4 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Domain.Enums;
@@ -21,6 +22,7 @@ public partial class DownloadQueueItem : ObservableObject
     /// Current status of this download
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusMessage))]
     private DownloadStatus _status = DownloadStatus.Pending;
 
     /// <summary>
@@ -36,19 +38,79 @@ public partial class DownloadQueueItem : ObservableObject
     private string? _errorMessage;
 
     /// <summary>
-    /// Status message for display (e.g., "Downloading...", "Sending to Telegram...")
+    /// Status message derived from current Status
     /// </summary>
-    [ObservableProperty]
-    private string _statusMessage = "Pending";
+    public string StatusMessage => Status switch
+    {
+        DownloadStatus.Pending => "⏸ Pending",
+        DownloadStatus.Editing => "⚡ Waiting for title edit",
+        DownloadStatus.Downloading => "⏳ Downloading...",
+        DownloadStatus.Completed => "✓ Completed",
+        DownloadStatus.Failed => "✗ Failed",
+        DownloadStatus.Cancelled => "⊘ Cancelled",
+        _ => throw new ArgumentOutOfRangeException(nameof(Status), Status, "Unhandled download status")
+    };
 
     /// <summary>
     /// Optional custom title for the output file (if null, uses video title)
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
     private string? _customTitle;
 
     /// <summary>
-    /// Result of the download operation (populated when status is Completed)
+    /// Fetched video title (separate from CustomTitle which is user-edited)
     /// </summary>
-    public DownloadResultDto? DownloadResult { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
+    private string? _videoTitle;
+
+    /// <summary>
+    /// YouTube channel name
+    /// </summary>
+    [ObservableProperty]
+    private string? _channelName;
+
+    /// <summary>
+    /// Formatted duration string (e.g., "3:45")
+    /// </summary>
+    [ObservableProperty]
+    private string? _duration;
+
+    /// <summary>
+    /// YouTube thumbnail URL for async image loading
+    /// </summary>
+    [ObservableProperty]
+    private string? _thumbnailUrl;
+
+    /// <summary>
+    /// Tracks whether metadata fetch completed (for UI loading state)
+    /// </summary>
+    [ObservableProperty]
+    private bool _isMetadataLoaded;
+
+    /// <summary>
+    /// Tracks whether metadata fetch failed (for error icon)
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasMetadataError;
+
+    /// <summary>
+    /// Display title: shows CustomTitle if set, otherwise VideoTitle
+    /// </summary>
+    public string? DisplayTitle =>
+        string.IsNullOrWhiteSpace(CustomTitle) ? VideoTitle : CustomTitle;
+
+    public void ApplyMetadata(VideoMetadataDto metadata)
+    {
+        VideoTitle = metadata.Title;
+        ChannelName = metadata.Channel;
+        Duration = metadata.Duration;
+        ThumbnailUrl = metadata.ThumbnailUrl;
+        IsMetadataLoaded = true;
+
+        // Only populate custom title if user hasn't started editing yet
+        if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
+            CustomTitle = metadata.Title;
+    }
 }

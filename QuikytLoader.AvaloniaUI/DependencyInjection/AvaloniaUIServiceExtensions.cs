@@ -1,4 +1,6 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.ViewModels;
 
@@ -15,6 +17,13 @@ public static class AvaloniaUIServiceExtensions
     public static IServiceCollection AddAvaloniaUIServices(this IServiceCollection services)
     {
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<DownloadQueueManager>(sp =>
+        {
+            var useCase = sp.GetRequiredService<DownloadAndSendUseCase>();
+            return new DownloadQueueManager((item, ct) =>
+                useCase.ExecuteAsync(item.Url, item.CustomTitle,
+                    new Progress<double>(value => item.Progress = value), ct));
+        });
 
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();

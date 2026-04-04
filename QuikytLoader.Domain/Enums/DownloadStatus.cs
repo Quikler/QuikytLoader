@@ -11,6 +11,11 @@ public enum DownloadStatus
     Pending,
 
     /// <summary>
+    /// Item is waiting for user to edit the title before proceeding
+    /// </summary>
+    Editing,
+
+    /// <summary>
     /// Download is currently in progress
     /// </summary>
     Downloading,
