@@ -47,20 +47,23 @@
                     CornerRadius="4"
                     Background="{DynamicResource LayerFillColorDefaultBrush}"
                     IsVisible="{Binding !IsMetadataLoaded}">
-                <!-- Loading placeholder -->
-                <ui:SymbolIcon Symbol="Video"
-                               FontSize="24"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               IsVisible="{Binding !HasMetadataError}"/>
-                <!-- Error placeholder -->
-                <ui:SymbolIcon Symbol="Alert"
-                               FontSize="24"
-                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               IsVisible="{Binding HasMetadataError}"/>
+                <StackPanel>
+
+                        <!-- Loading placeholder -->
+                        <ui:SymbolIcon Symbol="Video"
+                                       FontSize="24"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding !HasMetadataError}"/>
+                        <!-- Error placeholder -->
+                        <ui:SymbolIcon Symbol="Alert"
+                                       FontSize="24"
+                                       Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding HasMetadataError}"/>
+                </StackPanel>
             </Border>
 
             <!-- Right side: title, channel, status -->
