@@ -1,0 +1,21 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+    <!--Use Classes="RadioButtonListBox" in any ListBox to represent its items as RadioButtons-->
+    <Style Selector="ListBox.RadioButtonListBox">
+      <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="ListBox.RadioButtonListBox ListBoxItem">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate>
+            <Border Background="Transparent">
+              <RadioButton Content="{TemplateBinding ContentPresenter.Content}"
+                           VerticalAlignment="Center"
+                           IsChecked="{Binding Path=IsSelected,RelativeSource={RelativeSource TemplatedParent},Mode=TwoWay}"/>
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+</Styles>

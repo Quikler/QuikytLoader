@@ -17,7 +17,9 @@ public static class AvaloniaUIServiceExtensions
     public static IServiceCollection AddAvaloniaUIServices(this IServiceCollection services)
     {
         services.AddSingleton<IDialogService, DialogService>();
-        services.AddSingleton<DownloadQueueManager>(sp =>
+        services.AddSingleton<IThemeApplier, ThemeApplier>();
+
+        services.AddSingleton(sp =>
         {
             var useCase = sp.GetRequiredService<DownloadAndSendUseCase>();
             return new DownloadQueueManager((item, ct) =>
@@ -26,6 +28,7 @@ public static class AvaloniaUIServiceExtensions
         });
 
         services.AddSingleton<QueueAdditionService>();
+
 
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();
