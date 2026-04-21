@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with code in this repository.
 
 ## Project Overview
 
-QuikytLoader is an Avalonia UI desktop application for downloading YouTube videos as MP3 files and sending them to Telegram. Built for .NET 9 targeting Linux (Arch), following MVVM architecture with clean separation of concerns.
+QuikytLoader is a .NET Avalonia UI desktop application for downloading YouTube videos as MP3 files and sending them to Telegram. Follows MVVM architecture with clean separation of concerns.
 
 ## Build and Run Commands
 
@@ -13,19 +13,21 @@ QuikytLoader is an Avalonia UI desktop application for downloading YouTube video
 dotnet build
 
 # Run the application (from Startup project)
-dotnet run --project QuikytLoader.Startup
+make run
 
-# Build for release (self-contained)
-dotnet publish QuikytLoader.Startup -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
+# Build for release (trimmed)
+make trimmed
 
-# Output location after publish:
-# QuikytLoader.Startup/bin/Release/net9.0/linux-x64/publish/QuikytLoader.Startup
+# Build for release (NativeAOT)
+make aot
+
+# Go to output location after publish:
+. output.sh
 ```
 
 ## External Dependencies
 
-- **yt-dlp**: Must be installed on system (`sudo pacman -S yt-dlp` on Arch)
-- Used by YtDlpService to download and convert YouTube videos to MP3
+- **yt-dlp**: Must be installed on system (install via package manager, e.g. `sudo pacman -S yt-dlp` on Arch)
 
 ## Architecture Overview
 

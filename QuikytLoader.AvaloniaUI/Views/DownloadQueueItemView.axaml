@@ -1,0 +1,183 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="using:QuikytLoader.AvaloniaUI.Models"
+             xmlns:local="using:QuikytLoader.AvaloniaUI.Views"
+             xmlns:enums="using:QuikytLoader.Domain.Enums"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:asyncImageLoader="using:AsyncImageLoader"
+             x:Class="QuikytLoader.AvaloniaUI.Views.DownloadQueueItemView"
+             x:DataType="models:DownloadQueueItem">
+
+    <Border BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="16,12"
+            Background="Transparent"
+            IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
+            ToolTip.Tip="{Binding Url}">
+        <DockPanel LastChildFill="True">
+            <CheckBox DockPanel.Dock="Left"
+                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                      IsVisible="{Binding IsInPlaylist}"
+                      VerticalAlignment="Center"
+                      Margin="0,0,12,0"/>
+        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+
+            <!-- Thumbnail with duration overlay -->
+            <Panel Grid.Row="0" Grid.Column="0"
+                   Width="120" Height="68"
+                   Margin="0,0,12,0"
+                   IsVisible="{Binding IsMetadataLoaded}">
+                <Border CornerRadius="4" ClipToBounds="True">
+                    <Image Width="120" Height="68"
+                           Stretch="UniformToFill"
+                           asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"/>
+                </Border>
+                <!-- Duration overlay -->
+                <Border Background="#CC000000"
+                        CornerRadius="3"
+                        Padding="4,2"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,4,4"
+                        IsVisible="{Binding Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Text="{Binding Duration}"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                </Border>
+            </Panel>
+
+            <!-- Placeholder when metadata loading -->
+            <Border Grid.Row="0" Grid.Column="0"
+                    Width="120" Height="68"
+                    Margin="0,0,12,0"
+                    CornerRadius="4"
+                    Background="{DynamicResource LayerFillColorDefaultBrush}"
+                    IsVisible="{Binding !IsMetadataLoaded}">
+                <StackPanel>
+
+                        <!-- Loading placeholder -->
+                        <ui:SymbolIcon Symbol="Video"
+                                       FontSize="24"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding !HasMetadataError}"/>
+                        <!-- Error placeholder -->
+                        <ui:SymbolIcon Symbol="Alert"
+                                       FontSize="24"
+                                       Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding HasMetadataError}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Right side: title, channel, status -->
+            <Grid Grid.Row="0" Grid.Column="1"
+                  RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+
+                <!-- Video Title (static, when NOT Editing) -->
+                <StackPanel Grid.Row="0" Grid.Column="0"
+                            Orientation="Horizontal" Spacing="6"
+                            IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}">
+                    <TextBlock Text="{Binding DisplayTitle, FallbackValue=''}"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                               IsVisible="{Binding IsMetadataLoaded}"/>
+                    <!-- Loading: show URL as placeholder -->
+                    <TextBlock Text="{Binding Url}"
+                               FontSize="13"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                               IsVisible="{Binding !IsMetadataLoaded}"/>
+                    <!-- Metadata fetch failed -->
+                    <ui:SymbolIcon Symbol="Alert"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                   IsVisible="{Binding HasMetadataError}"/>
+                    <TextBlock Text="Failed to load video info"
+                               FontSize="13"
+                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                               IsVisible="{Binding HasMetadataError}"/>
+                </StackPanel>
+
+                <!-- Editable title + Proceed button (when Editing) -->
+                <Grid Grid.Row="0" Grid.Column="0"
+                      ColumnDefinitions="*,Auto"
+                      IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding CustomTitle, Mode=TwoWay}"
+                             Watermark="Edit title..."
+                             FontSize="13"
+                             Height="32"
+                             VerticalContentAlignment="Center"/>
+                    <Button Grid.Column="1"
+                            Command="{Binding ProceedCommand, RelativeSource={RelativeSource AncestorType=local:DownloadQueueItemView}}"
+                            CommandParameter="{Binding}"
+                            Margin="8,0,0,0"
+                            Height="32"
+                            Padding="12,0"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Background="#90EE90"
+                            Foreground="#2D5016">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <ui:SymbolIcon Symbol="Play" FontSize="12"/>
+                            <TextBlock Text="Proceed" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Status Badge -->
+                <Border Grid.Row="0" Grid.Column="1"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        CornerRadius="4"
+                        Padding="8,4"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Status}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                </Border>
+
+                <!-- Channel Name -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                           Text="{Binding ChannelName}"
+                           FontSize="12"
+                           Margin="0,2,0,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           IsVisible="{Binding ChannelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <!-- Status Message -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                           Text="{Binding StatusMessage}"
+                           FontSize="12"
+                           Margin="0,2,0,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </Grid>
+
+            <!-- Progress Bar (full width under entire item) -->
+            <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                         Value="{Binding Progress}"
+                         Maximum="100"
+                         Height="4"
+                         Margin="0,8,0,0"
+                         IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Downloading}}"
+                         ShowProgressText="False"/>
+
+            <!-- Error Message -->
+            <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                       Text="{Binding ErrorMessage}"
+                       FontSize="11"
+                       Margin="0,4,0,0"
+                       Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        </Grid>
+        </DockPanel>
+    </Border>
+
+</UserControl>

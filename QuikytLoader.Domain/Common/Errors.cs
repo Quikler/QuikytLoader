@@ -27,6 +27,15 @@ public static class Errors
 
         public static Error YtDlpException(string url, string exceptionType) => new(
             $"Unexpected error running yt-dlp for '{url}': {exceptionType}");
+
+        public static Error MetadataFetchFailed(string url) => new(
+            $"Failed to fetch video metadata from '{url}'");
+
+        public static Error InvalidPlaylistUrl(string url) => new(
+            $"The provided URL '{url}' is not a valid YouTube playlist URL");
+
+        public static Error PlaylistFetchFailed(string url) => new(
+            $"Failed to fetch playlist metadata from '{url}'");
     }
 
     public static class Telegram
