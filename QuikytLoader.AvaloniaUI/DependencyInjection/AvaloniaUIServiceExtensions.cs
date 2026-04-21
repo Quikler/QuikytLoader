@@ -25,6 +25,8 @@ public static class AvaloniaUIServiceExtensions
                     new Progress<double>(value => item.Progress = value), ct));
         });
 
+        services.AddSingleton<QueueAdditionService>();
+
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SettingsViewModel>();

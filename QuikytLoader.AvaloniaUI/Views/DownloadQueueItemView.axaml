@@ -12,7 +12,14 @@
             BorderThickness="0,0,0,1"
             Padding="16,12"
             Background="Transparent"
+            IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
             ToolTip.Tip="{Binding Url}">
+        <DockPanel LastChildFill="True">
+            <CheckBox DockPanel.Dock="Left"
+                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                      IsVisible="{Binding IsInPlaylist}"
+                      VerticalAlignment="Center"
+                      Margin="0,0,12,0"/>
         <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
 
             <!-- Thumbnail with duration overlay -->
@@ -170,6 +177,7 @@
                        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         </Grid>
+        </DockPanel>
     </Border>
 
 </UserControl>

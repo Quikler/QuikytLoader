@@ -93,7 +93,7 @@
                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
-                IsVisible="{Binding QueueManager.Items.Count}">
+                IsVisible="{Binding QueueManager.Queue.Count}">
             <DockPanel>
                 <!-- Queue Header -->
                 <Border DockPanel.Dock="Top"
@@ -108,10 +108,61 @@
 
                 <!-- Queue Items -->
                 <ScrollViewer MaxHeight="400">
-                    <ItemsControl ItemsSource="{Binding QueueManager.Items}">
+                    <ItemsControl ItemsSource="{Binding QueueManager.Queue}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <views:DownloadQueueItemView ProceedCommand="{Binding ((vm:HomeViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:HomeView}}"/>
+                            <DataTemplate DataType="vm:QueueGroupViewModel">
+                                <Grid>
+                                    <!-- Playlist: Expander with header + batch button -->
+                                    <Expander IsVisible="{Binding IsPlaylist}"
+                                              IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                                              HorizontalAlignment="Stretch"
+                                              Margin="8,4">
+                                        <Expander.Header>
+                                            <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding PlaylistTitle}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding HeaderCountText}"
+                                                           FontSize="12"
+                                                           Margin="12,0"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                <Button Grid.Column="2"
+                                                        Command="{Binding ProceedAllCommand}"
+                                                        IsEnabled="{Binding CanProceedAll}"
+                                                        Height="28"
+                                                        Padding="10,0"
+                                                        FontSize="12"
+                                                        FontWeight="SemiBold"
+                                                        Background="#90EE90"
+                                                        Foreground="#2D5016"
+                                                        Content="{Binding ProceedAllLabel}"/>
+                                            </Grid>
+                                        </Expander.Header>
+                                        <ItemsControl ItemsSource="{Binding Items}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="models:DownloadQueueItem">
+                                                    <views:DownloadQueueItemView ProceedCommand="{Binding ((vm:HomeViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:HomeView}}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
+
+                                    <!-- Single video: render item directly without group chrome -->
+                                    <ItemsControl IsVisible="{Binding !IsPlaylist}"
+                                                  ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="models:DownloadQueueItem">
+                                                <views:DownloadQueueItemView ProceedCommand="{Binding ((vm:HomeViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:HomeView}}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

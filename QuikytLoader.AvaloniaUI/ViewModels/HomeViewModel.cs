@@ -1,10 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.Models;
-using QuikytLoader.Domain.Enums;
-using System;
 using System.Threading.Tasks;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
@@ -13,9 +12,8 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 /// ViewModel for the Home page (YouTube download functionality)
 /// </summary>
 public partial class HomeViewModel(
-    FindExistingDownloadUseCase findExistingDownloadUseCase,
-    GetVideoMetadataUseCase getVideoMetadataUseCase,
     ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase,
+    QueueAdditionService queueAdditionService,
     DownloadQueueManager queueManager,
     IDialogService dialogService) : ViewModelBase
 {
@@ -39,54 +37,38 @@ public partial class HomeViewModel(
             return;
         }
 
-        var duplicateCheckResult = await findExistingDownloadUseCase.FindAsync(YoutubeUrl);
-        if (!duplicateCheckResult.IsSuccess)
-        {
-            UpdateStatus($"Error: {duplicateCheckResult.Error.Message}");
-            Console.WriteLine($"Duplicate check failed: {duplicateCheckResult.Error.Message}");
-            return;
-        }
+        UpdateStatus("Adding to queue...");
+        var result = await queueAdditionService.AddAsync(YoutubeUrl, UseCustomTitle, ConfirmDuplicateAsync);
 
-        if (duplicateCheckResult.Value is not null)
-        {
-            var existingRecord = duplicateCheckResult.Value;
-            var message = $"This video was already downloaded on {existingRecord.DownloadedAt}:\n" +
-                          $"Title: {existingRecord.VideoTitle}\n\n" +
-                          $"Do you want to download it again?";
+        UpdateStatus(FormatResult(result));
 
-            var confirmed = await dialogService.ShowConfirmationAsync("Duplicate Detected", message);
-            if (!confirmed)
-            {
-                UpdateStatus("Download cancelled - video already exists");
-                return;
-            }
-        }
-
-        var item = new DownloadQueueItem
-        {
-            Url = YoutubeUrl,
-            Status = UseCustomTitle ? DownloadStatus.Editing : DownloadStatus.Pending
-        };
-
-        queueManager.Enqueue(item);
-        _ = FetchMetadataAsync(item);
-
-        YoutubeUrl = string.Empty;
-        UpdateStatus($"Added to queue. {queueManager.Items.Count} items in queue.");
+        if (result is QueueAdditionResult.SingleAdded or QueueAdditionResult.PlaylistAdded)
+            YoutubeUrl = string.Empty;
     }
 
     [RelayCommand]
     private void ProceedItem(DownloadQueueItem item) => queueManager.Proceed(item);
 
-    private async Task FetchMetadataAsync(DownloadQueueItem item)
-    {
-        var videoMetadata = await getVideoMetadataUseCase.GetMetadataAsync(item.Url);
+    [RelayCommand]
+    private void ProceedGroup(string groupId) => queueManager.ProceedGroup(groupId);
 
-        if (videoMetadata.IsSuccess)
-            item.ApplyMetadata(videoMetadata.Value);
-        else
-            item.HasMetadataError = true;
+    private async Task<bool> ConfirmDuplicateAsync(DownloadHistoryDto existing)
+    {
+        var message = $"This video was already downloaded on {existing.DownloadedAt}:\n" +
+                      $"Title: {existing.VideoTitle}\n\n" +
+                      $"Do you want to download it again?";
+        return await dialogService.ShowConfirmationAsync("Duplicate Detected", message);
     }
+
+    private string FormatResult(QueueAdditionResult result) => result switch
+    {
+        QueueAdditionResult.SingleAdded r => $"Added to queue. {r.QueueCount} items in queue.",
+        QueueAdditionResult.PlaylistAdded r => $"Added playlist '{r.PlaylistTitle}' ({r.VideoCount} videos).",
+        QueueAdditionResult.AlreadyQueued => "Playlist already in queue.",
+        QueueAdditionResult.DuplicateCancelled => "Download cancelled - video already exists.",
+        QueueAdditionResult.Failed f => $"Error: {f.Message}",
+        _ => string.Empty
+    };
 
     private bool CanExecuteAddToQueue() => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 
