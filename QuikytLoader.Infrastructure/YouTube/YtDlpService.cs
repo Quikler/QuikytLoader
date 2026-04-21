@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
+using QuikytLoader.Infrastructure.Persistence.Json;
 
 namespace QuikytLoader.Infrastructure.YouTube;
 
@@ -137,6 +139,80 @@ internal partial class YtDlpService : IYtDlpService
             return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
         }
     }
+
+    public async Task<Result<PlaylistMetadataDto>> GetPlaylistMetadataAsync(string url, int maxItems, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(url) || maxItems <= 0)
+            return Errors.YouTube.InvalidPlaylistUrl(url);
+
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "yt-dlp",
+                ArgumentList =
+                {
+                    "--quiet",
+                    "--flat-playlist",
+                    "--playlist-items", $"1:{maxItems}",
+                    "--dump-single-json",
+                    "--", url
+                },
+                RedirectStandardOutput = true,
+                RedirectStandardError = false,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process is null) return Errors.YouTube.YtDlpStartFailed();
+
+            var playlistOutputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            await WaitForProcessExit(process, cancellationToken);
+
+            if (process.ExitCode != 0)
+                return Errors.YouTube.PlaylistFetchFailed(url);
+
+            var playlistOutput = await playlistOutputTask;
+            var parsedPlaylist = JsonSerializer.Deserialize(playlistOutput, AppJsonSerializerContext.Default.YtDlpPlaylistJson)!;
+
+            return new PlaylistMetadataDto(
+                PlaylistId: parsedPlaylist.Id,
+                Title: parsedPlaylist.Title,
+                Entries: parsedPlaylist.Entries.Select(BuildEntryDto).ToList());
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
+        }
+    }
+
+    private static PlaylistEntryDto BuildEntryDto(YtDlpPlaylistEntryJson entry)
+    {
+        var (isAvailable, reason) = DetermineAvailability(entry);
+        var thumbnailUrl = entry.Thumbnails?.LastOrDefault()?.Url;
+        var duration = entry.Duration.HasValue ? FormatDuration(entry.Duration.Value) : null;
+        return new PlaylistEntryDto(entry.Id, entry.Url, entry.Title, entry.Channel, duration, thumbnailUrl, isAvailable, reason);
+    }
+
+    private static string FormatDuration(double totalSeconds)
+    {
+        var ts = TimeSpan.FromSeconds(totalSeconds);
+        return ts.TotalHours >= 1
+            ? $"{(int)ts.TotalHours}:{ts.Minutes:D2}:{ts.Seconds:D2}"
+            : $"{ts.Minutes}:{ts.Seconds:D2}";
+    }
+
+    private static (bool isAvailable, string? reason) DetermineAvailability(YtDlpPlaylistEntryJson entry) =>
+        entry.Availability switch
+        {
+            null or "" or "public" or "unlisted" => (true, null),
+            "private" => (false, "Private video"),
+            "premium_only" => (false, "Premium only"),
+            "subscriber_only" => (false, "Members only"),
+            "needs_auth" => (false, "Sign-in required"),
+            _ => (false, entry.Availability)
+        };
 
     public async Task<Result> DownloadAudioAsync(string url, string tempDirectory, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {

@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using QuikytLoader.Application.DTOs;
+using QuikytLoader.Infrastructure.YouTube;
 
 namespace QuikytLoader.Infrastructure.Persistence.Json;
 
@@ -11,4 +12,5 @@ namespace QuikytLoader.Infrastructure.Persistence.Json;
     WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(UserSettingsDto))]
+[JsonSerializable(typeof(YtDlpPlaylistJson))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;

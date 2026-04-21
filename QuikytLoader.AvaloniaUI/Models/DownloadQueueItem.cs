@@ -1,6 +1,7 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.DTOs;
+using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.Models;
@@ -38,7 +39,7 @@ public partial class DownloadQueueItem : ObservableObject
     private string? _errorMessage;
 
     /// <summary>
-    /// Status message derived from current Status
+    /// Status message derived from current Status (or DisabledReason when disabled).
     /// </summary>
     public string StatusMessage => Status switch
     {
@@ -48,6 +49,7 @@ public partial class DownloadQueueItem : ObservableObject
         DownloadStatus.Completed => "✓ Completed",
         DownloadStatus.Failed => "✗ Failed",
         DownloadStatus.Cancelled => "⊘ Cancelled",
+        DownloadStatus.Disabled => $"⊘ {DisabledReason ?? "Disabled"}",
         _ => throw new ArgumentOutOfRangeException(nameof(Status), Status, "Unhandled download status")
     };
 
@@ -101,8 +103,53 @@ public partial class DownloadQueueItem : ObservableObject
     public string? DisplayTitle =>
         string.IsNullOrWhiteSpace(CustomTitle) ? VideoTitle : CustomTitle;
 
-    public void ApplyMetadata(VideoMetadataDto metadata)
+    /// <summary>
+    /// Group id this item belongs to. Set by DownloadQueueManager on enqueue.
+    /// </summary>
+    [ObservableProperty]
+    private string? _groupId;
+
+    /// <summary>
+    /// 11-char YouTube video id (populated from playlist entry or metadata fetch). Used for cross-playlist dedup.
+    /// </summary>
+    [ObservableProperty]
+    private string? _youtubeId;
+
+    /// <summary>
+    /// Whether this item is selected in its playlist group (ignored for non-grouped items).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSelected = true;
+
+    /// <summary>
+    /// Reason the item is hard-disabled (shown in StatusMessage when Status == Disabled).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusMessage))]
+    private string? _disabledReason;
+
+    /// <summary>
+    /// Whether this item is part of a YouTube playlist (drives selection checkbox visibility).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isInPlaylist;
+
+    public void Disable(string reason)
     {
+        DisabledReason = reason;
+        Status = DownloadStatus.Disabled;
+        IsSelected = false;
+    }
+
+    public void ApplyMetadata(Result<VideoMetadataDto> result)
+    {
+        if (!result.IsSuccess)
+        {
+            HasMetadataError = true;
+            return;
+        }
+
+        var metadata = result.Value;
         VideoTitle = metadata.Title;
         ChannelName = metadata.Channel;
         Duration = metadata.Duration;

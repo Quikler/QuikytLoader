@@ -33,5 +33,11 @@ public enum DownloadStatus
     /// <summary>
     /// Download was cancelled by the user
     /// </summary>
-    Cancelled
+    Cancelled,
+
+    /// <summary>
+    /// Item is permanently disabled (e.g. already downloaded, unavailable video, duplicate in another playlist).
+    /// Disabled items are never processed by the queue and cannot be selected.
+    /// </summary>
+    Disabled
 }
