@@ -29,6 +29,8 @@ public partial class DownloadQueueManager(
     [ObservableProperty]
     private bool _isProcessing;
 
+    private readonly Queue<DownloadQueueItem> _itemsToDownload = [];
+
     private CancellationTokenSource? _currentCancellationTokenSource;
 
     /// <summary>
@@ -43,7 +45,7 @@ public partial class DownloadQueueManager(
         Queue.Add(group);
 
         if (item.Status == DownloadStatus.Pending)
-            _ = ProcessQueueAsync();
+            _ = ProcessItemsToDownloadAsync(item);
     }
 
     /// <summary>
@@ -82,7 +84,7 @@ public partial class DownloadQueueManager(
         if (item.Status != DownloadStatus.Editing) return;
 
         item.Status = DownloadStatus.Pending;
-        _ = ProcessQueueAsync();
+        _ = ProcessItemsToDownloadAsync(item);
     }
 
     /// <summary>
@@ -95,14 +97,11 @@ public partial class DownloadQueueManager(
 
         foreach (var item in group.Items)
         {
-            if (item.Status == DownloadStatus.Disabled) continue;
-            if (!item.IsSelected) continue;
-            if (item.Status is DownloadStatus.Downloading or DownloadStatus.Completed) continue;
-
+            if (item.Status == DownloadStatus.Disabled || !item.IsSelected || (item.Status is DownloadStatus.Downloading or DownloadStatus.Completed)) continue;
             item.Status = DownloadStatus.Pending;
-        }
 
-        _ = ProcessQueueAsync();
+            _ = ProcessItemsToDownloadAsync(item);
+        }
     }
 
     // TODO: Wire to per-item cancel button (see TO-DOS.md)
@@ -117,8 +116,10 @@ public partial class DownloadQueueManager(
         return $"Queue processed. {succeededCount} succeeded, {failedCount} failed.{(editingCount > 0 ? $" {editingCount} items waiting for edits." : string.Empty)}";
     }
 
-    private async Task ProcessQueueAsync()
+    private async Task ProcessItemsToDownloadAsync(DownloadQueueItem itemToQueue)
     {
+        _itemsToDownload.Enqueue(itemToQueue);
+
         if (IsProcessing)
             return;
 
@@ -126,7 +127,7 @@ public partial class DownloadQueueManager(
         try
         {
             DownloadQueueItem? currentItem;
-            while ((currentItem = AllItems.FirstOrDefault(i => i.Status == DownloadStatus.Pending)) is not null)
+            while ((currentItem = _itemsToDownload.Dequeue()) is not null && currentItem.Status == DownloadStatus.Pending)
             {
                 currentItem.Status = DownloadStatus.Downloading;
 

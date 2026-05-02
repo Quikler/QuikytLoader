@@ -48,7 +48,7 @@
                         <TextBox Text="{Binding YoutubeUrl, Mode=TwoWay}"
                                  Watermark="https://www.youtube.com/watch?v=..."
                                  FontSize="14"
-                                 Height="40"
+                                 Padding="10"
                                  VerticalContentAlignment="Center"
                                  KeyDown="TextBox_KeyDown"/>
 
@@ -65,7 +65,7 @@
                     <!-- Add to Queue Button -->
                     <Button Command="{Binding AddToQueueCommand}"
                             HorizontalAlignment="Stretch"
-                            Height="48"
+                            Padding="0,12"
                             FontSize="16"
                             FontWeight="SemiBold"
                             IsDefault="False">
