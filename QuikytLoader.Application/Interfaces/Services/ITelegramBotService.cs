@@ -14,5 +14,5 @@ public interface ITelegramBotService : IDisposable
     /// <param name="audioFilePath">Path to the audio file to send</param>
     /// <param name="thumbnailPath">Path to the thumbnail image (JPEG format required)</param>
     /// <returns>Result indicating success or error details</returns>
-    Task<Result> SendAudioAsync(string audioFilePath, string? thumbnailPath = null);
+    Task<Result> SendAudioAsync(string audioFilePath, string thumbnailPath);
 }

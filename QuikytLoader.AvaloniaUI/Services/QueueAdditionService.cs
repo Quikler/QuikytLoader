@@ -55,7 +55,7 @@ public class QueueAdditionService(
             Status = editTitleBeforeDownload ? DownloadStatus.Editing : DownloadStatus.Pending
         };
 
-        queueManager.Enqueue(item);
+        queueManager.EnqueueItem(item);
         _ = FetchMetadataAsync(item);
 
         return new QueueAdditionResult.SingleAdded(queueManager.Queue.Count);

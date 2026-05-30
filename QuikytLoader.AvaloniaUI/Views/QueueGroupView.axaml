@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:models="using:QuikytLoader.AvaloniaUI.Models"
+             xmlns:local="using:QuikytLoader.AvaloniaUI.Views"
+             xmlns:enums="using:QuikytLoader.Domain.Enums"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
+             x:Class="QuikytLoader.AvaloniaUI.Views.QueueGroupView"
+             x:DataType="vm:QueueGroupViewModel">
+
+    <!-- Playlist: Expander with header + batch button -->
+    <Expander IsExpanded="true"
+              HorizontalAlignment="Stretch"
+              Margin="8,4">
+        <Expander.Header>
+            <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding PlaylistTitle}"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                <TextBlock Grid.Column="1"
+                           FontSize="12"
+                           Margin="12,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0}/{1}">
+                            <Binding Path="SelectedCount" />
+                            <Binding Path="SelectableCount" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <Button Grid.Column="2"
+                        Command="{Binding ProceedAllCommand}"
+                        IsEnabled="{Binding CanProceedAll}"
+                        Height="28"
+                        Padding="10,0"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Background="#90EE90"
+                        Foreground="#2D5016">
+                    <TextBlock FontSize="12"
+                               Margin="12,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="Proceed all ({0}/{1})">
+                                <Binding Path="SelectedCount" />
+                                <Binding Path="SelectableCount" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </Button>
+            </Grid>
+        </Expander.Header>
+
+        <ItemsControl ItemsSource="{Binding Items}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="models:DownloadQueueItem">
+                    <!--<Grid ColumnDefinitions="Auto,*">-->
+                        <!--<CheckBox Grid.Column="0"-->
+                                  <!--DockPanel.Dock="Left"-->
+                                  <!--IsChecked="{Binding ., Mode=TwoWay}"-->
+                                  <!--VerticalAlignment="Center"-->
+                                  <!--Margin="0,0,12,0"/>-->
+
+                        <views:DownloadQueueItemView Grid.Column="1" ProceedCommand="{Binding ((vm:HomeViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:HomeView}}"/>
+                    <!--</Grid>-->
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Expander>
+</UserControl>
