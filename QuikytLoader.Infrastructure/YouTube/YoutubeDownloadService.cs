@@ -15,8 +15,7 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
     /// </summary>
     public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(string url, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
-        if (!Directory.Exists(_tempDownloadDirectory))
-            Directory.CreateDirectory(_tempDownloadDirectory);
+        Directory.CreateDirectory(_tempDownloadDirectory);
 
         var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
@@ -33,7 +32,7 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
             return Result<DownloadResultEntity>.Failure(findResult.Error);
 
         var result = findResult.Value;
-        Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
+        Console.WriteLine($"Downloaded: {result.TempMp3FilePath}, Thumbnail: {result.TempThumbnailFilePath}");
         return result;
     }
 

@@ -61,15 +61,7 @@
         <ItemsControl ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="models:DownloadQueueItem">
-                    <!--<Grid ColumnDefinitions="Auto,*">-->
-                        <!--<CheckBox Grid.Column="0"-->
-                                  <!--DockPanel.Dock="Left"-->
-                                  <!--IsChecked="{Binding ., Mode=TwoWay}"-->
-                                  <!--VerticalAlignment="Center"-->
-                                  <!--Margin="0,0,12,0"/>-->
-
                         <views:DownloadQueueItemView Grid.Column="1" ProceedCommand="{Binding ((vm:HomeViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:HomeView}}"/>
-                    <!--</Grid>-->
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

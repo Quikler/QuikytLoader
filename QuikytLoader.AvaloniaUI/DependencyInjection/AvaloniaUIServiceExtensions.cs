@@ -20,9 +20,9 @@ public static class AvaloniaUIServiceExtensions
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThemeApplier, ThemeApplier>();
 
+        // Adding DownloadQueueManager with processQueueItem delegate
         services.AddSingleton(sp =>
         {
-            var useCase = sp.GetRequiredService<DownloadAndSendUseCase>();
             return new DownloadQueueManager(async (item, ct) =>
             {
 #if DEBUG
@@ -33,8 +33,9 @@ public static class AvaloniaUIServiceExtensions
                 }
 #endif
 
-                return await useCase.ExecuteAsync(item.Url, item.CustomTitle,
-                    new Progress<double>(value => item.Progress = value), ct);
+                return await sp.GetRequiredService<DownloadAndSendUseCase>()
+                    .ExecuteAsync(item.Url, item.CustomTitle,
+                        new Progress<double>(value => item.Progress = value), ct);
             });
         });
 

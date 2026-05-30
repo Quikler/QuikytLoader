@@ -107,9 +107,17 @@ public partial class DownloadQueueManager(
         _isProcessing = true;
         try
         {
-            DownloadQueueItem? currentItem;
-            while ((currentItem = _itemsToDownload.Dequeue()) is not null && currentItem.Status == DownloadStatus.Pending)
+            while (_itemsToDownload.TryDequeue(out var currentItem))
             {
+                // OFFENSIVE: We trust our callers. If it's in this queue, it MUST be Pending.
+                // If it's not, a developer broke the contract. Scream and crash.
+                if (currentItem.Status != DownloadStatus.Pending)
+                {
+                    throw new InvalidOperationException(
+                        $"Critical State Error: Item {currentItem.Url} was queued with status {currentItem.Status}. " +
+                        $"Only Pending items should be added to the download queue.");
+                }
+
                 currentItem.Status = DownloadStatus.Downloading;
 
                 _currentCancellationTokenSource = new CancellationTokenSource();

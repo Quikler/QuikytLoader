@@ -57,8 +57,8 @@ public static class Errors
         public static Error InitializationFailed(string errorMessage) => new(
             $"Failed to initialize Telegram bot: {errorMessage}");
 
-        public static Error FileReadError(string audioPath, string? thumbnailPath, string errorMessage) => new(
-            $"Failed to read file '{audioPath}' for upload (thumbnail: {thumbnailPath ?? "none"}): {errorMessage}");
+        public static Error FileReadError(string audioPath, string thumbnailPath, string errorMessage) => new(
+            $"Failed to read file '{audioPath}' for upload (thumbnail: {thumbnailPath}): {errorMessage}");
     }
 
     public static class Thumbnail
