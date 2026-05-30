@@ -1,6 +1,5 @@
 using System;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+using System.Collections.Generic;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,7 +16,7 @@ public partial class QueueGroupViewModel : ViewModelBase, IQueueItemsViewModel
 {
     public string Id { get; }
 
-    public ObservableCollection<DownloadQueueItem> Items { get; } = [];
+    public IReadOnlyList<DownloadQueueItem> Items { get; } = [];
 
     public string PlaylistTitle { get; }
 
@@ -47,16 +46,18 @@ public partial class QueueGroupViewModel : ViewModelBase, IQueueItemsViewModel
         PlaylistTitle = playlistTitle;
 
         _proceedGroupCallback = proceedGroupCallback;
-        Items.CollectionChanged += OnItemsChanged;
 
+        List<DownloadQueueItem> list = [];
         foreach (var item in items)
         {
             item.GroupId = id;
             item.IsInPlaylist = true;
             item.IsSelected = true;
-            Items.Add(item);
+            item.PropertyChanged += OnItemPropertyChanged;
+            list.Add(item);
         }
 
+        Items = list;
         RecomputeCounts();
     }
 
@@ -89,23 +90,6 @@ public partial class QueueGroupViewModel : ViewModelBase, IQueueItemsViewModel
             or DownloadStatus.Failed
             or DownloadStatus.Cancelled
             or DownloadStatus.Editing;
-
-    private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.OldItems is not null)
-        {
-            foreach (DownloadQueueItem item in e.OldItems)
-                item.PropertyChanged -= OnItemPropertyChanged;
-        }
-
-        if (e.NewItems is not null)
-        {
-            foreach (DownloadQueueItem item in e.NewItems)
-                item.PropertyChanged += OnItemPropertyChanged;
-        }
-
-        RecomputeCounts();
-    }
 
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

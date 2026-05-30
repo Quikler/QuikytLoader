@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.AvaloniaUI.Models;
 
@@ -9,7 +9,7 @@ public partial class QueueItemViewModel(string id, DownloadQueueItem item, Actio
 {
     public string Id { get; } = id;
 
-    public ObservableCollection<DownloadQueueItem> Items { get; } = [item];
+    public IReadOnlyList<DownloadQueueItem> Items { get; } = [item];
 
     private readonly Action<string> _proceedItemCallback = proceedItemCallback;
 
