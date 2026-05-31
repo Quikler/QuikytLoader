@@ -86,42 +86,7 @@
 
         </StackPanel>
 
-        <!-- Queue List -->
-        <Border Grid.Row="1"
-                Margin="0,24,0,0"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                IsVisible="{Binding QueueManager.Queue.Count}">
-            <DockPanel>
-                <!-- Queue Header -->
-                <Border DockPanel.Dock="Top"
-                        Background="{DynamicResource LayerFillColorDefaultBrush}"
-                        Padding="16,12"
-                        CornerRadius="8,8,0,0">
-                    <TextBlock Text="Download Queue"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                </Border>
-
-                <!-- Queue Items -->
-                <ScrollViewer MaxHeight="400">
-                    <ItemsControl ItemsSource="{Binding QueueManager.Queue}">
-                        <ItemsControl.DataTemplates>
-                            <DataTemplate DataType="{x:Type vm:QueueItemViewModel}">
-                                <views:QueueItemView />
-                            </DataTemplate>
-
-                            <DataTemplate DataType="{x:Type vm:QueueGroupViewModel}">
-                                <views:QueueGroupView />
-                            </DataTemplate>
-                        </ItemsControl.DataTemplates>
-                    </ItemsControl>
-                </ScrollViewer>
-            </DockPanel>
-        </Border>
+        <views:QueueListView Grid.Row="1" />
 
         <!-- Status Message -->
         <Border Grid.Row="3"

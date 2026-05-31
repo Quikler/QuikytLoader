@@ -37,10 +37,10 @@ public static class AvaloniaUIServiceExtensions
 
         services.AddSingleton<QueueAdditionService>();
 
-
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<QueueListViewModel>();
 
         return services;
     }
