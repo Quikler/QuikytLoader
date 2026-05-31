@@ -1,6 +1,5 @@
-using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.ViewModels;
 using QuikytLoader.Domain.Common;
@@ -20,24 +19,21 @@ public static class AvaloniaUIServiceExtensions
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThemeApplier, ThemeApplier>();
 
-        // Adding DownloadQueueManager with processQueueItem delegate
-        services.AddSingleton(sp =>
-        {
-            return new DownloadQueueManager(async (item, ct) =>
-            {
+        // For testing purposes we skip the whole Download
+        // and send to Telegram use case, it means we are
+        // not using yt-dlp or sending anything to Telegram
 #if DEBUG
-                // Testing purpose
-                if (item.Url == TestConstants.YoutubeTestVideoUrl)
-                {
-                    return Result.Success();
-                }
-#endif
-
-                return await sp.GetRequiredService<DownloadAndSendUseCase>()
+        services.AddSingleton(_ =>
+            new DownloadQueueManager((_, _) =>
+                Task.FromResult(Result.Success())));
+#else
+        services.AddSingleton(sp =>
+             new DownloadQueueManager(async (item, ct) =>
+                await sp.GetRequiredService<DownloadAndSendUseCase>()
                     .ExecuteAsync(item.Url, item.CustomTitle,
-                        new Progress<double>(value => item.Progress = value), ct);
-            });
-        });
+                        new Progress<double>(value => item.Progress = value), ct)
+                ));
+#endif
 
         services.AddSingleton<QueueAdditionService>();
 
