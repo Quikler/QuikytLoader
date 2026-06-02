@@ -20,19 +20,18 @@ public static class AvaloniaUIServiceExtensions
         services.AddSingleton<IThemeApplier, ThemeApplier>();
 
         services.AddSingleton(sp =>
-        {
-            var useCase = sp.GetRequiredService<DownloadAndSendUseCase>();
-            return new DownloadQueueManager((item, ct) =>
-                useCase.ExecuteAsync(item.Url, item.CustomTitle,
-                    new Progress<double>(value => item.Progress = value), ct));
-        });
+             new DownloadQueueManager(async (item, ct) =>
+                await sp.GetRequiredService<DownloadAndSendUseCase>()
+                    .ExecuteAsync(item.Url, item.CustomTitle,
+                        new Progress<double>(value => item.Progress = value), ct)
+                ));
 
         services.AddSingleton<QueueAdditionService>();
-
 
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<QueueListViewModel>();
 
         return services;
     }

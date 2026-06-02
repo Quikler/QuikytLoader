@@ -15,8 +15,7 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
     /// </summary>
     public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(string url, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
-        if (!Directory.Exists(_tempDownloadDirectory))
-            Directory.CreateDirectory(_tempDownloadDirectory);
+        Directory.CreateDirectory(_tempDownloadDirectory);
 
         var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(url, cancellationToken);
         if (!youtubeIdResult.IsSuccess)
@@ -29,12 +28,9 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
             return Result<DownloadResultEntity>.Failure(runResult.Error);
 
         var findResult = FindDownloadedFiles(youtubeId);
-        if (!findResult.IsSuccess)
-            return Result<DownloadResultEntity>.Failure(findResult.Error);
-
-        var result = findResult.Value;
-        Console.WriteLine($"Downloaded: {result.TempMediaFilePath}, Thumbnail: {result.TempThumbnailPath ?? "none"}");
-        return result;
+        return findResult.IsSuccess
+            ? findResult.Value
+            : Result<DownloadResultEntity>.Failure(findResult.Error);
     }
 
     private static string NormalizeWhitespace(string filename)

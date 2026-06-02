@@ -13,62 +13,31 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
     private string? _currentBotToken;
     private string? _currentChatId;
 
-    public async Task<Result> SendAudioAsync(string audioFilePath, string? thumbnailPath = null)
+    public async Task<Result> SendAudioAsync(Stream mp3Stream, Stream thumbnailStream)
     {
         var initResult = await EnsureInitializedAsync();
         if (!initResult.IsSuccess) return initResult;
 
-        if (!File.Exists(audioFilePath)) return Errors.Telegram.AudioFileNotFound(audioFilePath);
         if (!long.TryParse(_currentChatId, out var chatIdValue)) return Errors.Telegram.InvalidChatIdFormat(_currentChatId);
-
-        var chatId = new ChatId(chatIdValue);
 
         try
         {
-            await using var audioStream = File.OpenRead(audioFilePath);
-            var fileName = Path.GetFileName(audioFilePath);
-            var audioInputFile = InputFile.FromStream(audioStream, fileName);
+            await _botClient!.SendAudio(
+                chatId: new ChatId(chatIdValue),
+                audio: mp3Stream,
+                thumbnail: thumbnailStream,
+                cancellationToken: _cts?.Token ?? CancellationToken.None
+            );
 
-            InputFile? thumbnailInputFile = null;
-            FileStream? thumbnailStream = null;
-
-            try
-            {
-                if (thumbnailPath != null && File.Exists(thumbnailPath))
-                {
-                    thumbnailStream = File.OpenRead(thumbnailPath);
-                    var thumbnailFileName = Path.GetFileName(thumbnailPath);
-                    thumbnailInputFile = InputFile.FromStream(thumbnailStream, thumbnailFileName);
-                }
-
-                await _botClient!.SendAudio(
-                    chatId: chatId,
-                    audio: audioInputFile,
-                    thumbnail: thumbnailInputFile,
-                    cancellationToken: _cts?.Token ?? CancellationToken.None
-                );
-
-                Console.WriteLine($"Audio file sent to Telegram: {fileName}" +
-                                (thumbnailInputFile != null ? " (with thumbnail)" : ""));
-
-                return Result.Success();
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex) when (ex.GetType().Namespace?.StartsWith("Telegram.Bot") == true)
-            {
-                return Errors.Telegram.SendFailed(ex.Message);
-            }
-            finally
-            {
-                if (thumbnailStream != null) await thumbnailStream.DisposeAsync();
-            }
+            return Result.Success();
         }
-        catch (IOException ex)
+        catch (OperationCanceledException)
         {
-            return Errors.Telegram.FileReadError(audioFilePath, thumbnailPath, ex.Message);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return Errors.Telegram.SendFailed(ex.Message);
         }
     }
 

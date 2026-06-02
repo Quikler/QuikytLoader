@@ -1,8 +1,6 @@
 using System;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.AvaloniaUI.Models;
@@ -14,39 +12,24 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 /// Represents a playlist group in the download queue. Owns its items collection,
 /// selection counts, and the batch "Proceed all" command.
 /// </summary>
-public partial class QueueGroupViewModel : ViewModelBase
+public partial class QueueGroupViewModel : ViewModelBase, IQueueItemsViewModel
 {
-    public string GroupId { get; }
+    public string Id { get; }
+
+    public IReadOnlyList<DownloadQueueItem> Items { get; } = [];
+
     public string PlaylistTitle { get; }
-
-    /// <summary>
-    /// True when this group represents a YouTube playlist (header + batch controls shown).
-    /// False for a single standalone video.
-    /// </summary>
-    public bool IsPlaylist { get; }
-
-    public ObservableCollection<DownloadQueueItem> Items { get; } = [];
-
-    /// <summary>
-    /// Group expanded by default when first added to the queue.
-    /// </summary>
-    [ObservableProperty]
-    private bool _isExpanded = true;
 
     /// <summary>
     /// Number of items the user has selected (excluding disabled items).
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HeaderCountText))]
-    [NotifyPropertyChangedFor(nameof(ProceedAllLabel))]
     private int _selectedCount;
 
     /// <summary>
     /// Number of selectable items (not disabled).
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HeaderCountText))]
-    [NotifyPropertyChangedFor(nameof(ProceedAllLabel))]
     private int _selectableCount;
 
     /// <summary>
@@ -55,37 +38,32 @@ public partial class QueueGroupViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canProceedAll;
 
-    /// <summary>
-    /// "N/M" shown in the group header.
-    /// </summary>
-    public string HeaderCountText => $"{SelectedCount}/{SelectableCount}";
-
-    /// <summary>
-    /// Button label including the count.
-    /// </summary>
-    public string ProceedAllLabel => $"Proceed all ({SelectedCount}/{SelectableCount})";
-
     private readonly Action<string> _proceedGroupCallback;
 
-    public QueueGroupViewModel(string groupId, string playlistTitle, bool isPlaylist, Action<string> proceedGroupCallback)
+    public QueueGroupViewModel(string id, string playlistTitle, DownloadQueueItem[] items, Action<string> proceedGroupCallback)
     {
-        GroupId = groupId;
+        Id = id;
         PlaylistTitle = playlistTitle;
-        IsPlaylist = isPlaylist;
+
         _proceedGroupCallback = proceedGroupCallback;
-        Items.CollectionChanged += OnItemsChanged;
+
+        List<DownloadQueueItem> list = [];
+        foreach (var item in items)
+        {
+            item.GroupId = id;
+            item.IsInPlaylist = true;
+            item.IsSelected = true;
+            item.PropertyChanged += OnItemPropertyChanged;
+            list.Add(item);
+        }
+
+        Items = list;
+        RecomputeCounts();
     }
 
     [RelayCommand]
-    private void ToggleCollapse() => IsExpanded = !IsExpanded;
+    private void ProceedAll() => _proceedGroupCallback(Id);
 
-    [RelayCommand]
-    private void ProceedAll() => _proceedGroupCallback(GroupId);
-
-    /// <summary>
-    /// Recomputes selection counts and CanProceedAll. Call whenever an item's
-    /// IsSelected, Status, or DisabledReason changes.
-    /// </summary>
     public void RecomputeCounts()
     {
         var selectable = 0;
@@ -112,23 +90,6 @@ public partial class QueueGroupViewModel : ViewModelBase
             or DownloadStatus.Failed
             or DownloadStatus.Cancelled
             or DownloadStatus.Editing;
-
-    private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.OldItems is not null)
-        {
-            foreach (DownloadQueueItem item in e.OldItems)
-                item.PropertyChanged -= OnItemPropertyChanged;
-        }
-
-        if (e.NewItems is not null)
-        {
-            foreach (DownloadQueueItem item in e.NewItems)
-                item.PropertyChanged += OnItemPropertyChanged;
-        }
-
-        RecomputeCounts();
-    }
 
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

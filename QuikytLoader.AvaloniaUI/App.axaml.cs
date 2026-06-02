@@ -9,6 +9,8 @@ namespace QuikytLoader.AvaloniaUI;
 
 public partial class App(IServiceProvider serviceProvider) : Avalonia.Application
 {
+    public IServiceProvider Services => serviceProvider;
+
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()

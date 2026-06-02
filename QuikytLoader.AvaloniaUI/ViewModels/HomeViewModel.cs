@@ -3,18 +3,13 @@ using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Services;
-using QuikytLoader.AvaloniaUI.Models;
 using System.Threading.Tasks;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-/// <summary>
-/// ViewModel for the Home page (YouTube download functionality)
-/// </summary>
 public partial class HomeViewModel(
     ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase,
     QueueAdditionService queueAdditionService,
-    DownloadQueueManager queueManager,
     IDialogService dialogService) : ViewModelBase
 {
     [ObservableProperty]
@@ -25,8 +20,6 @@ public partial class HomeViewModel(
 
     [ObservableProperty]
     private bool _useCustomTitle = false;
-
-    public DownloadQueueManager QueueManager => queueManager;
 
     [RelayCommand(CanExecute = nameof(CanExecuteAddToQueue))]
     private async Task AddToQueue()
@@ -45,12 +38,6 @@ public partial class HomeViewModel(
         if (result is QueueAdditionResult.SingleAdded or QueueAdditionResult.PlaylistAdded)
             YoutubeUrl = string.Empty;
     }
-
-    [RelayCommand]
-    private void ProceedItem(DownloadQueueItem item) => queueManager.Proceed(item);
-
-    [RelayCommand]
-    private void ProceedGroup(string groupId) => queueManager.ProceedGroup(groupId);
 
     private async Task<bool> ConfirmDuplicateAsync(DownloadHistoryDto existing)
     {

@@ -214,6 +214,7 @@ internal partial class YtDlpService : IYtDlpService
             _ => (false, entry.Availability)
         };
 
+    // TODO: we are specifying "tempDirectory", so makes sense to return the download location info in return type
     public async Task<Result> DownloadAudioAsync(string url, string tempDirectory, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         try

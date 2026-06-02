@@ -30,23 +30,25 @@ public class DownloadAndSendUseCase(
         if (!downloadResult.IsSuccess)
             return downloadResult.Error;
 
-        var entity = downloadResult.Value;
-
+        var downloadResultEntity = downloadResult.Value;
+        Console.WriteLine($"Downloaded: {downloadResultEntity.TempMp3FilePath}, Thumbnail: {downloadResultEntity.TempThumbnailFilePath}");
         try
         {
-            // 3. Send to Telegram
-            var sendResult = await telegramService.SendAudioAsync(
-                entity.TempMediaFilePath,
-                entity.TempThumbnailPath);
+            await using var mp3FileStream = File.OpenRead(downloadResultEntity.TempMp3FilePath);
+            await using var thumbnailFileStream = File.OpenRead(downloadResultEntity.TempThumbnailFilePath);
 
+            // 3. Send to Telegram
+            var sendResult = await telegramService.SendAudioAsync(mp3FileStream, thumbnailFileStream);
             if (!sendResult.IsSuccess)
                 return sendResult.Error;
+
+            Console.WriteLine($"Audio file sent to Telegram: {Path.GetFileName(mp3FileStream.Name)}");
 
             // 4. Save to history
             await historyRepo.UpsertAsync(
                 new DownloadHistoryEntity(
-                    entity.YouTubeId,
-                    customTitle ?? entity.VideoTitle,
+                    downloadResultEntity.YouTubeId,
+                    customTitle ?? downloadResultEntity.VideoTitle,
                     DateTime.UtcNow.ToString("o")));
 
             return Result.Success();
@@ -54,8 +56,8 @@ public class DownloadAndSendUseCase(
         finally
         {
             // 5. Cleanup temp files — no longer needed after Telegram send
-            try { File.Delete(entity.TempMediaFilePath); } catch { }
-            try { File.Delete(entity.TempThumbnailPath); } catch { }
+            try { File.Delete(downloadResultEntity.TempMp3FilePath); } catch { }
+            try { File.Delete(downloadResultEntity.TempThumbnailFilePath); } catch { }
         }
     }
 }

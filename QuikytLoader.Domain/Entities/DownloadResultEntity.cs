@@ -10,5 +10,5 @@ namespace QuikytLoader.Domain.Entities;
 public record DownloadResultEntity(
     YouTubeId YouTubeId,
     string VideoTitle,
-    string TempMediaFilePath,
-    string TempThumbnailPath);
+    string TempMp3FilePath,
+    string TempThumbnailFilePath);

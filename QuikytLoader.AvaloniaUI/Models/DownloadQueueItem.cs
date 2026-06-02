@@ -116,17 +116,23 @@ public partial class DownloadQueueItem : ObservableObject
     private string? _youtubeId;
 
     /// <summary>
-    /// Whether this item is selected in its playlist group (ignored for non-grouped items).
-    /// </summary>
-    [ObservableProperty]
-    private bool _isSelected = true;
-
-    /// <summary>
     /// Reason the item is hard-disabled (shown in StatusMessage when Status == Disabled).
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusMessage))]
     private string? _disabledReason;
+
+    [ObservableProperty]
+    private bool _isCheckboxEnabled = true;
+
+    /// <summary>
+    /// Whether this item is selected in its playlist group (ignored for non-grouped items).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSelected = true;
+
+    [ObservableProperty]
+    private bool _isProceedButtonEnabled = true;
 
     /// <summary>
     /// Whether this item is part of a YouTube playlist (drives selection checkbox visibility).
@@ -134,7 +140,15 @@ public partial class DownloadQueueItem : ObservableObject
     [ObservableProperty]
     private bool _isInPlaylist;
 
-    public void Disable(string reason)
+    public void SetAsPending()
+    {
+        DisabledReason = "Already proceeded";
+        Status = DownloadStatus.Pending;
+        IsCheckboxEnabled = false;
+        IsProceedButtonEnabled = false;
+    }
+
+    public void SetAsDisabled(string reason)
     {
         DisabledReason = reason;
         Status = DownloadStatus.Disabled;
@@ -159,5 +173,31 @@ public partial class DownloadQueueItem : ObservableObject
         // Only populate custom title if user hasn't started editing yet
         if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = metadata.Title;
+    }
+
+
+    public override string ToString()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"[{StatusMessage}] ");
+
+        if (!string.IsNullOrWhiteSpace(DisplayTitle))
+            sb.Append($"{DisplayTitle}");
+        else
+            sb.Append(Url);
+
+        if (Status == DownloadStatus.Downloading)
+            sb.Append($" ({Progress:F0}%)");
+
+        if (!string.IsNullOrWhiteSpace(ChannelName))
+            sb.Append($" - {ChannelName}");
+
+        if (!string.IsNullOrWhiteSpace(Duration))
+            sb.Append($" [{Duration}]");
+
+        if (Status == DownloadStatus.Failed && !string.IsNullOrWhiteSpace(ErrorMessage))
+            sb.Append($" - Error: {ErrorMessage}");
+
+        return sb.ToString();
     }
 }

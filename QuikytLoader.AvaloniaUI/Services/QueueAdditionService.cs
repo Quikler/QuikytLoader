@@ -55,7 +55,7 @@ public class QueueAdditionService(
             Status = editTitleBeforeDownload ? DownloadStatus.Editing : DownloadStatus.Pending
         };
 
-        queueManager.Enqueue(item);
+        queueManager.EnqueueItem(item);
         _ = FetchMetadataAsync(item);
 
         return new QueueAdditionResult.SingleAdded(queueManager.Queue.Count);
@@ -114,17 +114,17 @@ public class QueueAdditionService(
 
             if (!entry.IsAvailable)
             {
-                item.Disable(entry.UnavailableReason ?? "Unavailable");
+                item.SetAsDisabled(entry.UnavailableReason ?? "Unavailable");
             }
             else if (historyTasks.TryGetValue(entry.VideoId, out var histTask)
                      && histTask.Result.IsSuccess
                      && histTask.Result.Value is not null)
             {
-                item.Disable("Already downloaded");
+                item.SetAsDisabled("Already downloaded");
             }
             else if (queueManager.TryFindByYoutubeId(entry.VideoId, excludeGroupId: playlistId) is not null)
             {
-                item.Disable("Already queued in another playlist");
+                item.SetAsDisabled("Already queued in another playlist");
             }
 
             items.Add(item);
