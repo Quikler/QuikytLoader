@@ -174,4 +174,30 @@ public partial class DownloadQueueItem : ObservableObject
         if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = metadata.Title;
     }
+
+
+    public override string ToString()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"[{StatusMessage}] ");
+
+        if (!string.IsNullOrWhiteSpace(DisplayTitle))
+            sb.Append($"{DisplayTitle}");
+        else
+            sb.Append(Url);
+
+        if (Status == DownloadStatus.Downloading)
+            sb.Append($" ({Progress:F0}%)");
+
+        if (!string.IsNullOrWhiteSpace(ChannelName))
+            sb.Append($" - {ChannelName}");
+
+        if (!string.IsNullOrWhiteSpace(Duration))
+            sb.Append($" [{Duration}]");
+
+        if (Status == DownloadStatus.Failed && !string.IsNullOrWhiteSpace(ErrorMessage))
+            sb.Append($" - Error: {ErrorMessage}");
+
+        return sb.ToString();
+    }
 }

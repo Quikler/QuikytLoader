@@ -24,8 +24,12 @@ public static class AvaloniaUIServiceExtensions
         // not using yt-dlp or sending anything to Telegram
 #if DEBUG
         services.AddSingleton(_ =>
-            new DownloadQueueManager((_, _) =>
-                Task.FromResult(Result.Success())));
+            new DownloadQueueManager(async (_, _) =>
+                {
+                    // Small delay for testing
+                    await Task.Delay(1000);
+                    return Result.Success();
+                }));
 #else
         services.AddSingleton(sp =>
              new DownloadQueueManager(async (item, ct) =>

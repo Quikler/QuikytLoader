@@ -78,8 +78,14 @@ public partial class DownloadQueueManager(
 
         foreach (var item in group.Items)
         {
-            if (!item.IsSelected || (item.Status is DownloadStatus.Disabled or DownloadStatus.Downloading or DownloadStatus.Completed)) continue;
+            if (!item.IsSelected ||
+                item.Status is DownloadStatus.Pending
+                    or DownloadStatus.Disabled
+                    or DownloadStatus.Downloading
+                    or DownloadStatus.Completed) continue;
+
             item.SetAsPending();
+            Console.WriteLine(item.ToString());
 
             _ = ProcessItemsToDownloadAsync(item);
         }
@@ -99,6 +105,13 @@ public partial class DownloadQueueManager(
 
     private async Task ProcessItemsToDownloadAsync(DownloadQueueItem itemToQueue)
     {
+        // TODO: #17
+        if (itemToQueue.Status != DownloadStatus.Pending)
+        {
+            System.Diagnostics.Debug.Fail($"ProcessItemsToDownloadAsync called with non-Pending item {itemToQueue.Url} (status: {itemToQueue.Status}).");
+            return; // silently skip in Release
+        }
+
         _itemsToDownload.Enqueue(itemToQueue);
 
         if (_isProcessing)
@@ -109,13 +122,12 @@ public partial class DownloadQueueManager(
         {
             while (_itemsToDownload.TryDequeue(out var currentItem))
             {
-                // OFFENSIVE: We trust our callers. If it's in this queue, it MUST be Pending.
-                // If it's not, a developer broke the contract. Scream and crash.
+                // TODO: #17
                 if (currentItem.Status != DownloadStatus.Pending)
                 {
-                    throw new InvalidOperationException(
-                        $"Critical State Error: Item {currentItem.Url} was queued with status {currentItem.Status}. " +
-                        $"Only Pending items should be added to the download queue.");
+                    // Contract violation: only Pending items should reach this queue.
+                    System.Diagnostics.Debug.Fail($"Item {currentItem.Url} dequeued with unexpected status {currentItem.Status}.");
+                    continue;
                 }
 
                 currentItem.Status = DownloadStatus.Downloading;
