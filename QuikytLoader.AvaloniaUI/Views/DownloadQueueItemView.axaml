@@ -18,6 +18,7 @@
         <DockPanel LastChildFill="True">
             <CheckBox DockPanel.Dock="Left"
                       IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                      IsEnabled="{Binding IsCheckboxEnabled, Mode=TwoWay}"
                       IsVisible="{Binding IsInPlaylist}"
                       VerticalAlignment="Center"
                       Margin="0,0,12,0"/>
@@ -118,7 +119,6 @@
                                  Height="32"
                                  VerticalContentAlignment="Center"/>
 
-                             <!-- TODO: maybe add Enable/Disable for "Proceed" button, so if user already clicked it - disable, or if some error occured also disable this shit -->
                         <Button Grid.Column="1"
                                 Command="{Binding ProceedCommand, RelativeSource={RelativeSource AncestorType=local:DownloadQueueItemView}}"
                                 CommandParameter="{Binding}"
@@ -128,7 +128,8 @@
                                 FontSize="12"
                                 FontWeight="SemiBold"
                                 Background="#90EE90"
-                                Foreground="#2D5016">
+                                Foreground="#2D5016"
+                                IsEnabled="{Binding IsProceedButtonEnabled}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <ui:SymbolIcon Symbol="Play" FontSize="12"/>
                                 <TextBlock Text="Proceed" VerticalAlignment="Center"/>

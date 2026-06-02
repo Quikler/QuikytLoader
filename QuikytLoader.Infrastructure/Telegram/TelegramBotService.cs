@@ -13,7 +13,7 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
     private string? _currentBotToken;
     private string? _currentChatId;
 
-    public async Task<Result> SendAudioAsync(FileStream mp3FileStream, FileStream thumbnailFileStream)
+    public async Task<Result> SendAudioAsync(Stream mp3Stream, FileStream thumbnailStream)
     {
         var initResult = await EnsureInitializedAsync();
         if (!initResult.IsSuccess) return initResult;
@@ -24,12 +24,10 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
         {
             await _botClient!.SendAudio(
                 chatId: new ChatId(chatIdValue),
-                audio: mp3FileStream,
-                thumbnail: thumbnailFileStream,
+                audio: mp3Stream,
+                thumbnail: thumbnailStream,
                 cancellationToken: _cts?.Token ?? CancellationToken.None
             );
-
-            Console.WriteLine($"Audio file sent to Telegram: {Path.GetFileName(mp3FileStream.Name)}");
 
             return Result.Success();
         }

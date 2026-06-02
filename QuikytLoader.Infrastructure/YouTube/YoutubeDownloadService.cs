@@ -28,12 +28,9 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
             return Result<DownloadResultEntity>.Failure(runResult.Error);
 
         var findResult = FindDownloadedFiles(youtubeId);
-        if (!findResult.IsSuccess)
-            return Result<DownloadResultEntity>.Failure(findResult.Error);
-
-        var result = findResult.Value;
-        Console.WriteLine($"Downloaded: {result.TempMp3FilePath}, Thumbnail: {result.TempThumbnailFilePath}");
-        return result;
+        return findResult.IsSuccess
+            ? findResult.Value
+            : Result<DownloadResultEntity>.Failure(findResult.Error);
     }
 
     private static string NormalizeWhitespace(string filename)

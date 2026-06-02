@@ -78,8 +78,8 @@ public partial class DownloadQueueManager(
 
         foreach (var item in group.Items)
         {
-            if (item.Status == DownloadStatus.Disabled || !item.IsSelected || (item.Status is DownloadStatus.Downloading or DownloadStatus.Completed)) continue;
-            item.Status = DownloadStatus.Pending;
+            if (!item.IsSelected || (item.Status is DownloadStatus.Disabled or DownloadStatus.Downloading or DownloadStatus.Completed)) continue;
+            item.SetAsPending();
 
             _ = ProcessItemsToDownloadAsync(item);
         }

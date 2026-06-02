@@ -61,7 +61,7 @@
         <ItemsControl ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="models:DownloadQueueItem">
-                        <views:DownloadQueueItemView Grid.Column="1" ProceedCommand="{Binding ((vm:QueueListViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:QueueListView}}"/>
+                        <views:DownloadQueueItemView ProceedCommand="{Binding ((vm:QueueListViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:QueueListView}}"/>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

@@ -31,6 +31,7 @@ public class DownloadAndSendUseCase(
             return downloadResult.Error;
 
         var downloadResultEntity = downloadResult.Value;
+        Console.WriteLine($"Downloaded: {downloadResultEntity.TempMp3FilePath}, Thumbnail: {downloadResultEntity.TempThumbnailFilePath}");
         try
         {
             await using var mp3FileStream = File.OpenRead(downloadResultEntity.TempMp3FilePath);
@@ -40,6 +41,8 @@ public class DownloadAndSendUseCase(
             var sendResult = await telegramService.SendAudioAsync(mp3FileStream, thumbnailFileStream);
             if (!sendResult.IsSuccess)
                 return sendResult.Error;
+
+            Console.WriteLine($"Audio file sent to Telegram: {Path.GetFileName(mp3FileStream.Name)}");
 
             // 4. Save to history
             await historyRepo.UpsertAsync(

@@ -10,7 +10,7 @@ public partial class QueueListView : UserControl
     {
         InitializeComponent();
 
-        if (Avalonia.Application.Current is App app)
+        if (!Design.IsDesignMode && Avalonia.Application.Current is App app)
             DataContext = app.Services.GetRequiredService<QueueListViewModel>();
     }
 }
