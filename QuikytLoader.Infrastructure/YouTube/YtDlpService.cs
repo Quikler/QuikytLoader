@@ -95,15 +95,6 @@ internal partial class YtDlpService : IYtDlpService
 
     public async Task<Result<VideoMetadataDto>> GetVideoMetadataAsync(string url, CancellationToken cancellationToken = default)
     {
-#if DEBUG
-        return new VideoMetadataDto(
-            Title: "test title",
-            Channel: "test channel",
-            Duration: "14:59",
-            ThumbnailUrl: "bergil.png"
-        );
-#else
-
         if (string.IsNullOrWhiteSpace(url))
             return Errors.YouTube.InvalidUrl(url);
 
@@ -147,21 +138,10 @@ internal partial class YtDlpService : IYtDlpService
         {
             return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
         }
-#endif
     }
 
     public async Task<Result<PlaylistMetadataDto>> GetPlaylistMetadataAsync(string url, int maxItems, CancellationToken cancellationToken = default)
     {
-#if DEBUG
-        var testPlaylistJson = await File.ReadAllTextAsync("test-playlist-data.json");
-        var parsedPlaylist = JsonSerializer.Deserialize(testPlaylistJson, AppJsonSerializerContext.Default.YtDlpPlaylistJson)!;
-
-        return new PlaylistMetadataDto(
-            PlaylistId: parsedPlaylist.Id,
-            Title: parsedPlaylist.Title,
-            Entries: parsedPlaylist.Entries.Select(BuildEntryDto).ToList());
-#else
-
         if (string.IsNullOrWhiteSpace(url) || maxItems <= 0)
             return Errors.YouTube.InvalidPlaylistUrl(url);
 
@@ -205,7 +185,6 @@ internal partial class YtDlpService : IYtDlpService
         {
             return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
         }
-#endif
     }
 
     private static PlaylistEntryDto BuildEntryDto(YtDlpPlaylistEntryJson entry)
