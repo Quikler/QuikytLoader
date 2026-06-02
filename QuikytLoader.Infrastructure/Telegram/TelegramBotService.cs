@@ -13,7 +13,7 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
     private string? _currentBotToken;
     private string? _currentChatId;
 
-    public async Task<Result> SendAudioAsync(Stream mp3Stream, FileStream thumbnailStream)
+    public async Task<Result> SendAudioAsync(Stream mp3Stream, Stream thumbnailStream)
     {
         var initResult = await EnsureInitializedAsync();
         if (!initResult.IsSuccess) return initResult;
@@ -35,7 +35,7 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
         {
             throw;
         }
-        catch (Exception ex) when (ex.GetType().Namespace?.StartsWith("Telegram.Bot") == true)
+        catch (Exception ex)
         {
             return Errors.Telegram.SendFailed(ex.Message);
         }
