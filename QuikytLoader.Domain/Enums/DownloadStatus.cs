@@ -6,7 +6,13 @@ namespace QuikytLoader.Domain.Enums;
 public enum DownloadStatus
 {
     /// <summary>
-    /// Download is queued and waiting to be processed
+    /// Item is visible in a playlist group in the UI, waiting for the user to trigger processing.
+    /// </summary>
+    Queued,
+
+    /// <summary>
+    /// Item has been submitted for processing and is waiting to be processed by a processing function
+    /// (e.g processQueueItem)
     /// </summary>
     Pending,
 

@@ -108,8 +108,7 @@ public class QueueAdditionService(
                 Duration = entry.Duration,
                 ThumbnailUrl = entry.ThumbnailUrl,
                 IsMetadataLoaded = entry.ThumbnailUrl is not null,
-                IsSelected = true,
-                Status = DownloadStatus.Pending
+                IsSelected = true
             };
 
             if (!entry.IsAvailable)

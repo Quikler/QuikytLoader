@@ -86,7 +86,7 @@ public partial class QueueGroupViewModel : ViewModelBase, IQueueItemsViewModel
     }
 
     private static bool IsEligibleForBatch(DownloadStatus status) =>
-        status is DownloadStatus.Pending
+        status is DownloadStatus.Queued
             or DownloadStatus.Failed
             or DownloadStatus.Cancelled
             or DownloadStatus.Editing;

@@ -24,7 +24,7 @@ public partial class DownloadQueueItem : ObservableObject
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusMessage))]
-    private DownloadStatus _status = DownloadStatus.Pending;
+    private DownloadStatus _status = DownloadStatus.Queued;
 
     /// <summary>
     /// Download progress (0-100)
@@ -43,6 +43,7 @@ public partial class DownloadQueueItem : ObservableObject
     /// </summary>
     public string StatusMessage => Status switch
     {
+        DownloadStatus.Queued => "⏱ Queued",
         DownloadStatus.Pending => "⏸ Pending",
         DownloadStatus.Editing => "⚡ Waiting for title edit",
         DownloadStatus.Downloading => "⏳ Downloading...",
