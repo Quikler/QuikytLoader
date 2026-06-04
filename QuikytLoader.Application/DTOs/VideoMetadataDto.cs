@@ -1,6 +1,7 @@
 namespace QuikytLoader.Application.DTOs;
 
 public record VideoMetadataDto(
+    string Url,
     string VideoId,
     string Title,
     string Channel,

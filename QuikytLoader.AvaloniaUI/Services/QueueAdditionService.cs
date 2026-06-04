@@ -102,6 +102,7 @@ public class QueueAdditionService(
         {
             var downloadQueueItem = new DownloadQueueItem
             {
+                Url = videoMetadataDto.Url,
                 IsSelected = true,
             };
             downloadQueueItem.ApplyMetadata(videoMetadataDto);

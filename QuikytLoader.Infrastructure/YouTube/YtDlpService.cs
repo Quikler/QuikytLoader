@@ -125,14 +125,15 @@ internal partial class YtDlpService : IYtDlpService
             if (lines.Length < 4)
                 return Errors.YouTube.MetadataFetchFailed(url);
 
-            var (isAvailable, unavailableReason) = DetermineAvailability(lines[5].Trim());
+            var (isAvailable, unavailableReason) = DetermineAvailability(lines[6].Trim());
 
             var metadata = new VideoMetadataDto(
-                VideoId: lines[0].Trim(),
-                Title: lines[1].Trim(),
-                Channel: lines[2].Trim(),
-                Duration: lines[3].Trim(),
-                ThumbnailUrl: lines[4].Trim(),
+                Url: url,
+                VideoId: lines[1].Trim(),
+                Title: lines[2].Trim(),
+                Channel: lines[3].Trim(),
+                Duration: lines[4].Trim(),
+                ThumbnailUrl: lines[5].Trim(),
                 IsAvailable: isAvailable,
                 UnavailableReason: unavailableReason
             );
@@ -195,7 +196,7 @@ internal partial class YtDlpService : IYtDlpService
     private static VideoMetadataDto BuildEntryDto(YtDlpPlaylistEntryJson entry)
     {
         var (isAvailable, unavailableReason) = DetermineAvailability(entry.Availability);
-        return new VideoMetadataDto(entry.Id, entry.Title, entry.Channel, FormatDuration(entry.Duration), entry.Thumbnails.LastOrDefault()?.Url!, isAvailable, unavailableReason);
+        return new VideoMetadataDto(entry.Url, entry.Id, entry.Title, entry.Channel, FormatDuration(entry.Duration), entry.Thumbnails.LastOrDefault()?.Url!, isAvailable, unavailableReason);
     }
 
     private static string FormatDuration(double totalSeconds)
