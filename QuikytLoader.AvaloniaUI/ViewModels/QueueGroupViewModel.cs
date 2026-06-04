@@ -38,6 +38,9 @@ public partial class QueueGroupViewModel : ViewModelBase, IQueueItemsViewModel
     [ObservableProperty]
     private bool _canProceedAll;
 
+    [RelayCommand]
+    private void Proceed() => _proceedGroupCallback(Id);
+
     private readonly Action<string> _proceedGroupCallback;
 
     public QueueGroupViewModel(string id, string playlistTitle, DownloadQueueItem[] items, Action<string> proceedGroupCallback)
