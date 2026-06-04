@@ -9,13 +9,12 @@
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueListView"
              x:DataType="vm:QueueListViewModel">
 
-    <Border Margin="0,24,0,0"
-            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
             CornerRadius="8"
             IsVisible="{Binding QueueManager.Queue.Count}">
-        <DockPanel>
+        <StackPanel>
             <!-- Queue Header -->
             <Border DockPanel.Dock="Top"
                     Background="{DynamicResource LayerFillColorDefaultBrush}"
@@ -41,7 +40,7 @@
                     </ItemsControl.DataTemplates>
                 </ItemsControl>
             </ScrollViewer>
-        </DockPanel>
+        </StackPanel>
     </Border>
 
 </UserControl>

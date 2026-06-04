@@ -14,13 +14,13 @@
         <vm:HomeViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="40">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="40">
 
         <views:YoutubeUrlInputCardView Grid.Row="0" />
 
-        <views:QueueListView Grid.Row="1" />
+        <views:QueueListView Grid.Row="1" Margin="0,24,0,0" />
 
-        <views:MessageInfoView Grid.Row="3" />
+        <views:MessageInfoView Grid.Row="2" />
 
     </Grid>
 

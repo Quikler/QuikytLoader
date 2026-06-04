@@ -29,11 +29,11 @@
                 <Panel Grid.Row="0" Grid.Column="0"
                        Width="120" Height="68"
                        Margin="0,0,12,0"
-                       IsVisible="{Binding IsMetadataLoaded}">
+                       IsVisible="{Binding VideoMetadata.IsLoaded}">
                     <Border CornerRadius="4" ClipToBounds="True">
                         <Image Width="120" Height="68"
                                Stretch="UniformToFill"
-                               asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"/>
+                               asyncImageLoader:ImageLoader.Source="{Binding VideoMetadata.ThumbnailUrl}"/>
                     </Border>
                     <!-- Duration overlay -->
                     <Border Background="#CC000000"
@@ -42,8 +42,8 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
                             Margin="0,0,4,4"
-                            IsVisible="{Binding Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                        <TextBlock Text="{Binding Duration}"
+                            IsVisible="{Binding VideoMetadata.Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="{Binding VideoMetadata.Duration}"
                                    FontSize="10"
                                    FontWeight="SemiBold"
                                    Foreground="White"/>
@@ -56,7 +56,7 @@
                         Margin="0,0,12,0"
                         CornerRadius="4"
                         Background="{DynamicResource LayerFillColorDefaultBrush}"
-                        IsVisible="{Binding !IsMetadataLoaded}">
+                        IsVisible="{Binding !VideoMetadata.IsLoaded}">
                     <ui:SymbolIcon Symbol="Video"
                                    FontSize="24"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
@@ -119,11 +119,11 @@
 
                     <TextBlock Grid.Row="1"
                                Grid.ColumnSpan="2"
-                               Text="{Binding ChannelName}"
+                               Text="{Binding VideoMetadata.Channel}"
                                FontSize="12"
                                Margin="0,2,0,0"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               IsVisible="{Binding ChannelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                               IsVisible="{Binding VideoMetadata.Channel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                     <TextBlock Text="{Binding StatusMessage}"
                                Grid.Row="2"

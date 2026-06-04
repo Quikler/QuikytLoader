@@ -32,16 +32,16 @@ internal sealed class YtDlpPlaylistEntryJson
     public string? Availability { get; set; }
 
     [JsonPropertyName("channel")]
-    public string? Channel { get; set; }
+    public string Channel { get; set; } = string.Empty;
 
     /// <summary>
     /// Duration in seconds (flat-playlist returns a number, not a formatted string).
     /// </summary>
     [JsonPropertyName("duration")]
-    public double? Duration { get; set; }
+    public double Duration { get; set; }
 
     [JsonPropertyName("thumbnails")]
-    public List<YtDlpThumbnailJson>? Thumbnails { get; set; }
+    public List<YtDlpThumbnailJson> Thumbnails { get; set; } = [];
 }
 
 internal sealed class YtDlpThumbnailJson

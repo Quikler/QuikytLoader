@@ -13,9 +13,6 @@ namespace QuikytLoader.AvaloniaUI.Models;
 /// </summary>
 public partial class DownloadQueueItem : ObservableObject
 {
-    /// <summary>
-    /// The YouTube URL to download
-    /// </summary>
     [ObservableProperty]
     private string _url = string.Empty;
 
@@ -61,47 +58,15 @@ public partial class DownloadQueueItem : ObservableObject
     [NotifyPropertyChangedFor(nameof(CurrentTitle))]
     private string? _customTitle;
 
-    /// <summary>
-    /// Fetched video title (separate from CustomTitle which is user-edited)
-    /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CurrentTitle))]
-    private string? _videoTitle;
-
-    /// <summary>
-    /// Tracks whether metadata fetch completed (for UI loading state)
-    /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CurrentTitle))]
-    private bool _isMetadataLoaded;
-
-    /// <summary>
-    /// YouTube channel name
-    /// </summary>
-    [ObservableProperty]
-    private string? _channelName;
-
-    /// <summary>
-    /// Formatted duration string (e.g., "3:45")
-    /// </summary>
-    [ObservableProperty]
-    private string? _duration;
-
-    /// <summary>
-    /// YouTube thumbnail URL for async image loading
-    /// </summary>
-    [ObservableProperty]
-    private string? _thumbnailUrl;
-
     public string? CurrentTitle
     {
         get
         {
-            if (!IsMetadataLoaded)
+            if (!VideoMetadata.IsLoaded)
                 return Url;
 
             return string.IsNullOrWhiteSpace(CustomTitle)
-                ? VideoTitle
+                ? VideoMetadata.Title
                 : CustomTitle;
         }
     }
@@ -111,12 +76,6 @@ public partial class DownloadQueueItem : ObservableObject
     /// </summary>
     [ObservableProperty]
     private string? _groupId;
-
-    /// <summary>
-    /// 11-char YouTube video id (populated from playlist entry or metadata fetch). Used for cross-playlist dedup.
-    /// </summary>
-    [ObservableProperty]
-    private string? _youtubeId;
 
     /// <summary>
     /// Reason the item is hard-disabled (shown in StatusMessage when Status == Disabled).
@@ -156,7 +115,10 @@ public partial class DownloadQueueItem : ObservableObject
         DisabledReason = reason;
         Status = DownloadStatus.Disabled;
         IsSelected = false;
+        IsProceedButtonEnabled = false;
     }
+
+    public VideoMetadataViewModel VideoMetadata { get; init; } = new();
 
     public void ApplyMetadata(Result<VideoMetadataDto> result)
     {
@@ -167,15 +129,20 @@ public partial class DownloadQueueItem : ObservableObject
         }
 
         var metadata = result.Value;
-        VideoTitle = metadata.Title;
-        ChannelName = metadata.Channel;
-        Duration = metadata.Duration;
-        ThumbnailUrl = metadata.ThumbnailUrl;
-        IsMetadataLoaded = true;
+        VideoMetadata.VideoId = metadata.VideoId;
+        VideoMetadata.Title = metadata.Title;
+        VideoMetadata.Channel = metadata.Channel;
+        VideoMetadata.Duration = metadata.Duration;
+        VideoMetadata.ThumbnailUrl = metadata.ThumbnailUrl;
+        VideoMetadata.IsAvailable = metadata.IsAvailable;
+        VideoMetadata.UnavailableReason = metadata.UnavailableReason;
+        VideoMetadata.IsLoaded = true;
 
         // Only populate custom title if user hasn't started editing yet
         if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = metadata.Title;
+
+        OnPropertyChanged(nameof(CurrentTitle));
     }
 
     public override string ToString()
@@ -191,11 +158,8 @@ public partial class DownloadQueueItem : ObservableObject
         if (Status == DownloadStatus.Downloading)
             sb.Append($" ({Progress:F0}%)");
 
-        if (!string.IsNullOrWhiteSpace(ChannelName))
-            sb.Append($" - {ChannelName}");
-
-        if (!string.IsNullOrWhiteSpace(Duration))
-            sb.Append($" [{Duration}]");
+        if (VideoMetadata.IsLoaded)
+            sb.Append(VideoMetadata.ToString());
 
         if (Status == DownloadStatus.Failed && !string.IsNullOrWhiteSpace(ErrorMessage))
             sb.Append($" - Error: {ErrorMessage}");

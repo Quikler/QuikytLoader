@@ -55,10 +55,8 @@ public partial class DownloadQueueManager(
     /// Look up an item by YouTube id across all groups. Used to detect duplicates
     /// when enqueuing a new playlist.
     /// </summary>
-    public DownloadQueueItem? TryFindByYoutubeId(string youtubeId, string? excludeGroupId = null) =>
-        AllItems.FirstOrDefault(
-            i => i.YoutubeId == youtubeId &&
-            (excludeGroupId is null || i.GroupId != excludeGroupId));
+    public bool IsAlreadyInQueue(string videoId, string excludeGroupId) =>
+        AllItems.Any(i => i.VideoMetadata.VideoId == videoId && i.GroupId != excludeGroupId);
 
     public void Proceed(DownloadQueueItem item)
     {
