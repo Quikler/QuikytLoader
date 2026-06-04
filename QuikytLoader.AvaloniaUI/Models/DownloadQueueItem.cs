@@ -58,15 +58,22 @@ public partial class DownloadQueueItem : ObservableObject
     /// Optional custom title for the output file (if null, uses video title)
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
+    [NotifyPropertyChangedFor(nameof(CurrentTitle))]
     private string? _customTitle;
 
     /// <summary>
     /// Fetched video title (separate from CustomTitle which is user-edited)
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
+    [NotifyPropertyChangedFor(nameof(CurrentTitle))]
     private string? _videoTitle;
+
+    /// <summary>
+    /// Tracks whether metadata fetch completed (for UI loading state)
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CurrentTitle))]
+    private bool _isMetadataLoaded;
 
     /// <summary>
     /// YouTube channel name
@@ -86,23 +93,18 @@ public partial class DownloadQueueItem : ObservableObject
     [ObservableProperty]
     private string? _thumbnailUrl;
 
-    /// <summary>
-    /// Tracks whether metadata fetch completed (for UI loading state)
-    /// </summary>
-    [ObservableProperty]
-    private bool _isMetadataLoaded;
+    public string? CurrentTitle
+    {
+        get
+        {
+            if (!IsMetadataLoaded)
+                return Url;
 
-    /// <summary>
-    /// Tracks whether metadata fetch failed (for error icon)
-    /// </summary>
-    [ObservableProperty]
-    private bool _hasMetadataError;
-
-    /// <summary>
-    /// Display title: shows CustomTitle if set, otherwise VideoTitle
-    /// </summary>
-    public string? DisplayTitle =>
-        string.IsNullOrWhiteSpace(CustomTitle) ? VideoTitle : CustomTitle;
+            return string.IsNullOrWhiteSpace(CustomTitle)
+                ? VideoTitle
+                : CustomTitle;
+        }
+    }
 
     /// <summary>
     /// Group id this item belongs to. Set by DownloadQueueManager on enqueue.
@@ -160,7 +162,7 @@ public partial class DownloadQueueItem : ObservableObject
     {
         if (!result.IsSuccess)
         {
-            HasMetadataError = true;
+            ErrorMessage = result.Error.Message;
             return;
         }
 
@@ -176,14 +178,13 @@ public partial class DownloadQueueItem : ObservableObject
             CustomTitle = metadata.Title;
     }
 
-
     public override string ToString()
     {
         var sb = new System.Text.StringBuilder();
         sb.Append($"[{StatusMessage}] ");
 
-        if (!string.IsNullOrWhiteSpace(DisplayTitle))
-            sb.Append($"{DisplayTitle}");
+        if (!string.IsNullOrWhiteSpace(CurrentTitle))
+            sb.Append($"{CurrentTitle}");
         else
             sb.Append(Url);
 
