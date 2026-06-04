@@ -122,18 +122,18 @@ internal partial class YtDlpService : IYtDlpService
             var output = await outputTask;
             var lines = output.Split('\n');
 
-            if (lines.Length < 4)
+            if (lines.Length < 6)
                 return Errors.YouTube.MetadataFetchFailed(url);
 
-            var (isAvailable, unavailableReason) = DetermineAvailability(lines[6].Trim());
+            var (isAvailable, unavailableReason) = DetermineAvailability(lines[5].Trim());
 
             var metadata = new VideoMetadataDto(
                 Url: url,
-                VideoId: lines[1].Trim(),
-                Title: lines[2].Trim(),
-                Channel: lines[3].Trim(),
-                Duration: lines[4].Trim(),
-                ThumbnailUrl: lines[5].Trim(),
+                VideoId: lines[0].Trim(),
+                Title: lines[1].Trim(),
+                Channel: lines[2].Trim(),
+                Duration: lines[3].Trim(),
+                ThumbnailUrl: lines[4].Trim(),
                 IsAvailable: isAvailable,
                 UnavailableReason: unavailableReason
             );
