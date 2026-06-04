@@ -16,6 +16,7 @@ public static class AvaloniaUIServiceExtensions
     /// </summary>
     public static IServiceCollection AddAvaloniaUIServices(this IServiceCollection services)
     {
+        services.AddSingleton<IUiNotificationService, UiNotificationService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThemeApplier, ThemeApplier>();
 
@@ -31,7 +32,10 @@ public static class AvaloniaUIServiceExtensions
         services.AddTransient<AppViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SettingsViewModel>();
+
+        services.AddTransient<YoutubeUrlInputCardViewModel>();
         services.AddTransient<QueueListViewModel>();
+        services.AddTransient<MessageInfoViewModel>();
 
         return services;
     }

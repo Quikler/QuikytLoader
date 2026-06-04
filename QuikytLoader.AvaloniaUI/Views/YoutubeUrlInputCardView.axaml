@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="QuikytLoader.AvaloniaUI.Views.YoutubeUrlInputCardView"
+             x:DataType="vm:YoutubeUrlInputCardViewModel">
+
+    <StackPanel Spacing="24" VerticalAlignment="Center">
+
+        <!-- Title Section -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="YouTube to Telegram"
+                       FontSize="32"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
+            <TextBlock Text="Download YouTube videos and send them directly to your Telegram"
+                       FontSize="14"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+        </StackPanel>
+
+        <!-- Input Card -->
+        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="24">
+            <StackPanel Spacing="20">
+
+                <!-- URL Input Section -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="YouTube URL"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+
+                    <TextBox Text="{Binding YoutubeUrl, Mode=TwoWay}"
+                             Watermark="https://www.youtube.com/watch?v=..."
+                             FontSize="14"
+                             Padding="10"
+                             VerticalContentAlignment="Center"
+                             KeyDown="YoutubeUrlTextBox_KeyDown"/>
+
+                    <TextBlock Text="Paste a YouTube video or music URL"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Custom Title Checkbox -->
+                <CheckBox IsChecked="{Binding UseCustomTitle, Mode=TwoWay}"
+                          Content="Use custom title"
+                          FontSize="14"/>
+
+                <!-- Add to Queue Button -->
+                <Button Command="{Binding AddToQueueCommand}"
+                        HorizontalAlignment="Stretch"
+                        Padding="0,12"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        IsDefault="False">
+                    <Button.Styles>
+                        <Style Selector="Button">
+                            <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Style>
+                    </Button.Styles>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ui:SymbolIcon Symbol="Add" FontSize="20"/>
+                        <TextBlock Text="Add to Queue" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+
+</UserControl>
