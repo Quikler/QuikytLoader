@@ -14,12 +14,6 @@ namespace QuikytLoader.AvaloniaUI.Models;
 public partial class DownloadQueueItem : ObservableObject
 {
     /// <summary>
-    /// The YouTube URL to download
-    /// </summary>
-    [ObservableProperty]
-    private string _url = string.Empty;
-
-    /// <summary>
     /// Current status of this download
     /// </summary>
     [ObservableProperty]
@@ -58,63 +52,27 @@ public partial class DownloadQueueItem : ObservableObject
     /// Optional custom title for the output file (if null, uses video title)
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
+    [NotifyPropertyChangedFor(nameof(CurrentTitle))]
     private string? _customTitle;
 
-    /// <summary>
-    /// Fetched video title (separate from CustomTitle which is user-edited)
-    /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayTitle))]
-    private string? _videoTitle;
+    public string? CurrentTitle
+    {
+        get
+        {
+            if (!VideoMetadata.IsLoaded)
+                return VideoMetadata.Url;
 
-    /// <summary>
-    /// YouTube channel name
-    /// </summary>
-    [ObservableProperty]
-    private string? _channelName;
-
-    /// <summary>
-    /// Formatted duration string (e.g., "3:45")
-    /// </summary>
-    [ObservableProperty]
-    private string? _duration;
-
-    /// <summary>
-    /// YouTube thumbnail URL for async image loading
-    /// </summary>
-    [ObservableProperty]
-    private string? _thumbnailUrl;
-
-    /// <summary>
-    /// Tracks whether metadata fetch completed (for UI loading state)
-    /// </summary>
-    [ObservableProperty]
-    private bool _isMetadataLoaded;
-
-    /// <summary>
-    /// Tracks whether metadata fetch failed (for error icon)
-    /// </summary>
-    [ObservableProperty]
-    private bool _hasMetadataError;
-
-    /// <summary>
-    /// Display title: shows CustomTitle if set, otherwise VideoTitle
-    /// </summary>
-    public string? DisplayTitle =>
-        string.IsNullOrWhiteSpace(CustomTitle) ? VideoTitle : CustomTitle;
+            return string.IsNullOrWhiteSpace(CustomTitle)
+                ? VideoMetadata.Title
+                : CustomTitle;
+        }
+    }
 
     /// <summary>
     /// Group id this item belongs to. Set by DownloadQueueManager on enqueue.
     /// </summary>
     [ObservableProperty]
     private string? _groupId;
-
-    /// <summary>
-    /// 11-char YouTube video id (populated from playlist entry or metadata fetch). Used for cross-playlist dedup.
-    /// </summary>
-    [ObservableProperty]
-    private string? _youtubeId;
 
     /// <summary>
     /// Reason the item is hard-disabled (shown in StatusMessage when Status == Disabled).
@@ -154,47 +112,50 @@ public partial class DownloadQueueItem : ObservableObject
         DisabledReason = reason;
         Status = DownloadStatus.Disabled;
         IsSelected = false;
+        IsProceedButtonEnabled = false;
     }
+
+    public VideoMetadataViewModel VideoMetadata { get; } = new();
 
     public void ApplyMetadata(Result<VideoMetadataDto> result)
     {
         if (!result.IsSuccess)
         {
-            HasMetadataError = true;
+            ErrorMessage = result.Error.Message;
             return;
         }
 
         var metadata = result.Value;
-        VideoTitle = metadata.Title;
-        ChannelName = metadata.Channel;
-        Duration = metadata.Duration;
-        ThumbnailUrl = metadata.ThumbnailUrl;
-        IsMetadataLoaded = true;
+        VideoMetadata.Url = metadata.Url;
+        VideoMetadata.VideoId = metadata.VideoId;
+        VideoMetadata.Title = metadata.Title;
+        VideoMetadata.Channel = metadata.Channel;
+        VideoMetadata.Duration = metadata.Duration;
+        VideoMetadata.ThumbnailUrl = metadata.ThumbnailUrl;
+        VideoMetadata.IsAvailable = metadata.IsAvailable;
+        VideoMetadata.UnavailableReason = metadata.UnavailableReason;
+        VideoMetadata.IsLoaded = true;
 
         // Only populate custom title if user hasn't started editing yet
         if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = metadata.Title;
-    }
 
+        OnPropertyChanged(nameof(CurrentTitle));
+    }
 
     public override string ToString()
     {
         var sb = new System.Text.StringBuilder();
         sb.Append($"[{StatusMessage}] ");
 
-        if (!string.IsNullOrWhiteSpace(DisplayTitle))
-            sb.Append($"{DisplayTitle}");
-        else
-            sb.Append(Url);
+        if (!string.IsNullOrWhiteSpace(CurrentTitle))
+            sb.Append($"{CurrentTitle}");
 
         if (Status == DownloadStatus.Downloading)
             sb.Append($" ({Progress:F0}%)");
 
-        if (!string.IsNullOrWhiteSpace(ChannelName))
-            sb.Append($" - {ChannelName}");
-
-        if (!string.IsNullOrWhiteSpace(Duration))
-            sb.Append($" [{Duration}]");
+        if (VideoMetadata.IsLoaded)
+            sb.Append(VideoMetadata.ToString());
 
         if (Status == DownloadStatus.Failed && !string.IsNullOrWhiteSpace(ErrorMessage))
             sb.Append($" - Error: {ErrorMessage}");

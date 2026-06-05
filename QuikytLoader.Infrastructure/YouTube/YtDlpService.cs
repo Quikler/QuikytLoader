@@ -103,7 +103,7 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--", url },
+                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "id", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--print", "availability", "--", url },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
                 UseShellExecute = false,
@@ -122,14 +122,20 @@ internal partial class YtDlpService : IYtDlpService
             var output = await outputTask;
             var lines = output.Split('\n');
 
-            if (lines.Length < 4)
+            if (lines.Length < 6)
                 return Errors.YouTube.MetadataFetchFailed(url);
 
+            var (isAvailable, unavailableReason) = DetermineAvailability(lines[5].Trim());
+
             var metadata = new VideoMetadataDto(
-                Title: lines[0].Trim(),
-                Channel: lines[1].Trim(),
-                Duration: lines[2].Trim(),
-                ThumbnailUrl: lines[3].Trim()
+                Url: url,
+                VideoId: lines[0].Trim(),
+                Title: lines[1].Trim(),
+                Channel: lines[2].Trim(),
+                Duration: lines[3].Trim(),
+                ThumbnailUrl: lines[4].Trim(),
+                IsAvailable: isAvailable,
+                UnavailableReason: unavailableReason
             );
 
             return Result<VideoMetadataDto>.Success(metadata);
@@ -179,20 +185,25 @@ internal partial class YtDlpService : IYtDlpService
             return new PlaylistMetadataDto(
                 PlaylistId: parsedPlaylist.Id,
                 Title: parsedPlaylist.Title,
-                Entries: parsedPlaylist.Entries.Select(BuildEntryDto).ToList());
+                PlaylistVideos: parsedPlaylist.Entries
+                    .Select(entry =>
+                    {
+                        var (isAvailable, unavailableReason) = DetermineAvailability(entry.Availability);
+                        return new VideoMetadataDto(
+                            entry.Url,
+                            entry.Id,
+                            entry.Title,
+                            entry.Channel,
+                            FormatDuration(entry.Duration),
+                            entry.Thumbnails.Last().Url,
+                            isAvailable,
+                            unavailableReason);
+                    }).ToList());
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
         }
-    }
-
-    private static PlaylistEntryDto BuildEntryDto(YtDlpPlaylistEntryJson entry)
-    {
-        var (isAvailable, reason) = DetermineAvailability(entry);
-        var thumbnailUrl = entry.Thumbnails?.LastOrDefault()?.Url;
-        var duration = entry.Duration.HasValue ? FormatDuration(entry.Duration.Value) : null;
-        return new PlaylistEntryDto(entry.Id, entry.Url, entry.Title, entry.Channel, duration, thumbnailUrl, isAvailable, reason);
     }
 
     private static string FormatDuration(double totalSeconds)
@@ -203,15 +214,15 @@ internal partial class YtDlpService : IYtDlpService
             : $"{ts.Minutes}:{ts.Seconds:D2}";
     }
 
-    private static (bool isAvailable, string? reason) DetermineAvailability(YtDlpPlaylistEntryJson entry) =>
-        entry.Availability switch
+    private static (bool isAvailable, string unavailableReason) DetermineAvailability(string? availability) =>
+        availability switch
         {
-            null or "" or "public" or "unlisted" => (true, null),
+            null or "" or "public" or "unlisted" => (true, string.Empty),
             "private" => (false, "Private video"),
             "premium_only" => (false, "Premium only"),
             "subscriber_only" => (false, "Members only"),
             "needs_auth" => (false, "Sign-in required"),
-            _ => (false, entry.Availability)
+            _ => (false, availability ?? "Unknown")
         };
 
     // TODO: we are specifying "tempDirectory", so makes sense to return the download location info in return type

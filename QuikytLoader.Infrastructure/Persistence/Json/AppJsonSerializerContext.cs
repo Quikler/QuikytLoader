@@ -10,6 +10,7 @@ namespace QuikytLoader.Infrastructure.Persistence.Json;
 /// </summary>
 [JsonSourceGenerationOptions(
     WriteIndented = true,
+    RespectNullableAnnotations = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(UserSettingsDto))]
 [JsonSerializable(typeof(YtDlpPlaylistJson))]

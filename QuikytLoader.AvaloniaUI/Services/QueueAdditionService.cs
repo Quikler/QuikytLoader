@@ -35,11 +35,11 @@ public class QueueAdditionService(
     }
 
     private async Task<QueueAdditionResult> AddSingleAsync(
-        string url,
+        string youtubeUrl,
         bool editTitleBeforeDownload,
         Func<DownloadHistoryDto, Task<bool>> confirmDuplicate)
     {
-        var duplicateCheck = await findExistingDownloadUseCase.FindAsync(url);
+        var duplicateCheck = await findExistingDownloadUseCase.FindAsync(youtubeUrl);
         if (!duplicateCheck.IsSuccess)
             return new QueueAdditionResult.Failed(duplicateCheck.Error.Message);
 
@@ -51,12 +51,15 @@ public class QueueAdditionService(
 
         var item = new DownloadQueueItem
         {
-            Url = url,
-            Status = editTitleBeforeDownload ? DownloadStatus.Editing : DownloadStatus.Pending
+            Status = editTitleBeforeDownload ? DownloadStatus.Editing : DownloadStatus.Pending,
         };
 
+        // Apply Url manually to show it in UI
+        item.VideoMetadata.Url = youtubeUrl;
+
         queueManager.EnqueueItem(item);
-        _ = FetchMetadataAsync(item);
+        _ = getVideoMetadataUseCase.GetMetadataAsync(youtubeUrl)
+            .ContinueWith(task => item.ApplyMetadata(task.Result));
 
         return new QueueAdditionResult.SingleAdded(queueManager.Queue.Count);
     }
@@ -71,70 +74,63 @@ public class QueueAdditionService(
         if (queueManager.HasGroup(playlistId))
             return new QueueAdditionResult.AlreadyQueued();
 
-        var metadataResult = await getPlaylistMetadataUseCase.GetMetadataAsync(url);
-        if (!metadataResult.IsSuccess)
-            return new QueueAdditionResult.Failed(metadataResult.Error.Message);
+        var playlistMetadataResult = await getPlaylistMetadataUseCase.GetMetadataAsync(url);
+        if (!playlistMetadataResult.IsSuccess)
+            return new QueueAdditionResult.Failed(playlistMetadataResult.Error.Message);
 
-        var metadata = metadataResult.Value;
-        if (metadata.Entries.Count == 0)
+        var playlistMetadata = playlistMetadataResult.Value;
+        if (playlistMetadata.PlaylistVideos.Count == 0)
             return new QueueAdditionResult.Failed("Playlist has no videos.");
 
-        var items = await BuildPlaylistItemsAsync(metadata, playlistId);
-        queueManager.EnqueueGroup(playlistId, metadata.Title, items);
+        var downloadQueueItems = CreatePlaylistItemsFromMetadata(playlistMetadata);
+        await DisableDuplicateItems(downloadQueueItems);
+        queueManager.EnqueueGroup(playlistId, playlistMetadata.PlaylistTitle, downloadQueueItems);
 
-        return new QueueAdditionResult.PlaylistAdded(metadata.Title, items.Count);
+        return new QueueAdditionResult.PlaylistAdded(playlistMetadata.PlaylistTitle, downloadQueueItems.Count);
     }
 
-    private async Task<List<DownloadQueueItem>> BuildPlaylistItemsAsync(PlaylistMetadataDto metadata, string playlistId)
+    private IReadOnlyList<DownloadQueueItem> CreatePlaylistItemsFromMetadata(PlaylistMetadataDto playlistMetadata)
     {
-        var historyTasks = new Dictionary<string, Task<Result<DownloadHistoryDto?>>>();
-        foreach (var entry in metadata.Entries)
+        var items = new List<DownloadQueueItem>(playlistMetadata.PlaylistVideos.Count);
+        foreach (var videoMetadataDto in playlistMetadata.PlaylistVideos)
         {
-            if (!entry.IsAvailable) continue;
-            if (!historyTasks.ContainsKey(entry.VideoId))
-                historyTasks[entry.VideoId] = findExistingDownloadUseCase.FindByIdAsync(entry.VideoId);
-        }
-        await Task.WhenAll(historyTasks.Values);
+            var downloadQueueItem = new DownloadQueueItem();
+            downloadQueueItem.ApplyMetadata(videoMetadataDto);
 
-        var items = new List<DownloadQueueItem>(metadata.Entries.Count);
-        foreach (var entry in metadata.Entries)
-        {
-            var item = new DownloadQueueItem
+            if (!videoMetadataDto.IsAvailable)
             {
-                Url = entry.Url,
-                YoutubeId = entry.VideoId,
-                VideoTitle = entry.Title,
-                ChannelName = entry.Channel,
-                Duration = entry.Duration,
-                ThumbnailUrl = entry.ThumbnailUrl,
-                IsMetadataLoaded = entry.ThumbnailUrl is not null,
-                IsSelected = true
-            };
-
-            if (!entry.IsAvailable)
-            {
-                item.SetAsDisabled(entry.UnavailableReason ?? "Unavailable");
+                downloadQueueItem.SetAsDisabled(videoMetadataDto.UnavailableReason);
             }
-            else if (historyTasks.TryGetValue(entry.VideoId, out var histTask)
-                     && histTask.Result.IsSuccess
-                     && histTask.Result.Value is not null)
+            else if (queueManager.IsAlreadyInQueue(videoMetadataDto.VideoId, excludeGroupId: playlistMetadata.PlaylistId))
             {
-                item.SetAsDisabled("Already downloaded");
-            }
-            else if (queueManager.TryFindByYoutubeId(entry.VideoId, excludeGroupId: playlistId) is not null)
-            {
-                item.SetAsDisabled("Already queued in another playlist");
+                downloadQueueItem.SetAsDisabled("Already queued in another playlist");
             }
 
-            items.Add(item);
+            items.Add(downloadQueueItem);
         }
         return items;
     }
 
-    private async Task FetchMetadataAsync(DownloadQueueItem item)
+    private async Task DisableDuplicateItems(IReadOnlyList<DownloadQueueItem> downloadQueueItems)
     {
-        var result = await getVideoMetadataUseCase.GetMetadataAsync(item.Url);
-        item.ApplyMetadata(result);
+        var historyTasks = new Dictionary<string, Task<Result<DownloadHistoryDto?>>>();
+        foreach (var downloadQueueItem in downloadQueueItems)
+        {
+            if (!downloadQueueItem.VideoMetadata.IsAvailable) continue;
+            if (!historyTasks.ContainsKey(downloadQueueItem.VideoMetadata.VideoId))
+                historyTasks[downloadQueueItem.VideoMetadata.VideoId] = findExistingDownloadUseCase.FindByIdAsync(downloadQueueItem.VideoMetadata.VideoId);
+        }
+        await Task.WhenAll(historyTasks.Values);
+
+        foreach (var downloadQueueItem in downloadQueueItems)
+        {
+            if (historyTasks.TryGetValue(downloadQueueItem.VideoMetadata.VideoId, out var historyTask)
+                 && historyTask.Result.IsSuccess
+                 && historyTask.Result.Value is not null)
+            {
+                downloadQueueItem.SetAsDisabled("Already downloaded");
+            }
+        }
     }
 }
 

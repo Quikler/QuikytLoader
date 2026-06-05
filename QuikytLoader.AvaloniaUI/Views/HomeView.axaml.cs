@@ -1,6 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Input;
-using QuikytLoader.AvaloniaUI.ViewModels;
 
 namespace QuikytLoader.AvaloniaUI.Views;
 
@@ -9,18 +7,5 @@ public partial class HomeView : UserControl
     public HomeView()
     {
         InitializeComponent();
-    }
-
-    private void YoutubeUrlTextBox_KeyDown(object _, KeyEventArgs e)
-    {
-        // Only execute command when Enter key is pressed
-        if (e.Key == Key.Enter && DataContext is HomeViewModel viewModel)
-        {
-            if (viewModel.AddToQueueCommand.CanExecute(null))
-            {
-                viewModel.AddToQueueCommand.Execute(null);
-            }
-            e.Handled = true;
-        }
     }
 }

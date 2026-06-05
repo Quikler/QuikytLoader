@@ -8,44 +8,54 @@ namespace QuikytLoader.Infrastructure.YouTube;
 internal sealed class YtDlpPlaylistJson
 {
     [JsonPropertyName("id")]
+    [JsonRequired]
     public string Id { get; set; } = string.Empty;
 
     [JsonPropertyName("title")]
+    [JsonRequired]
     public string Title { get; set; } = string.Empty;
 
     [JsonPropertyName("entries")]
+    [JsonRequired]
     public List<YtDlpPlaylistEntryJson> Entries { get; set; } = [];
 }
 
 internal sealed class YtDlpPlaylistEntryJson
 {
     [JsonPropertyName("id")]
+    [JsonRequired]
     public string Id { get; set; } = string.Empty;
 
     [JsonPropertyName("title")]
+    [JsonRequired]
     public string Title { get; set; } = string.Empty;
 
     [JsonPropertyName("url")]
+    [JsonRequired]
     public string Url { get; set; } = string.Empty;
 
     [JsonPropertyName("availability")]
     public string? Availability { get; set; }
 
     [JsonPropertyName("channel")]
-    public string? Channel { get; set; }
+    [JsonRequired]
+    public string Channel { get; set; } = string.Empty;
 
     /// <summary>
     /// Duration in seconds (flat-playlist returns a number, not a formatted string).
     /// </summary>
     [JsonPropertyName("duration")]
-    public double? Duration { get; set; }
+    [JsonRequired]
+    public double Duration { get; set; }
 
     [JsonPropertyName("thumbnails")]
-    public List<YtDlpThumbnailJson>? Thumbnails { get; set; }
+    [JsonRequired]
+    public List<YtDlpThumbnailJson> Thumbnails { get; set; } = [];
 }
 
 internal sealed class YtDlpThumbnailJson
 {
     [JsonPropertyName("url")]
+    [JsonRequired]
     public string Url { get; set; } = string.Empty;
 }

@@ -55,10 +55,8 @@ public partial class DownloadQueueManager(
     /// Look up an item by YouTube id across all groups. Used to detect duplicates
     /// when enqueuing a new playlist.
     /// </summary>
-    public DownloadQueueItem? TryFindByYoutubeId(string youtubeId, string? excludeGroupId = null) =>
-        AllItems.FirstOrDefault(
-            i => i.YoutubeId == youtubeId &&
-            (excludeGroupId is null || i.GroupId != excludeGroupId));
+    public bool IsAlreadyInQueue(string videoId, string excludeGroupId) =>
+        AllItems.Any(i => i.VideoMetadata.VideoId == videoId && i.GroupId != excludeGroupId);
 
     public void Proceed(DownloadQueueItem item)
     {
@@ -108,7 +106,7 @@ public partial class DownloadQueueManager(
         // TODO: #17
         if (itemToQueue.Status != DownloadStatus.Pending)
         {
-            System.Diagnostics.Debug.Fail($"ProcessItemsToDownloadAsync called with non-Pending item {itemToQueue.Url} (status: {itemToQueue.Status}).");
+            System.Diagnostics.Debug.Fail($"ProcessItemsToDownloadAsync called with non-Pending item {itemToQueue.VideoMetadata.Url} (status: {itemToQueue.Status}).");
             return; // silently skip in Release
         }
 
@@ -126,7 +124,7 @@ public partial class DownloadQueueManager(
                 if (currentItem.Status != DownloadStatus.Pending)
                 {
                     // Contract violation: only Pending items should reach this queue.
-                    System.Diagnostics.Debug.Fail($"Item {currentItem.Url} dequeued with unexpected status {currentItem.Status}.");
+                    System.Diagnostics.Debug.Fail($"Item {currentItem.VideoMetadata.Url} dequeued with unexpected status {currentItem.Status}.");
                     continue;
                 }
 
