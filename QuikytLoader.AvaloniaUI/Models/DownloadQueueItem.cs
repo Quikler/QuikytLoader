@@ -13,9 +13,6 @@ namespace QuikytLoader.AvaloniaUI.Models;
 /// </summary>
 public partial class DownloadQueueItem : ObservableObject
 {
-    [ObservableProperty]
-    private string _url = string.Empty;
-
     /// <summary>
     /// Current status of this download
     /// </summary>
@@ -63,7 +60,7 @@ public partial class DownloadQueueItem : ObservableObject
         get
         {
             if (!VideoMetadata.IsLoaded)
-                return Url;
+                return VideoMetadata.Url;
 
             return string.IsNullOrWhiteSpace(CustomTitle)
                 ? VideoMetadata.Title
@@ -118,7 +115,7 @@ public partial class DownloadQueueItem : ObservableObject
         IsProceedButtonEnabled = false;
     }
 
-    public VideoMetadataViewModel VideoMetadata { get; init; } = new();
+    public VideoMetadataViewModel VideoMetadata { get; } = new();
 
     public void ApplyMetadata(Result<VideoMetadataDto> result)
     {
@@ -129,6 +126,7 @@ public partial class DownloadQueueItem : ObservableObject
         }
 
         var metadata = result.Value;
+        VideoMetadata.Url = metadata.Url;
         VideoMetadata.VideoId = metadata.VideoId;
         VideoMetadata.Title = metadata.Title;
         VideoMetadata.Channel = metadata.Channel;
@@ -152,8 +150,6 @@ public partial class DownloadQueueItem : ObservableObject
 
         if (!string.IsNullOrWhiteSpace(CurrentTitle))
             sb.Append($"{CurrentTitle}");
-        else
-            sb.Append(Url);
 
         if (Status == DownloadStatus.Downloading)
             sb.Append($" ({Progress:F0}%)");

@@ -106,7 +106,7 @@ public partial class DownloadQueueManager(
         // TODO: #17
         if (itemToQueue.Status != DownloadStatus.Pending)
         {
-            System.Diagnostics.Debug.Fail($"ProcessItemsToDownloadAsync called with non-Pending item {itemToQueue.Url} (status: {itemToQueue.Status}).");
+            System.Diagnostics.Debug.Fail($"ProcessItemsToDownloadAsync called with non-Pending item {itemToQueue.VideoMetadata.Url} (status: {itemToQueue.Status}).");
             return; // silently skip in Release
         }
 
@@ -124,7 +124,7 @@ public partial class DownloadQueueManager(
                 if (currentItem.Status != DownloadStatus.Pending)
                 {
                     // Contract violation: only Pending items should reach this queue.
-                    System.Diagnostics.Debug.Fail($"Item {currentItem.Url} dequeued with unexpected status {currentItem.Status}.");
+                    System.Diagnostics.Debug.Fail($"Item {currentItem.VideoMetadata.Url} dequeued with unexpected status {currentItem.Status}.");
                     continue;
                 }
 

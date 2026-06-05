@@ -51,9 +51,11 @@ public class QueueAdditionService(
 
         var item = new DownloadQueueItem
         {
-            Url = youtubeUrl,
             Status = editTitleBeforeDownload ? DownloadStatus.Editing : DownloadStatus.Pending,
         };
+
+        // Apply Url manually to show it in UI
+        item.VideoMetadata.Url = youtubeUrl;
 
         queueManager.EnqueueItem(item);
         _ = getVideoMetadataUseCase.GetMetadataAsync(youtubeUrl)
@@ -102,7 +104,6 @@ public class QueueAdditionService(
         {
             var downloadQueueItem = new DownloadQueueItem
             {
-                Url = videoMetadataDto.Url,
                 IsSelected = true,
             };
             downloadQueueItem.ApplyMetadata(videoMetadataDto);

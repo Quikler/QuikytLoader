@@ -13,7 +13,7 @@
             Padding="16,12"
             Background="Transparent"
             IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
-            ToolTip.Tip="{Binding Url}">
+            ToolTip.Tip="{Binding VideoMetadata.Url}">
 
         <DockPanel LastChildFill="True">
             <CheckBox DockPanel.Dock="Left"

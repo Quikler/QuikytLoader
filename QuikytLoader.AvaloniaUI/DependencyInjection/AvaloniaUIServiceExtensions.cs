@@ -23,7 +23,7 @@ public static class AvaloniaUIServiceExtensions
         services.AddSingleton(sp =>
              new DownloadQueueManager(async (item, ct) =>
                 await sp.GetRequiredService<DownloadAndSendUseCase>()
-                    .ExecuteAsync(item.Url, item.CustomTitle,
+                    .ExecuteAsync(item.VideoMetadata.Url, item.CustomTitle,
                         new Progress<double>(value => item.Progress = value), ct)
                 ));
 
