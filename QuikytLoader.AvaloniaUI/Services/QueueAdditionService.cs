@@ -74,51 +74,34 @@ public class QueueAdditionService(
         if (queueManager.HasGroup(playlistId))
             return new QueueAdditionResult.AlreadyQueued();
 
-        var metadataResult = await getPlaylistMetadataUseCase.GetMetadataAsync(url);
-        if (!metadataResult.IsSuccess)
-            return new QueueAdditionResult.Failed(metadataResult.Error.Message);
+        var playlistMetadataResult = await getPlaylistMetadataUseCase.GetMetadataAsync(url);
+        if (!playlistMetadataResult.IsSuccess)
+            return new QueueAdditionResult.Failed(playlistMetadataResult.Error.Message);
 
-        var metadata = metadataResult.Value;
-        if (metadata.PlaylistVideos.Count == 0)
+        var playlistMetadata = playlistMetadataResult.Value;
+        if (playlistMetadata.PlaylistVideos.Count == 0)
             return new QueueAdditionResult.Failed("Playlist has no videos.");
 
-        var items = await BuildPlaylistItemsAsync(metadata, playlistId);
-        queueManager.EnqueueGroup(playlistId, metadata.Title, items);
+        var downloadQueueItems = CreatePlaylistItemsFromMetadata(playlistMetadata);
+        await DisableDuplicateItems(downloadQueueItems);
+        queueManager.EnqueueGroup(playlistId, playlistMetadata.PlaylistTitle, downloadQueueItems);
 
-        return new QueueAdditionResult.PlaylistAdded(metadata.Title, items.Count);
+        return new QueueAdditionResult.PlaylistAdded(playlistMetadata.PlaylistTitle, downloadQueueItems.Count);
     }
 
-    private async Task<List<DownloadQueueItem>> BuildPlaylistItemsAsync(PlaylistMetadataDto metadata, string playlistId)
+    private IReadOnlyList<DownloadQueueItem> CreatePlaylistItemsFromMetadata(PlaylistMetadataDto playlistMetadata)
     {
-        var historyTasks = new Dictionary<string, Task<Result<DownloadHistoryDto?>>>();
-        foreach (var videoMetadata in metadata.PlaylistVideos)
+        var items = new List<DownloadQueueItem>(playlistMetadata.PlaylistVideos.Count);
+        foreach (var videoMetadataDto in playlistMetadata.PlaylistVideos)
         {
-            if (!videoMetadata.IsAvailable) continue;
-            if (!historyTasks.ContainsKey(videoMetadata.VideoId))
-                historyTasks[videoMetadata.VideoId] = findExistingDownloadUseCase.FindByIdAsync(videoMetadata.VideoId);
-        }
-        await Task.WhenAll(historyTasks.Values);
-
-        var items = new List<DownloadQueueItem>(metadata.PlaylistVideos.Count);
-        foreach (var videoMetadataDto in metadata.PlaylistVideos)
-        {
-            var downloadQueueItem = new DownloadQueueItem
-            {
-                IsSelected = true,
-            };
+            var downloadQueueItem = new DownloadQueueItem();
             downloadQueueItem.ApplyMetadata(videoMetadataDto);
 
             if (!videoMetadataDto.IsAvailable)
             {
                 downloadQueueItem.SetAsDisabled(videoMetadataDto.UnavailableReason);
             }
-            else if (historyTasks.TryGetValue(videoMetadataDto.VideoId, out var historyTask)
-                     && historyTask.Result.IsSuccess
-                     && historyTask.Result.Value is not null)
-            {
-                downloadQueueItem.SetAsDisabled("Already downloaded");
-            }
-            else if (queueManager.IsAlreadyInQueue(videoMetadataDto.VideoId, excludeGroupId: playlistId))
+            else if (queueManager.IsAlreadyInQueue(videoMetadataDto.VideoId, excludeGroupId: playlistMetadata.PlaylistId))
             {
                 downloadQueueItem.SetAsDisabled("Already queued in another playlist");
             }
@@ -126,6 +109,28 @@ public class QueueAdditionService(
             items.Add(downloadQueueItem);
         }
         return items;
+    }
+
+    private async Task DisableDuplicateItems(IReadOnlyList<DownloadQueueItem> downloadQueueItems)
+    {
+        var historyTasks = new Dictionary<string, Task<Result<DownloadHistoryDto?>>>();
+        foreach (var downloadQueueItem in downloadQueueItems)
+        {
+            if (!downloadQueueItem.VideoMetadata.IsAvailable) continue;
+            if (!historyTasks.ContainsKey(downloadQueueItem.VideoMetadata.VideoId))
+                historyTasks[downloadQueueItem.VideoMetadata.VideoId] = findExistingDownloadUseCase.FindByIdAsync(downloadQueueItem.VideoMetadata.VideoId);
+        }
+        await Task.WhenAll(historyTasks.Values);
+
+        foreach (var downloadQueueItem in downloadQueueItems)
+        {
+            if (historyTasks.TryGetValue(downloadQueueItem.VideoMetadata.VideoId, out var historyTask)
+                 && historyTask.Result.IsSuccess
+                 && historyTask.Result.Value is not null)
+            {
+                downloadQueueItem.SetAsDisabled("Already downloaded");
+            }
+        }
     }
 }
 
