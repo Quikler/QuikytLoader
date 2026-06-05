@@ -7,10 +7,6 @@
              x:Class="QuikytLoader.AvaloniaUI.Views.MessageInfoView"
              x:DataType="vm:MessageInfoViewModel">
 
-    <Design.DataContext>
-        <vm:MessageInfoViewModel/>
-    </Design.DataContext>
-
     <Border Margin="0,16,0,0"
             Padding="12,8"
             Background="{DynamicResource LayerFillColorDefaultBrush}"

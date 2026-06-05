@@ -16,8 +16,7 @@
             IsVisible="{Binding QueueManager.Queue.Count}">
         <StackPanel>
             <!-- Queue Header -->
-            <Border DockPanel.Dock="Top"
-                    Background="{DynamicResource LayerFillColorDefaultBrush}"
+            <Border Background="{DynamicResource LayerFillColorDefaultBrush}"
                     Padding="16,12"
                     CornerRadius="8,8,0,0">
                 <TextBlock Text="Download Queue"

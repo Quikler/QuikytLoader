@@ -29,13 +29,13 @@ public static class AvaloniaUIServiceExtensions
 
         services.AddSingleton<QueueAdditionService>();
 
-        services.AddTransient<AppViewModel>();
-        services.AddTransient<HomeViewModel>();
-        services.AddTransient<SettingsViewModel>();
+        services.AddSingleton<AppViewModel>();
+        services.AddSingleton<HomeViewModel>();
+        services.AddSingleton<SettingsViewModel>();
 
-        services.AddTransient<YoutubeUrlInputCardViewModel>();
-        services.AddTransient<QueueListViewModel>();
-        services.AddTransient<MessageInfoViewModel>();
+        services.AddSingleton<YoutubeUrlInputCardViewModel>();
+        services.AddSingleton<QueueListViewModel>();
+        services.AddSingleton<MessageInfoViewModel>();
 
         return services;
     }

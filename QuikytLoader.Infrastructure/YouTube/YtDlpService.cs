@@ -185,18 +185,25 @@ internal partial class YtDlpService : IYtDlpService
             return new PlaylistMetadataDto(
                 PlaylistId: parsedPlaylist.Id,
                 Title: parsedPlaylist.Title,
-                PlaylistVideos: parsedPlaylist.Entries.Select(BuildEntryDto).ToList());
+                PlaylistVideos: parsedPlaylist.Entries
+                    .Select(entry =>
+                    {
+                        var (isAvailable, unavailableReason) = DetermineAvailability(entry.Availability);
+                        return new VideoMetadataDto(
+                            entry.Url,
+                            entry.Id,
+                            entry.Title,
+                            entry.Channel,
+                            FormatDuration(entry.Duration),
+                            entry.Thumbnails.LastOrDefault()?.Url!,
+                            isAvailable,
+                            unavailableReason);
+                    }).ToList());
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
         }
-    }
-
-    private static VideoMetadataDto BuildEntryDto(YtDlpPlaylistEntryJson entry)
-    {
-        var (isAvailable, unavailableReason) = DetermineAvailability(entry.Availability);
-        return new VideoMetadataDto(entry.Url, entry.Id, entry.Title, entry.Channel, FormatDuration(entry.Duration), entry.Thumbnails.LastOrDefault()?.Url!, isAvailable, unavailableReason);
     }
 
     private static string FormatDuration(double totalSeconds)
@@ -215,7 +222,7 @@ internal partial class YtDlpService : IYtDlpService
             "premium_only" => (false, "Premium only"),
             "subscriber_only" => (false, "Members only"),
             "needs_auth" => (false, "Sign-in required"),
-            _ => (false, availability ?? "Unkown")
+            _ => (false, availability ?? "Unknown")
         };
 
     // TODO: we are specifying "tempDirectory", so makes sense to return the download location info in return type

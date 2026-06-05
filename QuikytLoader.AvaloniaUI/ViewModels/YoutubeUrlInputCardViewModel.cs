@@ -38,9 +38,10 @@ public partial class YoutubeUrlInputCardViewModel(
     {
         return await dialogService.ShowConfirmationAsync("Duplicate Detected",
             $"""
-               This video was already downloaded at {existing.DownloadedAt}:
-               Title: {existing.VideoTitle}
-               Do you want to download it again?
+            This video was already downloaded at {existing.DownloadedAt}:
+            Title: {existing.VideoTitle}
+
+            Do you want to download it again?
             """);
     }
 
