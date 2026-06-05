@@ -195,7 +195,7 @@ internal partial class YtDlpService : IYtDlpService
                             entry.Title,
                             entry.Channel,
                             FormatDuration(entry.Duration),
-                            entry.Thumbnails.LastOrDefault()?.Url!,
+                            entry.Thumbnails.Last().Url,
                             isAvailable,
                             unavailableReason);
                     }).ToList());
