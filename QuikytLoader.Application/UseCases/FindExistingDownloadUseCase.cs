@@ -13,9 +13,9 @@ public class FindExistingDownloadUseCase(
     IDownloadHistoryRepository historyRepo,
     IYoutubeExtractorService youtubeExtractorService)
 {
-    public async Task<Result<DownloadHistoryDto?>> FindAsync(string youtubeUrl, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadHistoryDto?>> FindAsync(string youtubeUrl)
     {
-        var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(youtubeUrl, cancellationToken);
+        var youtubeIdResult = youtubeExtractorService.GetVideoId(youtubeUrl);
         if (!youtubeIdResult.IsSuccess)
             return Result<DownloadHistoryDto?>.Failure(youtubeIdResult.Error);
 

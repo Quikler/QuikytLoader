@@ -7,6 +7,9 @@ public static class Errors
         public static Error InvalidUrl(string url) => new(
             $"The provided URL '{url}' is not a valid YouTube URL");
 
+        public static Error VideoIdExtractionFailed(string url) => new(
+            $"Failed to extract video id of provided URL '{url}'");
+
         public static Error DownloadFailed(string url, int exitCode) => new(
             $"Failed to download video from '{url}' (yt-dlp exit code: {exitCode})");
 
@@ -21,9 +24,6 @@ public static class Errors
 
         public static Error YtDlpExtractionFailed(string url, int exitCode) => new(
             $"yt-dlp failed to extract video ID from '{url}' (exit code: {exitCode})");
-
-        public static Error InvalidIdLength(string url, string id, int length) => new(
-            $"yt-dlp returned invalid ID length: {length} (expected 11) for URL '{url}', ID: {id}");
 
         public static Error YtDlpException(string url, string exceptionType) => new(
             $"Unexpected error running yt-dlp for '{url}': {exceptionType}");

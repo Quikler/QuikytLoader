@@ -16,12 +16,12 @@ internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYo
     [GeneratedRegex(@"(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})", RegexOptions.IgnoreCase)]
     private static partial Regex YoutubeIdRegex();
 
-    public async Task<Result<YouTubeId>> GetVideoIdAsync(string url, CancellationToken cancellationToken = default)
+    public Result<YouTubeId> GetVideoId(string youtubeUrl)
     {
-        if (string.IsNullOrWhiteSpace(url))
-            return Errors.YouTube.InvalidUrl(url);
+        if (string.IsNullOrWhiteSpace(youtubeUrl))
+            return Errors.YouTube.InvalidUrl(youtubeUrl);
 
-        var match = YoutubeIdRegex().Match(url);
+        var match = YoutubeIdRegex().Match(youtubeUrl);
         if (match.Success && match.Groups.Count > 1)
         {
             var idString = match.Groups[1].Value;
@@ -30,12 +30,9 @@ internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYo
                 return regexIdResult;
         }
 
-        var videoIdResult = await ytDlpService.GetVideoIdAsync(url, cancellationToken);
-        return videoIdResult.IsSuccess
-            ? YouTubeId.Create(videoIdResult.Value)
-            : Result<YouTubeId>.Failure(videoIdResult.Error);
+        return Errors.YouTube.VideoIdExtractionFailed(youtubeUrl);
     }
 
-    public async Task<Result<string>> GetVideoTitleAsync(string url, CancellationToken cancellationToken = default)
-        => await ytDlpService.GetVideoTitleAsync(url, cancellationToken);
+    public async Task<Result<string>> GetVideoTitleAsync(string youtubeUrl, CancellationToken cancellationToken = default)
+        => await ytDlpService.GetVideoTitleAsync(youtubeUrl, cancellationToken);
 }

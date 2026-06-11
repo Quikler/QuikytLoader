@@ -14,6 +14,7 @@ public static class ApplicationServiceExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Register Use Cases
+        services.AddSingleton<AddToQueueUseCase>();
         services.AddSingleton<DownloadAndSendUseCase>();
         services.AddSingleton<FindExistingDownloadUseCase>();
         services.AddSingleton<GetVideoMetadataUseCase>();

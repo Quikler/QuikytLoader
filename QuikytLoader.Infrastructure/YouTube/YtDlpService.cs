@@ -4,48 +4,17 @@ using System.Text.RegularExpressions;
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
+using QuikytLoader.Domain.Entities;
+using QuikytLoader.Domain.ValueObjects;
 using QuikytLoader.Infrastructure.Persistence.Json;
 
 namespace QuikytLoader.Infrastructure.YouTube;
 
 internal partial class YtDlpService : IYtDlpService
 {
-    public async Task<Result<string>> GetVideoIdAsync(string url, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "yt-dlp",
-                ArgumentList = { "--quiet", "--print", "id", "--skip-download", "--", url },
-                RedirectStandardOutput = true,
-                RedirectStandardError = false,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+    public bool IsPlaylist(string url) => YouTubePlaylistUrl.Create(url).IsSuccess;
 
-            using var process = Process.Start(startInfo);
-            if (process == null)
-                return Errors.YouTube.YtDlpStartFailed();
-
-            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            await WaitForProcessExit(process, cancellationToken);
-
-            if (process.ExitCode != 0)
-                return Errors.YouTube.YtDlpExtractionFailed(url, process.ExitCode);
-
-            var output = await outputTask;
-            var id = output.Trim();
-
-            return id.Length == 11
-                ? Result<string>.Success(id)
-                : Errors.YouTube.InvalidIdLength(url, id, id.Length);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
-        }
-    }
+    public bool IsSingleVideo(string url) => YouTubeUrl.Create(url).IsSuccess;
 
     public async Task<Result<string>> GetVideoTitleAsync(string url, CancellationToken cancellationToken = default)
     {
@@ -93,7 +62,7 @@ internal partial class YtDlpService : IYtDlpService
         }
     }
 
-    public async Task<Result<VideoMetadataDto>> GetVideoMetadataAsync(string url, CancellationToken cancellationToken = default)
+    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(string url, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(url))
             return Errors.YouTube.InvalidUrl(url);
@@ -127,8 +96,7 @@ internal partial class YtDlpService : IYtDlpService
 
             var (isAvailable, unavailableReason) = DetermineAvailability(lines[5].Trim());
 
-            var metadata = new VideoMetadataDto(
-                Url: url,
+            var metadata = new VideoMetadata(
                 VideoId: lines[0].Trim(),
                 Title: lines[1].Trim(),
                 Channel: lines[2].Trim(),
@@ -138,7 +106,7 @@ internal partial class YtDlpService : IYtDlpService
                 UnavailableReason: unavailableReason
             );
 
-            return Result<VideoMetadataDto>.Success(metadata);
+            return Result<VideoMetadata>.Success(metadata);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -184,20 +152,21 @@ internal partial class YtDlpService : IYtDlpService
 
             return new PlaylistMetadataDto(
                 PlaylistId: parsedPlaylist.Id,
-                Title: parsedPlaylist.Title,
+                PlaylistTitle: parsedPlaylist.Title,
                 PlaylistVideos: parsedPlaylist.Entries
                     .Select(entry =>
                     {
                         var (isAvailable, unavailableReason) = DetermineAvailability(entry.Availability);
-                        return new VideoMetadataDto(
-                            entry.Url,
-                            entry.Id,
-                            entry.Title,
-                            entry.Channel,
-                            FormatDuration(entry.Duration),
-                            entry.Thumbnails.Last().Url,
-                            isAvailable,
-                            unavailableReason);
+                        return new PlaylistVideoDto(
+                            new DownloadSource(entry.Url, entry.Id),
+                            new VideoMetadata(
+                                entry.Id,
+                                entry.Title,
+                                entry.Channel,
+                                FormatDuration(entry.Duration),
+                                entry.Thumbnails.Last().Url,
+                                isAvailable,
+                                unavailableReason));
                     }).ToList());
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

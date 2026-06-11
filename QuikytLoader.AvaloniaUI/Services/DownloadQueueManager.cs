@@ -2,175 +2,102 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using QuikytLoader.AvaloniaUI.Models;
+using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.AvaloniaUI.ViewModels;
-using QuikytLoader.Domain.Common;
-using QuikytLoader.Domain.Enums;
+using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.Services;
 
-public partial class DownloadQueueManager(
-    Func<DownloadQueueItem, CancellationToken, Task<Result>> processQueueItem) : ObservableObject
+public partial class DownloadQueueManager : ObservableObject
 {
-    /// <summary>
-    /// All queue entries. Can be one item and a group.
-    /// </summary>
-    public ObservableCollection<IQueueItemsViewModel> Queue { get; } = [];
+    private readonly IDownloadQueue _queue;
+    private readonly IDownloadQueueProcessor _queueProcessor;
 
-    private IEnumerable<DownloadQueueItem> AllItems => Queue.SelectMany(g => g.Items);
+    private readonly Dictionary<Guid, QueueItemViewModel> _itemViewModels = [];
 
-    private readonly Queue<DownloadQueueItem> _itemsToDownload = [];
-
-    private CancellationTokenSource? _currentCancellationTokenSource;
-    private bool _isProcessing;
-
-    /// <summary>
-    /// Enqueue a standalone single-video item (wraps it in a single-item, non-playlist group).
-    /// </summary>
-    public void EnqueueItem(DownloadQueueItem item)
+    public DownloadQueueManager(IDownloadQueue queue, IDownloadQueueProcessor queueProcessor)
     {
-        var queueItemViewModel = new QueueItemViewModel(Guid.NewGuid().ToString(), item, ProceedGroup);
-        Queue.Add(queueItemViewModel);
+        _queue = queue;
+        _queue.Changed += OnQueueChanged;
 
-        if (item.Status == DownloadStatus.Pending)
-            _ = ProcessItemsToDownloadAsync(item);
+        _queueProcessor = queueProcessor;
     }
 
-    /// <summary>
-    /// Enqueue a batch of items belonging to a playlist group. Items keep their existing Status
-    /// (disabled items remain disabled and will be skipped by processing).
-    /// </summary>
-    public void EnqueueGroup(string id, string playlistTitle, IEnumerable<DownloadQueueItem> items)
+    private void OnQueueChanged(QueueEvent evt)
     {
-        var group = new QueueGroupViewModel(id, playlistTitle, [.. items], ProceedGroup);
-        Queue.Add(group);
-    }
-
-    public bool HasGroup(string groupId) => Queue.Any(g => g.Id == groupId);
-
-    /// <summary>
-    /// Look up an item by YouTube id across all groups. Used to detect duplicates
-    /// when enqueuing a new playlist.
-    /// </summary>
-    public bool IsAlreadyInQueue(string videoId, string excludeGroupId) =>
-        AllItems.Any(i => i.VideoMetadata.VideoId == videoId && i.GroupId != excludeGroupId);
-
-    public void Proceed(DownloadQueueItem item)
-    {
-        if (item.Status != DownloadStatus.Editing) return;
-
-        item.Status = DownloadStatus.Pending;
-        _ = ProcessItemsToDownloadAsync(item);
-    }
-
-    /// <summary>
-    /// Queue all selected, eligible items in a playlist group for processing.
-    /// </summary>
-    public void ProceedGroup(string groupId)
-    {
-        var group = Queue.FirstOrDefault(g => g.Id == groupId);
-        if (group is null) return;
-
-        foreach (var item in group.Items)
+        switch (evt)
         {
-            if (!item.IsSelected ||
-                item.Status is DownloadStatus.Pending
-                    or DownloadStatus.Disabled
-                    or DownloadStatus.Downloading
-                    or DownloadStatus.Completed) continue;
+            case QueueEvent.ItemAdded { Item: var item }:
+                AddItem(item);
+                break;
 
-            item.SetAsPending();
-            Console.WriteLine(item.ToString());
+            case QueueEvent.GroupAdded { Group: var group }:
+                AddGroup(group);
+                break;
 
-            _ = ProcessItemsToDownloadAsync(item);
+            case QueueEvent.ItemUpdated { Item: var item }:
+                UpdateItem(item);
+                break;
         }
     }
 
-    // TODO: Wire to per-item cancel button (see TO-DOS.md)
-    public void CancelCurrent() => _currentCancellationTokenSource?.Cancel();
-
-    public string GetStatusSummary()
+    private void AddItem(QueueItem item)
     {
-        var editingCount = AllItems.Count(i => i.Status == DownloadStatus.Editing);
-        var succeededCount = AllItems.Count(i => i.Status == DownloadStatus.Completed);
-        var failedCount = AllItems.Count(i => i.Status == DownloadStatus.Failed);
+        var vm = CreateItemVm(item, isInGroup: false);
 
-        return $"Queue processed. {succeededCount} succeeded, {failedCount} failed.{(editingCount > 0 ? $" {editingCount} items waiting for edits." : string.Empty)}";
+        RegisterItem(vm);
+        AddToUi(vm);
+
+        _queueProcessor.Enqueue(item.Id);
     }
 
-    private async Task ProcessItemsToDownloadAsync(DownloadQueueItem itemToQueue)
+    private void AddGroup(QueueGroup group)
     {
-        // TODO: #17
-        if (itemToQueue.Status != DownloadStatus.Pending)
+        var itemVms = group.ItemIds
+            .Select(_queue.GetItem)
+            .Select(i => CreateItemVm(i!, isInGroup: true))
+            .ToArray();
+
+        foreach (var vm in itemVms)
         {
-            System.Diagnostics.Debug.Fail($"ProcessItemsToDownloadAsync called with non-Pending item {itemToQueue.VideoMetadata.Url} (status: {itemToQueue.Status}).");
-            return; // silently skip in Release
+            RegisterItem(vm);
         }
 
-        _itemsToDownload.Enqueue(itemToQueue);
+        var groupVm = new QueueGroupViewModel(group, itemVms, ProceedGroup);
+        AddToUi(groupVm);
 
-        if (_isProcessing)
-            return;
+        // should not queue here as in `AddItem` because it's a group
+        // and it requires user to manually click 
+        // "Proceed all" in order to queue the queueItem
+    }
 
-        _isProcessing = true;
-        try
+    private void UpdateItem(QueueItem item)
+    {
+        if (_itemViewModels.TryGetValue(item.Id, out var vm))
+            vm.UpdateFrom(item);
+    }
+
+    /// <summary>
+    /// All queue entries. Can be one queue item and a group item.
+    /// </summary>
+    public ObservableCollection<QueueEntryViewModel> QueueEntries { get; } = [];
+
+    private QueueItemViewModel CreateItemVm(QueueItem item, bool isInGroup) =>
+        new(item, ProceedItem, isInGroup);
+
+    private void RegisterItem(QueueItemViewModel vm)
+        => _itemViewModels[vm.QueueItemId] = vm;
+
+    private void AddToUi(QueueEntryViewModel vm) => QueueEntries.Add(vm);
+
+    private void ProceedItem(Guid itemId) => _queueProcessor.Proceed(itemId);
+
+    private void ProceedGroup(IEnumerable<Guid> itemIds)
+    {
+        foreach (var itemId in itemIds)
         {
-            while (_itemsToDownload.TryDequeue(out var currentItem))
-            {
-                // TODO: #17
-                if (currentItem.Status != DownloadStatus.Pending)
-                {
-                    // Contract violation: only Pending items should reach this queue.
-                    System.Diagnostics.Debug.Fail($"Item {currentItem.VideoMetadata.Url} dequeued with unexpected status {currentItem.Status}.");
-                    continue;
-                }
-
-                currentItem.Status = DownloadStatus.Downloading;
-
-                _currentCancellationTokenSource = new CancellationTokenSource();
-
-                try
-                {
-                    var result = await processQueueItem(
-                        currentItem,
-                        _currentCancellationTokenSource.Token);
-
-                    if (!result.IsSuccess)
-                    {
-                        currentItem.Status = DownloadStatus.Failed;
-                        currentItem.ErrorMessage = result.Error.Message;
-                        currentItem.Progress = 0;
-                    }
-                    else
-                    {
-                        currentItem.Status = DownloadStatus.Completed;
-                        currentItem.Progress = 100;
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    currentItem.Status = DownloadStatus.Cancelled;
-                    currentItem.Progress = 0;
-                }
-                catch (Exception ex)
-                {
-                    currentItem.Status = DownloadStatus.Failed;
-                    currentItem.ErrorMessage = ex.Message;
-                    currentItem.Progress = 0;
-                }
-                finally
-                {
-                    _currentCancellationTokenSource?.Dispose();
-                    _currentCancellationTokenSource = null;
-                }
-            }
-        }
-        finally
-        {
-            _isProcessing = false;
+            ProceedItem(itemId);
         }
     }
 }

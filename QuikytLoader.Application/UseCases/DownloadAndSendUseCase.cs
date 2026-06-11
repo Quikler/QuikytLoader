@@ -16,12 +16,12 @@ public class DownloadAndSendUseCase(
 {
     public async Task<Result> ExecuteAsync(
         string url,
-        string? customTitle = null,
-        IProgress<double>? progress = null,
+        string? customTitle,
+        IProgress<double> progress,
         CancellationToken cancellationToken = default)
     {
         // 1. Extract YouTube ID
-        var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(url, cancellationToken);
+        var youtubeIdResult = youtubeExtractorService.GetVideoId(url);
         if (!youtubeIdResult.IsSuccess)
             return youtubeIdResult.Error;
 

@@ -1,6 +1,6 @@
-using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
+using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.ValueObjects;
 
 namespace QuikytLoader.Application.UseCases;
@@ -10,7 +10,7 @@ namespace QuikytLoader.Application.UseCases;
 /// </summary>
 public class GetVideoMetadataUseCase(IYtDlpService ytDlpService)
 {
-    public async Task<Result<VideoMetadataDto>> GetMetadataAsync(string youtubeUrl, CancellationToken cancellationToken = default)
+    public async Task<Result<VideoMetadata>> GetMetadataAsync(string youtubeUrl, CancellationToken cancellationToken = default)
     {
         var youtubeUrlResult = YouTubeUrl.Create(youtubeUrl);
         return !youtubeUrlResult.IsSuccess
