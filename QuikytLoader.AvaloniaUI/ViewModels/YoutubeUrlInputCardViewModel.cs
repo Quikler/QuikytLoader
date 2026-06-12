@@ -62,7 +62,8 @@ public partial class YoutubeUrlInputCardViewModel(
     {
         AddToQueueResult.SingleAdded r => $"Added to queue. {r.QueueCount} items in queue.",
         AddToQueueResult.PlaylistAdded r => $"Added playlist '{r.PlaylistTitle}' ({r.ItemCount} videos).",
-        AddToQueueResult.AlreadyQueued => "Video already queued",
+        AddToQueueResult.AlreadyQueued r => $"Video '{r.VideoId}' already in queue",
+        AddToQueueResult.PlaylistAlreadyQueued r => $"Playlist '{r.PlaylistId}' already in queue",
         AddToQueueResult.Failed f => $"Error: {f.Error.Message}",
         _ => string.Empty
     };

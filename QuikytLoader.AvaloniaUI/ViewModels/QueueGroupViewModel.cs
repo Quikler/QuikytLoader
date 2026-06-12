@@ -12,6 +12,8 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 {
     [ObservableProperty] private int _selectedCount;
     [ObservableProperty] private int _selectableCount;
+
+    [NotifyCanExecuteChangedFor(nameof(ProceedAllCommand))]
     [ObservableProperty] private bool _canProceedAll;
 
     public bool IsGroupContext => true;
@@ -67,7 +69,7 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
             RecomputeCounts();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanProceedAll))]
     private void ProceedAll() =>
         _proceedGroupCallback(
             Items.Where(i => i.CanProceed).Select(i => i.QueueItemId)

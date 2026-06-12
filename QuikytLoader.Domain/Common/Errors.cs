@@ -7,9 +7,6 @@ public static class Errors
         public static Error InvalidUrl(string url) => new(
             $"The provided URL '{url}' is not a valid YouTube URL");
 
-        public static Error VideoIdExtractionFailed(string url) => new(
-            $"Failed to extract video id of provided URL '{url}'");
-
         public static Error DownloadFailed(string url, int exitCode) => new(
             $"Failed to download video from '{url}' (yt-dlp exit code: {exitCode})");
 

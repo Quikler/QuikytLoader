@@ -45,7 +45,7 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
 
         // Checking if queueItem with same SourceId is already queued BEFORE calling queue.EnqueueItem
         if (queue.ContainsSourceId(queueItem.Source.SourceId))
-            return new AddToQueueResult.AlreadyQueued();
+            return new AddToQueueResult.AlreadyQueued(queueItem.Source.SourceId);
 
         queue.EnqueueItem(queueItem);
         _ = EnrichAsync(queueItem);
@@ -83,12 +83,17 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
 
     private async Task<AddToQueueResult> AddPlaylistAsync(string youtubeUrl)
     {
+        var playlistIdResult = youtubeExtractorService.GetPlaylistId(youtubeUrl);
+        if (!playlistIdResult.IsSuccess)
+            return new AddToQueueResult.Failed(playlistIdResult.Error);
+
+        if (queue.ContainsGroup(playlistIdResult.Value))
+            return new AddToQueueResult.PlaylistAlreadyQueued(playlistIdResult.Value);
+
         var playlistMetadataResult = await ytDlpService.GetPlaylistMetadataAsync(youtubeUrl, 15);
         if (!playlistMetadataResult.IsSuccess)
             return new AddToQueueResult.Failed(playlistMetadataResult.Error);
         var playlistMetadata = playlistMetadataResult.Value;
-
-        if (queue.ContainsGroup(playlistMetadata.PlaylistId)) return new AddToQueueResult.AlreadyQueued();
 
         List<QueueItem> items = [];
         HashSet<string> seenSourceIds = [];
@@ -104,6 +109,7 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
             var duplicateCheck = await findExistingDownloadUseCase.FindAsync(playlistVideo.Source.Url);
             if (!duplicateCheck.IsSuccess)
             {
+                queueItem.Status = DownloadStatus.Failed;
                 queueItem.Error = duplicateCheck.Error;
             }
             else if (duplicateCheck.Value is not null)
@@ -147,7 +153,8 @@ public abstract record AddToQueueResult
 {
     public sealed record Failed(Error Error) : AddToQueueResult;
     public sealed record DuplicateDetected(DownloadHistoryDto ExistingDownload) : AddToQueueResult;
-    public sealed record AlreadyQueued() : AddToQueueResult;
+    public sealed record AlreadyQueued(string VideoId) : AddToQueueResult;
+    public sealed record PlaylistAlreadyQueued(string PlaylistId) : AddToQueueResult;
     public sealed record SingleAdded(int QueueCount) : AddToQueueResult;
     public sealed record PlaylistAdded(string PlaylistTitle, int ItemCount) : AddToQueueResult;
 }
