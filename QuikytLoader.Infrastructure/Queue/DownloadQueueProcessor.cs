@@ -12,22 +12,16 @@ public sealed class DownloadQueueProcessor(
 {
     private readonly Queue<Guid> _pendingItems = [];
 
-    private readonly Lock _syncRoot = new();
-
     private CancellationTokenSource? _currentCancellationTokenSource;
 
     private bool _isProcessing;
 
     public void Enqueue(Guid queueItemId)
     {
-        lock (_syncRoot)
-        {
-            _pendingItems.Enqueue(queueItemId);
+        _pendingItems.Enqueue(queueItemId);
 
-            if (_isProcessing) return;
-
-            _isProcessing = true;
-        }
+        if (_isProcessing) return;
+        _isProcessing = true;
 
         _ = ProcessLoopAsync();
     }
@@ -61,15 +55,10 @@ public sealed class DownloadQueueProcessor(
         {
             while (true)
             {
-                Guid itemId;
-
-                lock (_syncRoot)
+                if (!_pendingItems.TryDequeue(out var itemId))
                 {
-                    if (!_pendingItems.TryDequeue(out itemId))
-                    {
-                        _isProcessing = false;
-                        return;
-                    }
+                    _isProcessing = false;
+                    return;
                 }
 
                 var item = queue.GetItem(itemId);
@@ -80,10 +69,7 @@ public sealed class DownloadQueueProcessor(
         }
         finally
         {
-            lock (_syncRoot)
-            {
-                _isProcessing = false;
-            }
+            _isProcessing = false;
         }
     }
 
