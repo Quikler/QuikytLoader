@@ -36,8 +36,8 @@ public partial class DownloadQueueManager : ObservableObject
                 AddGroup(group);
                 break;
 
-            case QueueEvent.ItemUpdated { Item: var item }:
-                UpdateItem(item);
+            case QueueEvent.ItemUpdated { ItemId: var itemId }:
+                UpdateItem(itemId);
                 break;
         }
     }
@@ -56,7 +56,7 @@ public partial class DownloadQueueManager : ObservableObject
     {
         var itemVms = group.ItemIds
             .Select(_queue.GetItem)
-            .Select(i => CreateItemVm(i!))
+            .Select(i => CreateGroupItemVm(i!))
             .ToArray();
 
         foreach (var vm in itemVms)
@@ -72,10 +72,10 @@ public partial class DownloadQueueManager : ObservableObject
         // "Proceed all" in order to queue the queueItem
     }
 
-    private void UpdateItem(QueueItem item)
+    private void UpdateItem(Guid itemId)
     {
-        if (_itemViewModels.TryGetValue(item.Id, out var vm))
-            vm.UpdateFrom(item);
+        if (_itemViewModels.TryGetValue(itemId, out var vm))
+            vm.Refresh();
     }
 
     /// <summary>
@@ -83,7 +83,12 @@ public partial class DownloadQueueManager : ObservableObject
     /// </summary>
     public ObservableCollection<QueueEntryViewModel> QueueEntries { get; } = [];
 
+    // Single items — no selection needed
     private QueueItemViewModel CreateItemVm(QueueItem item) =>
+        new(item, ProceedItem);
+
+    // Group items — selectable subtype
+    private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item) =>
         new(item, ProceedItem);
 
     private void RegisterItem(QueueItemViewModel vm)

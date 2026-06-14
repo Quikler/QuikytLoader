@@ -20,7 +20,7 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 
     public QueueGroup Model { get; }
 
-    public IReadOnlyList<QueueItemViewModel> Items { get; }
+    public IReadOnlyList<SelectableQueueItemViewModel> Items { get; }
 
     private readonly Action<IEnumerable<Guid>> _proceedGroupCallback;
 
@@ -38,7 +38,7 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
             selectableCount++;
             if (!item.IsSelected) continue;
             selectedCount++;
-
+            if (!item.CanProceed) continue;
             canProceedAll = true;
         }
 
@@ -47,7 +47,7 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
         CanProceedAll = canProceedAll;
     }
 
-    public QueueGroupViewModel(QueueGroup model, IReadOnlyList<QueueItemViewModel> items, Action<IEnumerable<Guid>> proceedGroupCallback)
+    public QueueGroupViewModel(QueueGroup model, IReadOnlyList<SelectableQueueItemViewModel> items, Action<IEnumerable<Guid>> proceedGroupCallback)
     {
         Model = model;
         Items = items;
@@ -63,9 +63,9 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 
     private void OnItemChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(QueueItemViewModel.IsSelected)
-            || e.PropertyName == nameof(QueueItemViewModel.IsSelectable)
-            || e.PropertyName == nameof(QueueItemViewModel.Status))
+        if (e.PropertyName == nameof(SelectableQueueItemViewModel.IsSelected)
+            || e.PropertyName == nameof(SelectableQueueItemViewModel.IsSelectable)
+            || e.PropertyName == nameof(SelectableQueueItemViewModel.Status))
             RecomputeCounts();
     }
 

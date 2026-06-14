@@ -59,7 +59,7 @@
 
         <ItemsControl ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="vm:QueueItemViewModel">
+                <DataTemplate DataType="vm:SelectableQueueItemViewModel">
                     <views:QueueItemView IsInGroup="true" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

@@ -63,7 +63,7 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
         {
             queueItem.Status = DownloadStatus.Failed;
             queueItem.Error = metadataResult.Error;
-            queue.UpdateItem(queueItem);
+            queue.UpdateItem(queueItem.Id);
             return;
         }
 
@@ -74,7 +74,7 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
         }
 
         queueItem.Metadata = metadataResult.Value;
-        queue.UpdateItem(queueItem);
+        queue.UpdateItem(queueItem.Id);
     }
 
     private async Task<AddToQueueResult> AddPlaylistAsync(string youtubeUrl)

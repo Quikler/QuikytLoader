@@ -34,7 +34,7 @@ public sealed class DownloadQueue : IDownloadQueue
     }
 
     public QueueItem? GetItem(Guid id) => _itemsById.GetValueOrDefault(id);
-    public void UpdateItem(QueueItem item) => Changed?.Invoke(new QueueEvent.ItemUpdated(item));
+    public void UpdateItem(Guid itemId) => Changed?.Invoke(new QueueEvent.ItemUpdated(itemId));
 
     public bool ContainsGroup(string groupId) => _groupsById.ContainsKey(groupId);
     public bool ContainsItem(Guid itemId) => _itemsById.ContainsKey(itemId);

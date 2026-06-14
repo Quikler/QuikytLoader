@@ -28,24 +28,24 @@ public sealed class DownloadQueueProcessor(
 
     public void Proceed(Guid itemId)
     {
-        var item = queue.GetItem(itemId);
-        if (item is null || !item.CanStartDownload) return;
+        var queueItem = queue.GetItem(itemId);
+        if (queueItem is null || !queueItem.CanStartDownload) return;
 
-        switch (item.Status)
+        switch (queueItem.Status)
         {
             case DownloadStatus.Editing:
             case DownloadStatus.Queued:
             case DownloadStatus.Failed:
             case DownloadStatus.Cancelled:
-                item.Status = DownloadStatus.Pending;
+                queueItem.Status = DownloadStatus.Pending;
                 break;
 
             default:
-                Console.WriteLine($"Item '{item.Metadata?.Title}' is not in correct State for ProceedAsync: {item.Status}");
+                Console.WriteLine($"Item '{queueItem.Metadata?.Title}' is not in correct State for ProceedAsync: {queueItem.Status}");
                 return;
         }
 
-        queue.UpdateItem(item);
+        queue.UpdateItem(queueItem.Id);
         Enqueue(itemId);
     }
 
@@ -75,15 +75,15 @@ public sealed class DownloadQueueProcessor(
         }
     }
 
-    private async Task ProcessItemAsync(QueueItem item)
+    private async Task ProcessItemAsync(QueueItem queueItem)
     {
-        if (item.Status != DownloadStatus.Pending)
+        if (queueItem.Status != DownloadStatus.Pending)
             return;
 
-        item.Status = DownloadStatus.Downloading;
-        item.Error = null;
+        queueItem.Status = DownloadStatus.Downloading;
+        queueItem.Error = null;
 
-        queue.UpdateItem(item);
+        queue.UpdateItem(queueItem.Id);
 
         _currentCancellationTokenSource = new CancellationTokenSource();
 
@@ -91,41 +91,41 @@ public sealed class DownloadQueueProcessor(
         {
             var progress = new Progress<double>(value =>
             {
-                item.Progress = value;
-                queue.UpdateItem(item);
+                queueItem.Progress = value;
+                queue.UpdateItem(queueItem.Id);
             });
 
             var result = await downloadAndSendUseCase.ExecuteAsync(
-                item.Source.Url,
-                item.CustomTitle,
+                queueItem.Source.Url,
+                queueItem.CustomTitle,
                 progress,
                 _currentCancellationTokenSource.Token);
 
             if (result.IsSuccess)
             {
-                item.Status = DownloadStatus.Completed;
+                queueItem.Status = DownloadStatus.Completed;
             }
             else
             {
-                item.Status = DownloadStatus.Failed;
-                item.Error = result.Error;
+                queueItem.Status = DownloadStatus.Failed;
+                queueItem.Error = result.Error;
             }
         }
         catch (OperationCanceledException)
         {
-            item.Status = DownloadStatus.Cancelled;
+            queueItem.Status = DownloadStatus.Cancelled;
         }
         catch (Exception ex)
         {
-            item.Status = DownloadStatus.Failed;
-            item.Error = new Error(ex.Message);
+            queueItem.Status = DownloadStatus.Failed;
+            queueItem.Error = new Error(ex.Message);
         }
         finally
         {
             _currentCancellationTokenSource.Dispose();
             _currentCancellationTokenSource = null;
 
-            queue.UpdateItem(item);
+            queue.UpdateItem(queueItem.Id);
         }
     }
 }

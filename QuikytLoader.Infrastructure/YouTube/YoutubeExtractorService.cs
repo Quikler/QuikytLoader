@@ -7,7 +7,7 @@ namespace QuikytLoader.Infrastructure.YouTube;
 
 /// <summary>
 /// Service for extracting YouTube info.
-/// Uses regex for fast extraction, with yt-dlp fallback for edge cases.
+/// Uses regex for fast extraction
 /// </summary>
 internal partial class YoutubeExtractorService : IYoutubeExtractorService
 {

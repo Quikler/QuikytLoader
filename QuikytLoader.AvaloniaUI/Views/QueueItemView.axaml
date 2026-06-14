@@ -11,7 +11,7 @@
              x:DataType="vm:QueueItemViewModel">
 
     <Border BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
-            BorderThickness="0,0,0,1"
+            BorderThickness="0,1"
             Padding="16,12"
             Background="Transparent"
             IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
@@ -19,8 +19,8 @@
 
         <DockPanel LastChildFill="True">
             <CheckBox DockPanel.Dock="Left"
-                      IsChecked="{Binding IsSelected, Mode=OneWayToSource}"
-                      IsEnabled="{Binding IsSelectable}"
+                      IsChecked="{ReflectionBinding IsSelected, Mode=OneWayToSource}"
+                      IsEnabled="{ReflectionBinding IsSelectable}"
                       IsVisible="{Binding IsInGroup, Mode=OneTime, RelativeSource={RelativeSource AncestorType=views:QueueItemView}}"
                       VerticalAlignment="Center"
                       Margin="0,0,12,0"/>
