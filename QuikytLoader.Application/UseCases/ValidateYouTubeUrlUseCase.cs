@@ -1,4 +1,4 @@
-using QuikytLoader.Domain.ValueObjects;
+﻿using QuikytLoader.Domain.ValueObjects;
 
 namespace QuikytLoader.Application.UseCases;
 

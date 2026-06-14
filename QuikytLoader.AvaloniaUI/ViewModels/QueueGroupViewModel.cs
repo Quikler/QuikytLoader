@@ -1,103 +1,77 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QuikytLoader.AvaloniaUI.Models;
-using QuikytLoader.Domain.Enums;
+using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-/// <summary>
-/// Represents a playlist group in the download queue. Owns its items collection,
-/// selection counts, and the batch "Proceed all" command.
-/// </summary>
-public partial class QueueGroupViewModel : ViewModelBase, IQueueItemsViewModel
+public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 {
-    public string Id { get; }
+    [ObservableProperty] private int _selectedCount;
+    [ObservableProperty] private int _selectableCount;
 
-    public IReadOnlyList<DownloadQueueItem> Items { get; } = [];
+    [NotifyCanExecuteChangedFor(nameof(ProceedAllCommand))]
+    [ObservableProperty] private bool _canProceedAll;
 
-    public string PlaylistTitle { get; }
+    public bool IsGroupContext => true;
 
-    /// <summary>
-    /// Number of items the user has selected (excluding disabled items).
-    /// </summary>
-    [ObservableProperty]
-    private int _selectedCount;
+    public QueueGroup Model { get; }
 
-    /// <summary>
-    /// Number of selectable items (not disabled).
-    /// </summary>
-    [ObservableProperty]
-    private int _selectableCount;
+    public IReadOnlyList<SelectableQueueItemViewModel> Items { get; }
 
-    /// <summary>
-    /// Whether at least one selected item is eligible to start downloading.
-    /// </summary>
-    [ObservableProperty]
-    private bool _canProceedAll;
+    private readonly Action<IEnumerable<Guid>> _proceedGroupCallback;
 
-    private readonly Action<string> _proceedGroupCallback;
-
-    public QueueGroupViewModel(string id, string playlistTitle, DownloadQueueItem[] items, Action<string> proceedGroupCallback)
-    {
-        Id = id;
-        PlaylistTitle = playlistTitle;
-
-        _proceedGroupCallback = proceedGroupCallback;
-
-        List<DownloadQueueItem> list = [];
-        foreach (var item in items)
-        {
-            item.GroupId = id;
-            item.IsInPlaylist = true;
-            item.IsSelected = true;
-            item.PropertyChanged += OnItemPropertyChanged;
-            list.Add(item);
-        }
-
-        Items = list;
-        RecomputeCounts();
-    }
-
-    [RelayCommand]
-    private void ProceedAll() => _proceedGroupCallback(Id);
+    public string Title => Model.Title;
 
     public void RecomputeCounts()
     {
-        var selectable = 0;
-        var selected = 0;
-        var hasEligible = false;
+        var selectableCount = 0;
+        var selectedCount = 0;
+        var canProceedAll = false;
 
         foreach (var item in Items)
         {
-            if (item.Status == DownloadStatus.Disabled) continue;
-            selectable++;
+            if (!item.IsSelectable) continue;
+            selectableCount++;
             if (!item.IsSelected) continue;
-            selected++;
-            if (IsEligibleForBatch(item.Status))
-                hasEligible = true;
+            selectedCount++;
+            if (!item.CanProceed) continue;
+            canProceedAll = true;
         }
 
-        SelectableCount = selectable;
-        SelectedCount = selected;
-        CanProceedAll = hasEligible;
+        SelectableCount = selectableCount;
+        SelectedCount = selectedCount;
+        CanProceedAll = canProceedAll;
     }
 
-    private static bool IsEligibleForBatch(DownloadStatus status) =>
-        status is DownloadStatus.Queued
-            or DownloadStatus.Failed
-            or DownloadStatus.Cancelled
-            or DownloadStatus.Editing;
-
-    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    public QueueGroupViewModel(QueueGroup model, IReadOnlyList<SelectableQueueItemViewModel> items, Action<IEnumerable<Guid>> proceedGroupCallback)
     {
-        if (e.PropertyName is nameof(DownloadQueueItem.IsSelected)
-            or nameof(DownloadQueueItem.Status)
-            or nameof(DownloadQueueItem.DisabledReason))
+        Model = model;
+        Items = items;
+        _proceedGroupCallback = proceedGroupCallback;
+
+        foreach (var item in Items)
         {
-            RecomputeCounts();
+            item.PropertyChanged += OnItemChanged;
         }
+
+        RecomputeCounts();
     }
+
+    private void OnItemChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SelectableQueueItemViewModel.IsSelected)
+            || e.PropertyName == nameof(SelectableQueueItemViewModel.IsSelectable)
+            || e.PropertyName == nameof(SelectableQueueItemViewModel.Status))
+            RecomputeCounts();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanProceedAll))]
+    private void ProceedAll() =>
+        _proceedGroupCallback(
+            Items.Where(i => i.CanProceed).Select(i => i.QueueItemId)
+        );
 }

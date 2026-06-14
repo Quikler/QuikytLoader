@@ -1,6 +1,4 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
-using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.ViewModels;
 
@@ -20,14 +18,7 @@ public static class AvaloniaUIServiceExtensions
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThemeApplier, ThemeApplier>();
 
-        services.AddSingleton(sp =>
-             new DownloadQueueManager(async (item, ct) =>
-                await sp.GetRequiredService<DownloadAndSendUseCase>()
-                    .ExecuteAsync(item.VideoMetadata.Url, item.CustomTitle,
-                        new Progress<double>(value => item.Progress = value), ct)
-                ));
-
-        services.AddSingleton<QueueAdditionService>();
+        services.AddSingleton<DownloadQueueManager>();
 
         services.AddSingleton<AppViewModel>();
         services.AddSingleton<HomeViewModel>();

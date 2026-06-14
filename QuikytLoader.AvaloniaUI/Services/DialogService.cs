@@ -8,7 +8,8 @@ public class DialogService : IDialogService
 {
     public async Task<bool> ShowConfirmationAsync(string title, string message)
     {
+        var mainWindow = (Avalonia.Application.Current as App)!.MainWindow;
         var box = MessageBoxManager.GetMessageBoxStandard(title, message, ButtonEnum.YesNo);
-        return await box.ShowAsync() == ButtonResult.Yes;
+        return await box.ShowWindowDialogAsync(mainWindow) == ButtonResult.Yes;
     }
 }

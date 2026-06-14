@@ -17,7 +17,7 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
     {
         Directory.CreateDirectory(_tempDownloadDirectory);
 
-        var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(url, cancellationToken);
+        var youtubeIdResult = youtubeExtractorService.GetVideoId(url);
         if (!youtubeIdResult.IsSuccess)
             return Result<DownloadResultEntity>.Failure(youtubeIdResult.Error);
 

@@ -11,13 +11,16 @@ public partial class App(IServiceProvider serviceProvider) : Avalonia.Applicatio
 {
     public IServiceProvider Services => serviceProvider;
 
+    // Not null after registration
+    public MainWindow MainWindow { get; private set; } = null!;
+
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
+            desktop.MainWindow = MainWindow = new MainWindow
             {
                 DataContext = serviceProvider.GetRequiredService<AppViewModel>()
             };

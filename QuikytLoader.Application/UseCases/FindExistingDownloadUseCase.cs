@@ -13,9 +13,9 @@ public class FindExistingDownloadUseCase(
     IDownloadHistoryRepository historyRepo,
     IYoutubeExtractorService youtubeExtractorService)
 {
-    public async Task<Result<DownloadHistoryDto?>> FindAsync(string youtubeUrl, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadHistoryDto?>> FindAsync(string youtubeUrl)
     {
-        var youtubeIdResult = await youtubeExtractorService.GetVideoIdAsync(youtubeUrl, cancellationToken);
+        var youtubeIdResult = youtubeExtractorService.GetVideoId(youtubeUrl);
         if (!youtubeIdResult.IsSuccess)
             return Result<DownloadHistoryDto?>.Failure(youtubeIdResult.Error);
 
@@ -37,5 +37,16 @@ public class FindExistingDownloadUseCase(
 
         var duplicateResult = new DownloadHistoryDto(downloadEntity.YouTubeId, downloadEntity.VideoTitle, DateTime.Parse(downloadEntity.DownloadedAt));
         return Result<DownloadHistoryDto?>.Success(duplicateResult);
+    }
+
+    public async Task<(PlaylistVideoDto PlaylistVideoDto, Result<DownloadHistoryDto?> DuplicateCheck)[]> FindMultipleAsync(IEnumerable<PlaylistVideoDto> playlistVideoDtos)
+    {
+        var duplicateCheckTasks = playlistVideoDtos
+            .Select(async playlistVideoDto => (
+                PlaylistVideoDto: playlistVideoDto,
+                DuplicateCheck: await FindAsync(playlistVideoDto.Source.Url)
+            ));
+
+        return await Task.WhenAll(duplicateCheckTasks);
     }
 }

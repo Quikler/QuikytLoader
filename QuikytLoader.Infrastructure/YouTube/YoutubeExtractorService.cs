@@ -7,35 +7,37 @@ namespace QuikytLoader.Infrastructure.YouTube;
 
 /// <summary>
 /// Service for extracting YouTube info.
-/// Uses regex for fast extraction, with yt-dlp fallback for edge cases.
+/// Uses regex for fast extraction
 /// </summary>
-internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYoutubeExtractorService
+internal partial class YoutubeExtractorService : IYoutubeExtractorService
 {
     // Regex patterns for common YouTube URL formats
     // Matches: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID, etc.
     [GeneratedRegex(@"(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})", RegexOptions.IgnoreCase)]
     private static partial Regex YoutubeIdRegex();
 
-    public async Task<Result<YouTubeId>> GetVideoIdAsync(string url, CancellationToken cancellationToken = default)
+    [GeneratedRegex(@"(?:[?&]list=)([a-zA-Z0-9_-]+)", RegexOptions.IgnoreCase)]
+    private static partial Regex YoutubePlaylistRegex();
+
+    public Result<string> GetPlaylistId(string youtubePlaylistUrl)
     {
-        if (string.IsNullOrWhiteSpace(url))
-            return Errors.YouTube.InvalidUrl(url);
+        if (string.IsNullOrWhiteSpace(youtubePlaylistUrl))
+            return Errors.YouTube.InvalidUrl(youtubePlaylistUrl);
 
-        var match = YoutubeIdRegex().Match(url);
-        if (match.Success && match.Groups.Count > 1)
-        {
-            var idString = match.Groups[1].Value;
-            var regexIdResult = YouTubeId.Create(idString);
-            if (regexIdResult.IsSuccess)
-                return regexIdResult;
-        }
-
-        var videoIdResult = await ytDlpService.GetVideoIdAsync(url, cancellationToken);
-        return videoIdResult.IsSuccess
-            ? YouTubeId.Create(videoIdResult.Value)
-            : Result<YouTubeId>.Failure(videoIdResult.Error);
+        var match = YoutubePlaylistRegex().Match(youtubePlaylistUrl);
+        return match.Success
+            ? match.Groups[1].Value
+            : Errors.YouTube.InvalidUrl(youtubePlaylistUrl);
     }
 
-    public async Task<Result<string>> GetVideoTitleAsync(string url, CancellationToken cancellationToken = default)
-        => await ytDlpService.GetVideoTitleAsync(url, cancellationToken);
+    public Result<YouTubeId> GetVideoId(string youtubeUrl)
+    {
+        if (string.IsNullOrWhiteSpace(youtubeUrl))
+            return Errors.YouTube.InvalidUrl(youtubeUrl);
+
+        var match = YoutubeIdRegex().Match(youtubeUrl);
+        return match.Success && match.Groups.Count > 1 && YouTubeId.Create(match.Groups[1].Value) is { IsSuccess: true } regexIdResult
+            ? regexIdResult
+            : Errors.YouTube.InvalidUrl(youtubeUrl);
+    }
 }

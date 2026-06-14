@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
-             xmlns:models="using:QuikytLoader.AvaloniaUI.Models"
              xmlns:local="using:QuikytLoader.AvaloniaUI.Views"
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -16,7 +15,7 @@
         <Expander.Header>
             <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
                 <TextBlock Grid.Column="0"
-                           Text="{Binding PlaylistTitle}"
+                           Text="{Binding Title}"
                            FontSize="14"
                            FontWeight="SemiBold"
                            TextTrimming="CharacterEllipsis"
@@ -60,8 +59,8 @@
 
         <ItemsControl ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="models:DownloadQueueItem">
-                        <views:DownloadQueueItemView ProceedCommand="{Binding ((vm:QueueListViewModel)DataContext).ProceedItemCommand, RelativeSource={RelativeSource AncestorType=views:QueueListView}}"/>
+                <DataTemplate DataType="vm:SelectableQueueItemViewModel">
+                    <views:QueueItemView IsInGroup="true" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

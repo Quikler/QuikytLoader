@@ -1,18 +1,106 @@
 ﻿using System;
-using System.Collections.Generic;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QuikytLoader.AvaloniaUI.Models;
+using QuikytLoader.Domain.Entities;
+using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-public partial class QueueItemViewModel(string id, DownloadQueueItem item, Action<string> proceedItemCallback) : ViewModelBase, IQueueItemsViewModel
+public partial class QueueItemViewModel : QueueEntryViewModel
 {
-    public string Id { get; } = id;
+    protected QueueItem Model { get; }
+    private readonly Action<Guid> _proceedCallback;
 
-    public IReadOnlyList<DownloadQueueItem> Items { get; } = [item];
+#pragma warning disable IDE0290 // Use primary constructor
+    public QueueItemViewModel(QueueItem model, Action<Guid> proceedCallback)
+#pragma warning restore IDE0290 // Use primary constructor
+    {
+        Model = model;
+        _proceedCallback = proceedCallback;
 
-    private readonly Action<string> _proceedItemCallback = proceedItemCallback;
+        _status = model.Status;
+        _progress = model.Progress;
+        _errorMessage = model.Error?.Message;
+    }
 
-    [RelayCommand]
-    private void Proceed() => _proceedItemCallback(Id);
+    #region --- NOT EDITABLE BY USER ---
+
+    [NotifyPropertyChangedFor(nameof(StatusMessage))]
+    [NotifyCanExecuteChangedFor(nameof(ProceedCommand))]
+    [ObservableProperty] private DownloadStatus _status;
+
+    [ObservableProperty] private double _progress;
+    [ObservableProperty] private string? _errorMessage;
+
+    [RelayCommand(CanExecute = nameof(CanProceed))]
+    private void Proceed() => _proceedCallback(Model.Id);
+
+    public string StatusMessage => Status switch
+    {
+        DownloadStatus.Queued => "⏱ Queued",
+        DownloadStatus.Pending => "⏸ Pending",
+        DownloadStatus.Editing => "⚡ Waiting for title edit",
+        DownloadStatus.Downloading => "⏳ Downloading...",
+        DownloadStatus.Completed => "✓ Completed",
+        DownloadStatus.Failed => "✗ Failed",
+        DownloadStatus.Cancelled => "⊘ Cancelled",
+        DownloadStatus.Disabled => $"⊘ {Model.Error?.Message ?? "Disabled"}",
+        _ => throw new ArgumentOutOfRangeException(nameof(Status), Status, "Unhandled download status")
+    };
+
+    public Guid QueueItemId => Model.Id;
+    public virtual bool CanProceed => Model.CanStartDownload;
+
+    #region --- Metadata (Updates UI when `Refresh` is executed) ---
+
+    [NotifyPropertyChangedFor(nameof(Title))]
+    [NotifyPropertyChangedFor(nameof(Channel))]
+    [NotifyPropertyChangedFor(nameof(Duration))]
+    [NotifyPropertyChangedFor(nameof(ThumbnailUrl))]
+    [NotifyPropertyChangedFor(nameof(IsMetadataLoaded))]
+    [ObservableProperty] private VideoMetadata? _metadata;
+
+    // When Metadata is null show Url instead of Title
+    public string? Title => CustomTitle ?? Model.Metadata?.Title ?? Url;
+    public string? Channel => Model.Metadata?.Channel;
+    public string? Duration => Model.Metadata?.Duration;
+    public string? ThumbnailUrl => Model.Metadata?.ThumbnailUrl;
+    public bool IsMetadataLoaded => Model.Metadata is not null;
+
+    // Only initialized once, because `model.Source` is `init`
+    public string Url => Model.Source.Url;
+
+    #endregion
+
+    #endregion
+
+    #region --- EDIABLE BY USER ---
+
+    public string? CustomTitle
+    {
+        get => Model.CustomTitle;
+        set
+        {
+            if (Model.CustomTitle == value) return;
+
+            Model.CustomTitle = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Title));
+        }
+    }
+
+    #endregion
+
+    public virtual void Refresh()
+    {
+        Metadata = Model.Metadata;
+
+        Status = Model.Status;
+        Progress = Model.Progress;
+        ErrorMessage = Model.Error?.Message;
+
+        // Setting `CustomTitle` as `Title` if user hasn't typed anything yet
+        if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
+            CustomTitle = Model.Metadata?.Title;
+    }
 }

@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Infrastructure.Persistence;
 using QuikytLoader.Infrastructure.Persistence.Repositories;
 using QuikytLoader.Infrastructure.Persistence.Settings;
+using QuikytLoader.Infrastructure.Queue;
 using QuikytLoader.Infrastructure.Services;
 using QuikytLoader.Infrastructure.Telegram;
 using QuikytLoader.Infrastructure.YouTube;
@@ -31,6 +33,10 @@ public static class InfrastructureServiceExtensions
 
         // Telegram services
         services.AddSingleton<ITelegramBotService, TelegramBotService>();
+
+        // Queue services
+        services.AddSingleton<IDownloadQueue, DownloadQueue>();
+        services.AddSingleton<IDownloadQueueProcessor, DownloadQueueProcessor>();
 
         // Persistence
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();

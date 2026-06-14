@@ -9,7 +9,7 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 public partial class YoutubeUrlInputCardViewModel(
     ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase,
-    QueueAdditionService queueAdditionService,
+    AddToQueueUseCase addToQueueUseCase,
     IDialogService dialogService,
     IUiNotificationService uiNotificationService) : ViewModelBase
 {
@@ -24,34 +24,47 @@ public partial class YoutubeUrlInputCardViewModel(
     private async Task AddToQueue()
     {
         uiNotificationService.SetMessageInfo("Adding to queue...");
-        var result = await queueAdditionService.AddAsync(YoutubeUrl, UseCustomTitle, ConfirmDuplicateAsync);
+
+        var result = await addToQueueUseCase.ExecuteAsync(YoutubeUrl, UseCustomTitle);
+
+        if (result is AddToQueueResult.DuplicateDetected duplicate)
+        {
+            var proceed = await ConfirmDuplicateAsync(duplicate.ExistingDownload);
+
+            if (proceed)
+            {
+                result = await addToQueueUseCase.ExecuteAsync(
+                    YoutubeUrl,
+                    UseCustomTitle,
+                    ignoreDuplicateCheck: true);
+            }
+        }
 
         uiNotificationService.SetMessageInfo(FormatResult(result));
 
-        if (result is QueueAdditionResult.SingleAdded or QueueAdditionResult.PlaylistAdded)
+        if (result is AddToQueueResult.SingleAdded or AddToQueueResult.PlaylistAdded)
             YoutubeUrl = string.Empty;
     }
 
-    private bool CanExecuteAddToQueue() => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
+    private bool CanExecuteAddToQueue => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
 
     private async Task<bool> ConfirmDuplicateAsync(DownloadHistoryDto existing)
-    {
-        return await dialogService.ShowConfirmationAsync("Duplicate Detected",
+        => await dialogService.ShowConfirmationAsync("Duplicate Detected",
             $"""
             This video was already downloaded at {existing.DownloadedAt}:
             Title: {existing.VideoTitle}
 
             Do you want to download it again?
             """);
-    }
 
-    private string FormatResult(QueueAdditionResult result) => result switch
+    private string FormatResult(AddToQueueResult result) => result switch
     {
-        QueueAdditionResult.SingleAdded r => $"Added to queue. {r.QueueCount} items in queue.",
-        QueueAdditionResult.PlaylistAdded r => $"Added playlist '{r.PlaylistTitle}' ({r.VideoCount} videos).",
-        QueueAdditionResult.AlreadyQueued => "Playlist already in queue.",
-        QueueAdditionResult.DuplicateCancelled => "Download cancelled - video already exists.",
-        QueueAdditionResult.Failed f => $"Error: {f.Message}",
+        AddToQueueResult.SingleAdded r => $"Added to queue. {r.QueueCount} items in queue.",
+        AddToQueueResult.PlaylistAdded r => $"Added playlist '{r.PlaylistTitle}' ({r.ItemCount} videos).",
+        AddToQueueResult.AlreadyQueued r => $"Video '{r.VideoId}' already in queue",
+        AddToQueueResult.PlaylistAlreadyQueued r => $"Playlist '{r.PlaylistId}' already in queue",
+        AddToQueueResult.DuplicateDetected => "Download cancelled - video already exists",
+        AddToQueueResult.Failed f => $"Error: {f.Error.Message}",
         _ => string.Empty
     };
 }

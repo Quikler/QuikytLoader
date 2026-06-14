@@ -22,9 +22,6 @@ public static class Errors
         public static Error YtDlpExtractionFailed(string url, int exitCode) => new(
             $"yt-dlp failed to extract video ID from '{url}' (exit code: {exitCode})");
 
-        public static Error InvalidIdLength(string url, string id, int length) => new(
-            $"yt-dlp returned invalid ID length: {length} (expected 11) for URL '{url}', ID: {id}");
-
         public static Error YtDlpException(string url, string exceptionType) => new(
             $"Unexpected error running yt-dlp for '{url}': {exceptionType}");
 

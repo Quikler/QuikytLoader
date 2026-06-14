@@ -11,10 +11,10 @@ public interface IYoutubeExtractorService
     /// <summary>
     /// Gets video ID from a given URL.
     /// </summary>
-    Task<Result<YouTubeId>> GetVideoIdAsync(string youtubeUrl, CancellationToken cancellationToken = default);
+    Result<YouTubeId> GetVideoId(string youtubeUrl);
 
     /// <summary>
-    /// Gets video title without downloading.
+    /// Gets playlist ID from a given URL.
     /// </summary>
-    Task<Result<string>> GetVideoTitleAsync(string youtubeUrl, CancellationToken cancellationToken = default);
+    Result<string> GetPlaylistId(string youtubePlaylistUrl);
 }

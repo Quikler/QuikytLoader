@@ -13,7 +13,7 @@
             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
             CornerRadius="8"
-            IsVisible="{Binding QueueManager.Queue.Count}">
+            IsVisible="{Binding QueueManager.QueueEntries.Count}">
         <StackPanel>
             <!-- Queue Header -->
             <Border Background="{DynamicResource LayerFillColorDefaultBrush}"
@@ -27,7 +27,7 @@
 
             <!-- Queue Items -->
             <ScrollViewer MaxHeight="400">
-                <ItemsControl ItemsSource="{Binding QueueManager.Queue}">
+                <ItemsControl ItemsSource="{Binding QueueManager.QueueEntries}">
                     <ItemsControl.DataTemplates>
                         <DataTemplate DataType="{x:Type vm:QueueItemViewModel}">
                             <views:QueueItemView />
