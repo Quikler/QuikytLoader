@@ -19,9 +19,9 @@
 
         <DockPanel LastChildFill="True">
             <CheckBox DockPanel.Dock="Left"
-                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                      IsEnabled="{Binding IsCheckboxEnabled}"
-                      IsVisible="{Binding IsInGroup}"
+                      IsChecked="{Binding IsSelected, Mode=OneWayToSource}"
+                      IsEnabled="{Binding IsSelectable}"
+                      IsVisible="{Binding IsInGroup, Mode=OneTime, RelativeSource={RelativeSource AncestorType=views:QueueItemView}}"
                       VerticalAlignment="Center"
                       Margin="0,0,12,0"/>
 

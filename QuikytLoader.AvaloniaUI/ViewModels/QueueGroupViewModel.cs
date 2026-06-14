@@ -38,7 +38,7 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
             selectableCount++;
             if (!item.IsSelected) continue;
             selectedCount++;
-            if (!item.CanStartDownload) continue;
+
             canProceedAll = true;
         }
 

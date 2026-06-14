@@ -44,7 +44,7 @@ public partial class DownloadQueueManager : ObservableObject
 
     private void AddItem(QueueItem item)
     {
-        var vm = CreateItemVm(item, isInGroup: false);
+        var vm = CreateItemVm(item);
 
         RegisterItem(vm);
         AddToUi(vm);
@@ -56,7 +56,7 @@ public partial class DownloadQueueManager : ObservableObject
     {
         var itemVms = group.ItemIds
             .Select(_queue.GetItem)
-            .Select(i => CreateItemVm(i!, isInGroup: true))
+            .Select(i => CreateItemVm(i!))
             .ToArray();
 
         foreach (var vm in itemVms)
@@ -83,8 +83,8 @@ public partial class DownloadQueueManager : ObservableObject
     /// </summary>
     public ObservableCollection<QueueEntryViewModel> QueueEntries { get; } = [];
 
-    private QueueItemViewModel CreateItemVm(QueueItem item, bool isInGroup) =>
-        new(item, ProceedItem, isInGroup);
+    private QueueItemViewModel CreateItemVm(QueueItem item) =>
+        new(item, ProceedItem);
 
     private void RegisterItem(QueueItemViewModel vm)
         => _itemViewModels[vm.QueueItemId] = vm;

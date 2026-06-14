@@ -6,75 +6,20 @@ using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-public sealed partial class QueueItemViewModel(QueueItem model, Action<Guid> proceedCallback, bool isInGroup) : QueueEntryViewModel
+public sealed partial class QueueItemViewModel(QueueItem model, Action<Guid> proceedCallback) : QueueEntryViewModel
 {
+    #region --- NOT EDITABLE BY USER ---
+
+    [NotifyPropertyChangedFor(nameof(StatusMessage))]
     [NotifyCanExecuteChangedFor(nameof(ProceedCommand))]
-    [ObservableProperty] private bool _isSelected = true;
-    [ObservableProperty] private bool _isCheckboxEnabled = true;
+    [ObservableProperty] private DownloadStatus _status = model.Status;
 
-    private QueueItem Model { get; } = model;
-
-    public Guid QueueItemId => Model.Id;
-
-    public bool IsInGroup => isInGroup;
-
-    public bool CanStartDownload => Model.CanStartDownload;
-    public bool CanProceed => IsSelected && IsSelectable && CanStartDownload;
-    public bool IsSelectable => Status != DownloadStatus.Disabled;
-
-    public bool IsMetadataLoaded => Model.Metadata is not null;
-
-    public string Url => Model.Source.Url;
-
-    // When Metadata is null show Url instead of Title
-    public string? Title => CustomTitle ?? Model.Metadata?.Title ?? Url;
-    public string? Channel => Model.Metadata?.Channel;
-    public string? Duration => Model.Metadata?.Duration;
-    public string? ThumbnailUrl => Model.Metadata?.ThumbnailUrl;
-
-    public DownloadStatus Status => Model.Status;
-    public double Progress => Model.Progress;
-    public string? ErrorMessage => Model.Error?.Message;
-
-    public string? CustomTitle
-    {
-        get => Model.CustomTitle;
-        set
-        {
-            if (Model.CustomTitle == value) return;
-
-            Model.CustomTitle = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(Title));
-        }
-    }
-
-    public void UpdateFrom(QueueItem item)
-    {
-        Model.Metadata = item.Metadata;
-        OnPropertyChanged(nameof(IsMetadataLoaded));
-
-        OnPropertyChanged(nameof(Title));
-        OnPropertyChanged(nameof(Channel));
-        OnPropertyChanged(nameof(Duration));
-        OnPropertyChanged(nameof(ThumbnailUrl));
-
-        Model.Status = item.Status;
-        Model.Progress = item.Progress;
-        Model.Error = item.Error;
-
-        OnPropertyChanged(nameof(Progress));
-        OnPropertyChanged(nameof(Status));
-        OnPropertyChanged(nameof(StatusMessage));
-        OnPropertyChanged(nameof(ErrorMessage));
-
-        // Setting `CustomTitle` as `Title` if user hasn't typed anything yet
-        if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
-            CustomTitle = item.Metadata?.Title;
-    }
+    [ObservableProperty] private double _progress = model.Progress;
+    [ObservableProperty] private string? _errorMessage = model.Error?.Message;
+    [ObservableProperty] private bool _isSelectable = model.CanStartDownload;
 
     [RelayCommand(CanExecute = nameof(CanProceed))]
-    private void Proceed() => proceedCallback(Model.Id);
+    private void Proceed() => proceedCallback(model.Id);
 
     public string StatusMessage => Status switch
     {
@@ -85,7 +30,67 @@ public sealed partial class QueueItemViewModel(QueueItem model, Action<Guid> pro
         DownloadStatus.Completed => "✓ Completed",
         DownloadStatus.Failed => "✗ Failed",
         DownloadStatus.Cancelled => "⊘ Cancelled",
-        DownloadStatus.Disabled => $"⊘ {Model.Error?.Message ?? "Disabled"}",
+        DownloadStatus.Disabled => $"⊘ {model.Error?.Message ?? "Disabled"}",
         _ => throw new ArgumentOutOfRangeException(nameof(Status), Status, "Unhandled download status")
     };
+
+    public Guid QueueItemId => model.Id;
+    public bool CanProceed => IsSelected && IsSelectable;
+
+    #region --- Metadata (Updates UI when `UpdateFrom` is executed) ---
+
+    [NotifyPropertyChangedFor(nameof(Title))]
+    [NotifyPropertyChangedFor(nameof(Channel))]
+    [NotifyPropertyChangedFor(nameof(Duration))]
+    [NotifyPropertyChangedFor(nameof(ThumbnailUrl))]
+    [NotifyPropertyChangedFor(nameof(IsMetadataLoaded))]
+    [ObservableProperty] private VideoMetadata? _metadata;
+
+    // When Metadata is null show Url instead of Title
+    public string? Title => CustomTitle ?? model.Metadata?.Title ?? Url;
+    public string? Channel => model.Metadata?.Channel;
+    public string? Duration => model.Metadata?.Duration;
+    public string? ThumbnailUrl => model.Metadata?.ThumbnailUrl;
+    public bool IsMetadataLoaded => model.Metadata is not null;
+
+    // Only initialized once, because `model.Source` is `init`
+    public string Url => model.Source.Url;
+
+    #endregion
+
+    #endregion
+
+    #region --- EDIABLE BY USER ---
+
+    public string? CustomTitle
+    {
+        get => model.CustomTitle;
+        set
+        {
+            if (model.CustomTitle == value) return;
+
+            model.CustomTitle = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Title));
+        }
+    }
+
+    [NotifyCanExecuteChangedFor(nameof(ProceedCommand))]
+    [ObservableProperty] private bool _isSelected;
+
+    #endregion
+
+    public void UpdateFrom(QueueItem item)
+    {
+        Metadata = item.Metadata;
+
+        Status = item.Status;
+        Progress = item.Progress;
+        ErrorMessage = item.Error?.Message;
+        IsSelectable = item.CanStartDownload;
+
+        // Setting `CustomTitle` as `Title` if user hasn't typed anything yet
+        if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
+            CustomTitle = item.Metadata?.Title;
+    }
 }
