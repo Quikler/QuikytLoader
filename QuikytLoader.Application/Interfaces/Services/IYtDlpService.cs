@@ -13,8 +13,6 @@ public interface IYtDlpService
 
     bool IsSingleVideo(string url);
 
-    Task<Result<string>> GetVideoTitleAsync(string url, CancellationToken cancellationToken = default);
-
     Task<Result> DownloadAudioAsync(string url, string tempDirectory, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default);
 
     Task<Result<VideoMetadata>> GetVideoMetadataAsync(string url, CancellationToken cancellationToken = default);

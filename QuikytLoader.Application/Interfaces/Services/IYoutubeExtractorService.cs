@@ -17,9 +17,4 @@ public interface IYoutubeExtractorService
     /// Gets playlist ID from a given URL.
     /// </summary>
     Result<string> GetPlaylistId(string youtubePlaylistUrl);
-
-    /// <summary>
-    /// Gets video title without downloading.
-    /// </summary>
-    Task<Result<string>> GetVideoTitleAsync(string youtubeUrl, CancellationToken cancellationToken = default);
 }

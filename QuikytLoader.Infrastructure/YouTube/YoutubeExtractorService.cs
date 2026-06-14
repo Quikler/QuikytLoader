@@ -9,7 +9,7 @@ namespace QuikytLoader.Infrastructure.YouTube;
 /// Service for extracting YouTube info.
 /// Uses regex for fast extraction, with yt-dlp fallback for edge cases.
 /// </summary>
-internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYoutubeExtractorService
+internal partial class YoutubeExtractorService : IYoutubeExtractorService
 {
     // Regex patterns for common YouTube URL formats
     // Matches: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID, etc.
@@ -40,7 +40,4 @@ internal partial class YoutubeExtractorService(IYtDlpService ytDlpService) : IYo
             ? regexIdResult
             : Errors.YouTube.InvalidUrl(youtubeUrl);
     }
-
-    public async Task<Result<string>> GetVideoTitleAsync(string youtubeUrl, CancellationToken cancellationToken = default)
-        => await ytDlpService.GetVideoTitleAsync(youtubeUrl, cancellationToken);
 }

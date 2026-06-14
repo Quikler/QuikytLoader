@@ -16,52 +16,6 @@ internal partial class YtDlpService : IYtDlpService
 
     public bool IsSingleVideo(string url) => YouTubeUrl.Create(url).IsSuccess;
 
-    public async Task<Result<string>> GetVideoTitleAsync(string url, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(url))
-            return Errors.YouTube.InvalidUrl(url);
-
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "yt-dlp",
-                ArgumentList = { "--quiet", "--get-title", "--no-playlist", "--", url },
-                RedirectStandardOutput = true,
-                RedirectStandardError = false,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            if (process is null) return Errors.YouTube.YtDlpStartFailed();
-
-            var outputBuilder = new System.Text.StringBuilder();
-            process.OutputDataReceived += (sender, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data))
-                    outputBuilder.AppendLine(e.Data);
-            };
-
-            process.BeginOutputReadLine();
-
-            await WaitForProcessExit(process, cancellationToken);
-
-            if (process.ExitCode != 0)
-                return Errors.YouTube.DownloadFailed(url, process.ExitCode);
-
-            var title = outputBuilder.ToString().Trim();
-            if (string.IsNullOrWhiteSpace(title))
-                return Errors.YouTube.TitleFetchFailed(url);
-
-            return Result<string>.Success(title);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
-        }
-    }
-
     public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(string url, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -114,6 +68,19 @@ internal partial class YtDlpService : IYtDlpService
         }
     }
 
+    // TODO: I think makes sense to call `GetPlaylistMetadataAsync` by extracted id, so youtubeUrl links are only to extract id
+    // Also after testing it seems providing just playlistId is faster by 1 second!
+    // Example:
+    // 1) Full url:
+    // time yt-dlp --flat-playlist --dump-single-json -- "https://www.youtube.com/watch?v=xfhbxDh4xrk&list=OLAK5uy_mwmTuYXssTxaUL-GIAQ_5gOS2fQk9O6Mg"
+    // real	0m2.062s
+    // user	0m0.324s
+    // sys  0m0.042s
+    // 2) Just playlistId:
+    // time yt-dlp --flat-playlist --dump-single-json -- "OLAK5uy_mwmTuYXssTxaUL-GIAQ_5gOS2fQk9O6Mg"
+    // real	0m0.998s
+    // user	0m0.313s
+    // sys	0m0.026s
     public async Task<Result<PlaylistMetadataDto>> GetPlaylistMetadataAsync(string url, int maxItems, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(url) || maxItems <= 0)
