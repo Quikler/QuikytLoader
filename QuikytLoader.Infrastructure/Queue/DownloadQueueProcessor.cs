@@ -35,6 +35,8 @@ public sealed class DownloadQueueProcessor(
         {
             case DownloadStatus.Editing:
             case DownloadStatus.Queued:
+            case DownloadStatus.Failed:
+            case DownloadStatus.Cancelled:
                 item.Status = DownloadStatus.Pending;
                 break;
 

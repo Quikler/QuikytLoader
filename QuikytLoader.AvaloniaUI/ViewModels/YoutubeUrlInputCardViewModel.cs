@@ -29,8 +29,7 @@ public partial class YoutubeUrlInputCardViewModel(
 
         if (result is AddToQueueResult.DuplicateDetected duplicate)
         {
-            var proceed = await ConfirmDuplicateAsync(
-                duplicate.ExistingDownload);
+            var proceed = await ConfirmDuplicateAsync(duplicate.ExistingDownload);
 
             if (proceed)
             {
@@ -64,6 +63,7 @@ public partial class YoutubeUrlInputCardViewModel(
         AddToQueueResult.PlaylistAdded r => $"Added playlist '{r.PlaylistTitle}' ({r.ItemCount} videos).",
         AddToQueueResult.AlreadyQueued r => $"Video '{r.VideoId}' already in queue",
         AddToQueueResult.PlaylistAlreadyQueued r => $"Playlist '{r.PlaylistId}' already in queue",
+        AddToQueueResult.DuplicateDetected => "Download cancelled - video already exists",
         AddToQueueResult.Failed f => $"Error: {f.Error.Message}",
         _ => string.Empty
     };

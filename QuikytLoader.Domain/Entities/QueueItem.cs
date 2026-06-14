@@ -3,7 +3,7 @@ using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.Domain.Entities;
 
-public sealed record QueueItem
+public sealed class QueueItem
 {
     public Guid Id { get; } = Guid.NewGuid();
 

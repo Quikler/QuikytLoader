@@ -61,11 +61,9 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
         var metadataResult = await ytDlpService.GetVideoMetadataAsync(queueItem.Source.Url);
         if (!metadataResult.IsSuccess)
         {
-            queue.UpdateItem(queueItem with
-            {
-                Status = DownloadStatus.Failed,
-                Error = metadataResult.Error
-            });
+            queueItem.Status = DownloadStatus.Failed;
+            queueItem.Error = metadataResult.Error;
+            queue.UpdateItem(queueItem);
             return;
         }
 
@@ -75,10 +73,8 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
             queueItem.Error = new Error(metadataResult.Value.UnavailableReason);
         }
 
-        queue.UpdateItem(queueItem with
-        {
-            Metadata = metadataResult.Value
-        });
+        queueItem.Metadata = metadataResult.Value;
+        queue.UpdateItem(queueItem);
     }
 
     private async Task<AddToQueueResult> AddPlaylistAsync(string youtubeUrl)
@@ -95,9 +91,11 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
             return new AddToQueueResult.Failed(playlistMetadataResult.Error);
         var playlistMetadata = playlistMetadataResult.Value;
 
+        var duplicateChecks = await findExistingDownloadUseCase.FindMultipleAsync(playlistMetadata.PlaylistVideos);
+
         List<QueueItem> items = [];
         HashSet<string> seenSourceIds = [];
-        foreach (var playlistVideo in playlistMetadata.PlaylistVideos)
+        foreach (var (playlistVideo, duplicateCheck) in duplicateChecks)
         {
             var queueItem = new QueueItem
             {
@@ -106,7 +104,6 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
                 Status = DownloadStatus.Queued,
             };
 
-            var duplicateCheck = await findExistingDownloadUseCase.FindAsync(playlistVideo.Source.Url);
             if (!duplicateCheck.IsSuccess)
             {
                 queueItem.Status = DownloadStatus.Failed;
