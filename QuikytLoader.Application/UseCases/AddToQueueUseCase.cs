@@ -1,4 +1,5 @@
 ﻿using QuikytLoader.Application.DTOs;
+using QuikytLoader.Application.Interfaces.Parsers;
 using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
@@ -7,37 +8,46 @@ using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.Application.UseCases;
 
-public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadUseCase, IYtDlpService ytDlpService, IDownloadQueue queue, IYoutubeExtractorService youtubeExtractorService)
+public class AddToQueueUseCase(
+    FindExistingDownloadUseCase findExistingDownloadUseCase,
+    IYtDlpService ytDlpService,
+    IDownloadQueue queue,
+    IYoutubeVideoIdParser youtubeVideoIdParser,
+    IYoutubePlaylistIdParser youtubePlaylistIdParser)
 {
     public async Task<AddToQueueResult> ExecuteAsync(
         string youtubeUrl,
         bool editTitleBeforeDownload,
         bool ignoreDuplicateCheck = false)
     {
-        return ytDlpService.IsPlaylist(youtubeUrl)
-            ? await AddPlaylistAsync(youtubeUrl)
-            : await AddSingleAsync(youtubeUrl, editTitleBeforeDownload, ignoreDuplicateCheck);
+        // Firstly try to parse playlist - &list= query url param
+        var youtubePlaylistIdResult = youtubePlaylistIdParser.Parse(youtubeUrl);
+        if (youtubePlaylistIdResult.IsSuccess)
+            return await AddPlaylistAsync(youtubePlaylistIdResult.Value);
+
+        // Secondly try to parse a single video
+        var youtubeVideoIdResult = youtubeVideoIdParser.Parse(youtubeUrl);
+        if (youtubeVideoIdResult.IsSuccess)
+            return await AddSingleAsync(youtubeUrl, youtubeVideoIdResult.Value, editTitleBeforeDownload, ignoreDuplicateCheck);
+
+        return new AddToQueueResult.Failed(youtubeVideoIdResult.Error);
     }
 
-    private async Task<AddToQueueResult> AddSingleAsync(string youtubeUrl, bool editTitleBeforeDownload, bool ignoreDuplicateCheck)
+    private async Task<AddToQueueResult> AddSingleAsync(string youtubeUrl, string youtubeVideoId, bool editTitleBeforeDownload, bool ignoreDuplicateCheck)
     {
         if (!ignoreDuplicateCheck)
         {
-            var duplicateCheck = await findExistingDownloadUseCase.FindAsync(youtubeUrl);
+            var duplicateCheck = await findExistingDownloadUseCase.FindByIdAsync(youtubeVideoId);
             if (!duplicateCheck.IsSuccess)
                 return new AddToQueueResult.Failed(duplicateCheck.Error);
             if (duplicateCheck.Value is not null)
                 return new AddToQueueResult.DuplicateDetected(duplicateCheck.Value);
         }
 
-        var videoIdResult = youtubeExtractorService.GetVideoId(youtubeUrl);
-        if (!videoIdResult.IsSuccess)
-            return new AddToQueueResult.Failed(videoIdResult.Error);
-
         var queueItem = new QueueItem
         {
             // Appling Source now in order to show `Url` in UI
-            Source = new DownloadSource(youtubeUrl, videoIdResult.Value),
+            Source = new DownloadSource(youtubeUrl, youtubeVideoId),
             // Assigning null explicitly since we are loading metadata synchronously
             Metadata = null,
             Status = editTitleBeforeDownload ? DownloadStatus.Editing : DownloadStatus.Pending,
@@ -77,16 +87,12 @@ public class AddToQueueUseCase(FindExistingDownloadUseCase findExistingDownloadU
         queue.UpdateItem(queueItem.Id);
     }
 
-    private async Task<AddToQueueResult> AddPlaylistAsync(string youtubeUrl)
+    private async Task<AddToQueueResult> AddPlaylistAsync(string youtubePlaylistId)
     {
-        var playlistIdResult = youtubeExtractorService.GetPlaylistId(youtubeUrl);
-        if (!playlistIdResult.IsSuccess)
-            return new AddToQueueResult.Failed(playlistIdResult.Error);
+        if (queue.ContainsGroup(youtubePlaylistId))
+            return new AddToQueueResult.PlaylistAlreadyQueued(youtubePlaylistId);
 
-        if (queue.ContainsGroup(playlistIdResult.Value))
-            return new AddToQueueResult.PlaylistAlreadyQueued(playlistIdResult.Value);
-
-        var playlistMetadataResult = await ytDlpService.GetPlaylistMetadataAsync(youtubeUrl, 15);
+        var playlistMetadataResult = await ytDlpService.GetPlaylistMetadataAsync(youtubePlaylistId, 15);
         if (!playlistMetadataResult.IsSuccess)
             return new AddToQueueResult.Failed(playlistMetadataResult.Error);
         var playlistMetadata = playlistMetadataResult.Value;

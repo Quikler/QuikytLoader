@@ -49,7 +49,7 @@ internal class DbConnectionFactory : IDbConnectionFactory
     {
         const string createTableSql = """
             CREATE TABLE IF NOT EXISTS DownloadHistory (
-                YouTubeId TEXT PRIMARY KEY CHECK(length(YouTubeId) = 11 AND trim(YouTubeId) != ''),
+                YoutubeVideoId TEXT PRIMARY KEY CHECK(length(YoutubeVideoId) = 11 AND trim(YoutubeVideoId) != ''),
                 VideoTitle TEXT NOT NULL,
                 DownloadedAt TEXT NOT NULL
             )

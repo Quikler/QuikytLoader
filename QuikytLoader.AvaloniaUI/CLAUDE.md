@@ -11,9 +11,9 @@ The app uses a layered navigation system:
    - Handles view switching via NavigateToHome/NavigateToSettings commands
    - Maintains selected tab state
 
-2. **HomeViewModel** - Main YouTube download functionality
+2. **HomeViewModel** - Main Youtube download functionality
    - Orchestrates download workflow via DownloadAndSendAsync command
-   - Uses IYouTubeDownloadService for downloads
+   - Uses IYoutubeDownloadService for downloads
    - Progress reporting via IProgress<double>
    - Status management and validation
 
@@ -70,7 +70,7 @@ MainWindow contains:
 
 ### yt-dlp Integration
 - All yt-dlp arguments constructed in YtDlpService.BuildAudioDownloadArguments method
-- Metadata mapping: YouTube fields -> MP3 ID3 tags
+- Metadata mapping: Youtube fields -> MP3 ID3 tags
 - Progress extracted via regex from stdout/stderr in YtDlpService
 - Comprehensive metadata embedding (Artist, Album, Composer, Publisher, etc.)
 - Thumbnail embedding with automatic format conversion to JPG
@@ -78,15 +78,15 @@ MainWindow contains:
 
 ### Download History and Duplicate Detection
 - HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryRepository
-- Duplicate detection extracts YouTube ID via IYoutubeExtractorService and queries IDownloadHistoryRepository
+- Duplicate detection extracts Youtube ID via IYoutubeExtractorService and queries IDownloadHistoryRepository
 - After successful Telegram send, saves record to history with:
-  - YouTube video ID (11 chars, primary key)
+  - Youtube video ID (11 chars, primary key)
   - Video title (custom or original from filename)
   - Download timestamp (ISO 8601 UTC format)
-- Thumbnail URLs can be derived from YouTube ID when needed (via GetThumbnailUrlAsync)
+- Thumbnail URLs can be derived from Youtube ID when needed (via GetThumbnailUrlAsync)
 - Re-downloading same video updates the DownloadedAt timestamp (INSERT OR REPLACE)
 - Database: `~/.config/QuikytLoader/history.db`
-- Schema: DownloadHistory table (YouTubeId, VideoTitle, DownloadedAt)
+- Schema: DownloadHistory table (YoutubeVideoId, VideoTitle, DownloadedAt)
 
 ## Dependency Injection
 

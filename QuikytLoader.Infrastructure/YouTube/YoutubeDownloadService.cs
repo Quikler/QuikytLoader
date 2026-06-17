@@ -1,33 +1,26 @@
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
-using QuikytLoader.Domain.ValueObjects;
 
-namespace QuikytLoader.Infrastructure.YouTube;
+namespace QuikytLoader.Infrastructure.Youtube;
 
-internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeExtractorService, IYtDlpService ytDlpService, IThumbnailService thumbnailService) : IYoutubeDownloadService
+internal partial class YoutubeDownloadService(IYtDlpService ytDlpService, IThumbnailService thumbnailService) : IYoutubeDownloadService
 {
-    private readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
+    private static readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
 
     /// <summary>
-    /// Downloads a video from YouTube and converts it to MP3 format
+    /// Downloads a video from Youtube and converts it to MP3 format
     /// Files are kept in temp directory for sending to Telegram
     /// </summary>
-    public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(string url, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(string youtubeVideoId, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(_tempDownloadDirectory);
 
-        var youtubeIdResult = youtubeExtractorService.GetVideoId(url);
-        if (!youtubeIdResult.IsSuccess)
-            return Result<DownloadResultEntity>.Failure(youtubeIdResult.Error);
+        var downloadAudioResult = await ytDlpService.DownloadAudioAsync(youtubeVideoId, _tempDownloadDirectory, customTitle: customTitle, progress: progress, cancellationToken: cancellationToken);
+        if (!downloadAudioResult.IsSuccess)
+            return Result<DownloadResultEntity>.Failure(downloadAudioResult.Error);
 
-        var youtubeId = youtubeIdResult.Value;
-
-        var runResult = await ytDlpService.DownloadAudioAsync(url, _tempDownloadDirectory, customTitle: customTitle, progress: progress, cancellationToken: cancellationToken);
-        if (!runResult.IsSuccess)
-            return Result<DownloadResultEntity>.Failure(runResult.Error);
-
-        var findResult = FindDownloadedFiles(youtubeId);
+        var findResult = FindDownloadedFiles(youtubeVideoId);
         return findResult.IsSuccess
             ? findResult.Value
             : Result<DownloadResultEntity>.Failure(findResult.Error);
@@ -40,7 +33,7 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
     /// Finds downloaded files in temp directory and normalizes filenames
     /// Files remain in temp directory for sending to Telegram
     /// </summary>
-    private Result<DownloadResultEntity> FindDownloadedFiles(YouTubeId youtubeId)
+    private Result<DownloadResultEntity> FindDownloadedFiles(string youtubeVideoId)
     {
         var files = Directory.EnumerateFiles(_tempDownloadDirectory)
             .Where(f => f.EndsWith(".mp3") || f.EndsWith(".jpg"))
@@ -48,7 +41,7 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
             .ToList();
 
         var tempMp3File = files.Find(f => f.EndsWith(".mp3"));
-        if (tempMp3File is null) return Errors.YouTube.FileNotFound(_tempDownloadDirectory);
+        if (tempMp3File is null) return Errors.Youtube.FileNotFound(_tempDownloadDirectory);
 
         var tempThumbnailFile = files.Find(f => f.EndsWith(".jpg"));
         if (tempThumbnailFile is null) return Errors.Thumbnail.FileNotFound(_tempDownloadDirectory);
@@ -65,7 +58,7 @@ internal partial class YoutubeDownloadService(IYoutubeExtractorService youtubeEx
             return Result<DownloadResultEntity>.Failure(processResult.Error);
 
         return new DownloadResultEntity(
-            youtubeId,
+            youtubeVideoId,
             Path.GetFileNameWithoutExtension(normalizedMp3Path),
             normalizedMp3Path,
             normalizedThumbnailPath);

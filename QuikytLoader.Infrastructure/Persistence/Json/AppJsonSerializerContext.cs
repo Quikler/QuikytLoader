@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using QuikytLoader.Application.DTOs;
-using QuikytLoader.Infrastructure.YouTube;
+using QuikytLoader.Infrastructure.Youtube;
 
 namespace QuikytLoader.Infrastructure.Persistence.Json;
 

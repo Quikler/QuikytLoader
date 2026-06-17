@@ -6,27 +6,21 @@ using QuikytLoader.Domain.Entities;
 namespace QuikytLoader.Application.UseCases;
 
 /// <summary>
-/// Use case: Download YouTube video, send to Telegram, save to history, cleanup temp files
+/// Use case: Download Youtube video, send to Telegram, save to history, cleanup temp files
 /// </summary>
 public class DownloadAndSendUseCase(
     IYoutubeDownloadService youtubeDownloadService,
     IDownloadHistoryRepository historyRepo,
-    ITelegramBotService telegramService,
-    IYoutubeExtractorService youtubeExtractorService)
+    ITelegramBotService telegramService)
 {
     public async Task<Result> ExecuteAsync(
-        string url,
+        string youtubeVideoId,
         string? customTitle,
         IProgress<double> progress,
         CancellationToken cancellationToken = default)
     {
-        // 1. Extract YouTube ID
-        var youtubeIdResult = youtubeExtractorService.GetVideoId(url);
-        if (!youtubeIdResult.IsSuccess)
-            return youtubeIdResult.Error;
-
-        // 2. Download video
-        var downloadResult = await youtubeDownloadService.DownloadAudioAsync(url, customTitle, progress, cancellationToken);
+        // 1. Download video
+        var downloadResult = await youtubeDownloadService.DownloadAudioAsync(youtubeVideoId, customTitle, progress, cancellationToken);
         if (!downloadResult.IsSuccess)
             return downloadResult.Error;
 
@@ -37,17 +31,17 @@ public class DownloadAndSendUseCase(
             await using var mp3FileStream = File.OpenRead(downloadResultEntity.TempMp3FilePath);
             await using var thumbnailFileStream = File.OpenRead(downloadResultEntity.TempThumbnailFilePath);
 
-            // 3. Send to Telegram
+            // 2. Send to Telegram
             var sendResult = await telegramService.SendAudioAsync(mp3FileStream, thumbnailFileStream);
             if (!sendResult.IsSuccess)
                 return sendResult.Error;
 
             Console.WriteLine($"Audio file sent to Telegram: {Path.GetFileName(mp3FileStream.Name)}");
 
-            // 4. Save to history
+            // 3. Save to history
             await historyRepo.UpsertAsync(
                 new DownloadHistoryEntity(
-                    downloadResultEntity.YouTubeId,
+                    downloadResultEntity.YoutubeVideoId,
                     customTitle ?? downloadResultEntity.VideoTitle,
                     DateTime.UtcNow.ToString("o")));
 
@@ -55,7 +49,7 @@ public class DownloadAndSendUseCase(
         }
         finally
         {
-            // 5. Cleanup temp files — no longer needed after Telegram send
+            // 4. Cleanup temp files — no longer needed after Telegram send
             try { File.Delete(downloadResultEntity.TempMp3FilePath); } catch { }
             try { File.Delete(downloadResultEntity.TempThumbnailFilePath); } catch { }
         }

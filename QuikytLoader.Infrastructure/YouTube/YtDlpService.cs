@@ -5,28 +5,20 @@ using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
-using QuikytLoader.Domain.ValueObjects;
 using QuikytLoader.Infrastructure.Persistence.Json;
 
-namespace QuikytLoader.Infrastructure.YouTube;
+namespace QuikytLoader.Infrastructure.Youtube;
 
 internal partial class YtDlpService : IYtDlpService
 {
-    public bool IsPlaylist(string url) => YouTubePlaylistUrl.Create(url).IsSuccess;
-
-    public bool IsSingleVideo(string url) => YouTubeUrl.Create(url).IsSuccess;
-
-    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(string url, CancellationToken cancellationToken = default)
+    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(string youtubeVideoId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(url))
-            return Errors.YouTube.InvalidUrl(url);
-
         try
         {
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "id", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--print", "availability", "--", url },
+                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "id", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--print", "availability", "--", youtubeVideoId },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
                 UseShellExecute = false,
@@ -34,19 +26,19 @@ internal partial class YtDlpService : IYtDlpService
             };
 
             using var process = Process.Start(startInfo);
-            if (process is null) return Errors.YouTube.YtDlpStartFailed();
+            if (process is null) return Errors.Youtube.YtDlpStartFailed();
 
             var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
             await WaitForProcessExit(process, cancellationToken);
 
             if (process.ExitCode != 0)
-                return Errors.YouTube.MetadataFetchFailed(url);
+                return Errors.Youtube.MetadataFetchFailed(youtubeVideoId);
 
             var output = await outputTask;
             var lines = output.Split('\n');
 
             if (lines.Length < 6)
-                return Errors.YouTube.MetadataFetchFailed(url);
+                return Errors.Youtube.MetadataFetchFailed(youtubeVideoId);
 
             var (isAvailable, unavailableReason) = DetermineAvailability(lines[5].Trim());
 
@@ -64,28 +56,12 @@ internal partial class YtDlpService : IYtDlpService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
+            return Errors.Youtube.YtDlpException(youtubeVideoId, ex.GetType().Name);
         }
     }
 
-    // TODO: I think makes sense to call `GetPlaylistMetadataAsync` by extracted id, so youtubeUrl links are only to extract id
-    // Also after testing it seems providing just playlistId is faster by 1 second!
-    // Example:
-    // 1) Full url:
-    // time yt-dlp --flat-playlist --dump-single-json -- "https://www.youtube.com/watch?v=xfhbxDh4xrk&list=OLAK5uy_mwmTuYXssTxaUL-GIAQ_5gOS2fQk9O6Mg"
-    // real	0m2.062s
-    // user	0m0.324s
-    // sys  0m0.042s
-    // 2) Just playlistId:
-    // time yt-dlp --flat-playlist --dump-single-json -- "OLAK5uy_mwmTuYXssTxaUL-GIAQ_5gOS2fQk9O6Mg"
-    // real	0m0.998s
-    // user	0m0.313s
-    // sys	0m0.026s
-    public async Task<Result<PlaylistMetadataDto>> GetPlaylistMetadataAsync(string url, int maxItems, CancellationToken cancellationToken = default)
+    public async Task<Result<PlaylistMetadataDto>> GetPlaylistMetadataAsync(string youtubePlaylistId, uint maxItems, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(url) || maxItems <= 0)
-            return Errors.YouTube.InvalidPlaylistUrl(url);
-
         try
         {
             var startInfo = new ProcessStartInfo
@@ -97,7 +73,7 @@ internal partial class YtDlpService : IYtDlpService
                     "--flat-playlist",
                     "--playlist-items", $"1:{maxItems}",
                     "--dump-single-json",
-                    "--", url
+                    "--", youtubePlaylistId
                 },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
@@ -106,13 +82,13 @@ internal partial class YtDlpService : IYtDlpService
             };
 
             using var process = Process.Start(startInfo);
-            if (process is null) return Errors.YouTube.YtDlpStartFailed();
+            if (process is null) return Errors.Youtube.YtDlpStartFailed();
 
             var playlistOutputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
             await WaitForProcessExit(process, cancellationToken);
 
             if (process.ExitCode != 0)
-                return Errors.YouTube.PlaylistFetchFailed(url);
+                return Errors.Youtube.PlaylistMetadataFetchFailed(youtubePlaylistId);
 
             var playlistOutput = await playlistOutputTask;
             var parsedPlaylist = JsonSerializer.Deserialize(playlistOutput, AppJsonSerializerContext.Default.YtDlpPlaylistJson)!;
@@ -138,7 +114,7 @@ internal partial class YtDlpService : IYtDlpService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
+            return Errors.Youtube.YtDlpException(youtubePlaylistId, ex.GetType().Name);
         }
     }
 
@@ -162,14 +138,14 @@ internal partial class YtDlpService : IYtDlpService
         };
 
     // TODO: we are specifying "tempDirectory", so makes sense to return the download location info in return type
-    public async Task<Result> DownloadAudioAsync(string url, string tempDirectory, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<Result> DownloadAudioAsync(string youtubeVideoId, string tempDirectory, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                Arguments = BuildAudioDownloadArguments(url, tempDirectory, customTitle),
+                Arguments = BuildAudioDownloadArguments(youtubeVideoId, tempDirectory, customTitle),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -178,7 +154,7 @@ internal partial class YtDlpService : IYtDlpService
 
             using var process = Process.Start(startInfo);
             if (process == null)
-                return Errors.YouTube.YtDlpStartFailed();
+                return Errors.Youtube.YtDlpStartFailed();
 
             process.OutputDataReceived += (sender, e) => HandleOutput(e.Data, progress);
             process.ErrorDataReceived += (sender, e) => HandleOutput(e.Data, progress);
@@ -189,15 +165,15 @@ internal partial class YtDlpService : IYtDlpService
             await WaitForProcessExit(process, cancellationToken);
             return process.ExitCode == 0
                 ? Result.Success()
-                : Errors.YouTube.DownloadFailed(url, process.ExitCode);
+                : Errors.Youtube.DownloadFailed(youtubeVideoId, process.ExitCode);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return Errors.YouTube.YtDlpException(url, ex.GetType().Name);
+            return Errors.Youtube.YtDlpException(youtubeVideoId, ex.GetType().Name);
         }
     }
 
-    private static string BuildAudioDownloadArguments(string url, string tempDirectory, string? customTitle)
+    private static string BuildAudioDownloadArguments(string youtubeVideoId, string tempDirectory, string? customTitle)
     {
         var sanitizedTitle = !string.IsNullOrWhiteSpace(customTitle)
             ? string.Join("_", customTitle.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries)).Trim()
@@ -226,7 +202,7 @@ internal partial class YtDlpService : IYtDlpService
                $"--parse-metadata \"%(webpage_url)s:%(meta_purl)s\" " +
                $"--parse-metadata \"%(genre)s:%(meta_genre)s\" " +
                $"--progress " +
-               $"\"{url}\"";
+               $"\"{youtubeVideoId}\"";
     }
 
     private static void HandleOutput(string? data, IProgress<double>? progress)

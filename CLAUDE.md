@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Project Overview
 
-QuikytLoader is a .NET Avalonia UI desktop application for downloading YouTube videos as MP3 files and sending them to Telegram. Follows MVVM architecture with clean separation of concerns.
+QuikytLoader is a .NET Avalonia UI desktop application for downloading Youtube videos as MP3 files and sending them to Telegram. Follows MVVM architecture with clean separation of concerns.
 
 ## Build and Run Commands
 

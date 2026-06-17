@@ -9,11 +9,11 @@
 
         <!-- Title Section -->
         <StackPanel Spacing="8">
-            <TextBlock Text="YouTube to Telegram"
+            <TextBlock Text="Youtube to Telegram"
                        FontSize="32"
                        FontWeight="Bold"
                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
-            <TextBlock Text="Download YouTube videos and send them directly to your Telegram"
+            <TextBlock Text="Download Youtube videos and send them directly to your Telegram"
                        FontSize="14"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
         </StackPanel>
@@ -28,7 +28,7 @@
 
                 <!-- URL Input Section -->
                 <StackPanel Spacing="8">
-                    <TextBlock Text="YouTube URL"
+                    <TextBlock Text="Youtube URL"
                                FontSize="14"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
@@ -40,7 +40,7 @@
                              VerticalContentAlignment="Center"
                              KeyDown="YoutubeUrlTextBox_KeyDown"/>
 
-                    <TextBlock Text="Paste a YouTube video or music URL"
+                    <TextBlock Text="Paste a Youtube video or music URL"
                                FontSize="12"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>

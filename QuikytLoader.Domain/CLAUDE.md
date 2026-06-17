@@ -4,24 +4,24 @@ Core domain layer with no external dependencies. Contains entities, value object
 
 ## Entities
 
-**DownloadResultEntity** - Result of a YouTube download operation
-- Record type with YouTubeId, VideoTitle, TempMediaFilePath, TempThumbnailPath
+**DownloadResultEntity** - Result of a Youtube download operation
+- Record type with YoutubeVideoId, VideoTitle, TempMediaFilePath, TempThumbnailPath
 - Represents temporary files that should be cleaned up after use
 
 **DownloadHistoryEntity** - Download history record for persistence
-- Record type with YouTubeId, VideoTitle, DownloadedAt (ISO 8601 UTC timestamp)
+- Record type with YoutubeVideoId, VideoTitle, DownloadedAt (ISO 8601 UTC timestamp)
 - Factory method `Create()` returning `Result<DownloadHistoryEntity>`
-- Propagates failure from YouTubeId validation if invalid
+- Propagates failure from YoutubeVideoId validation if invalid
 
 ## Value Objects
 
-**YouTubeId** - YouTube video ID (always 11 characters)
-- Private constructor with factory method `Create()` returning `Result<YouTubeId>`
+**YoutubeVideoId** - Youtube video ID (always 11 characters)
+- Private constructor with factory method `Create()` returning `Result<YoutubeVideoId>`
 - Validates length and non-empty
 - Implicit conversion to string
 
-**YouTubeUrl** - Validated YouTube URL
-- Factory method `Create()` returning `Result<YouTubeUrl>`
+**YoutubeUrl** - Validated Youtube URL
+- Factory method `Create()` returning `Result<YoutubeUrl>`
 - Validates: non-empty, valid URI format, HTTP/HTTPS scheme, youtube.com or youtu.be host
 - Implicit conversion to string
 
