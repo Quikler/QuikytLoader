@@ -63,7 +63,19 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     // When Metadata is null show Url instead of Title
     public string? Title => CustomTitle ?? Model.Metadata?.Title ?? Url;
     public string? Channel => Model.Metadata?.Channel;
-    public string? Duration => Model.Metadata?.Duration;
+    public string? Duration
+    {
+        get
+        {
+            if (Model.Metadata?.DurationInSeconds is null)
+                return null;
+
+            var ts = Model.Metadata.DurationInSeconds;
+            return ts.TotalHours >= 1
+                ? $"{(int)ts.TotalHours}:{ts.Minutes:D2}:{ts.Seconds:D2}"
+                : $"{ts.Minutes}:{ts.Seconds:D2}";
+        }
+    }
     public string? ThumbnailUrl => Model.Metadata?.ThumbnailUrl;
     public bool IsMetadataLoaded => Model.Metadata is not null;
 

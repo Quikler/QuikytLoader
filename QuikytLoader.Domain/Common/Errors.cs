@@ -1,3 +1,4 @@
+
 namespace QuikytLoader.Domain.Common;
 
 public static class Errors
@@ -24,6 +25,9 @@ public static class Errors
 
         public static Error PlaylistMetadataFetchFailed(string youtubePlaylistId) => new(
             $"Failed to fetch playlist metadata from '{youtubePlaylistId}'");
+
+        public static Error YtDlpFailed(int exitCode) => new(
+            $"yt-dlp failed with exit code: {exitCode}");
     }
 
     public static class Telegram

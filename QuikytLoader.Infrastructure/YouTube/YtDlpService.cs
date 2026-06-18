@@ -20,7 +20,7 @@ internal partial class YtDlpService : IYtDlpService
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "id", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--print", "availability", "--", downloadSource.YoutubeVideoId },
+                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "id", "--print", "title", "--print", "channel", "--print", "duration", "--print", "thumbnail", "--print", "availability", "--", downloadSource.YoutubeVideoId },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
                 UseShellExecute = false,
@@ -48,7 +48,7 @@ internal partial class YtDlpService : IYtDlpService
                 VideoId: lines[0].Trim(),
                 Title: lines[1].Trim(),
                 Channel: lines[2].Trim(),
-                Duration: lines[3].Trim(),
+                DurationInSeconds: TimeSpan.FromSeconds(double.Parse(lines[3].Trim())),
                 ThumbnailUrl: lines[4].Trim(),
                 IsAvailable: isAvailable,
                 UnavailableReason: unavailableReason
@@ -111,7 +111,7 @@ internal partial class YtDlpService : IYtDlpService
                                 entry.Id,
                                 entry.Title,
                                 entry.Channel,
-                                FormatDuration(entry.Duration),
+                                TimeSpan.FromSeconds(entry.Duration),
                                 entry.Thumbnails.Last().Url,
                                 isAvailable,
                                 unavailableReason));
@@ -121,14 +121,6 @@ internal partial class YtDlpService : IYtDlpService
         {
             return Errors.Youtube.YtDlpException(downloadPlaylistSource.YoutubePlaylistId, ex.GetType().Name);
         }
-    }
-
-    private static string FormatDuration(double totalSeconds)
-    {
-        var ts = TimeSpan.FromSeconds(totalSeconds);
-        return ts.TotalHours >= 1
-            ? $"{(int)ts.TotalHours}:{ts.Minutes:D2}:{ts.Seconds:D2}"
-            : $"{ts.Minutes}:{ts.Seconds:D2}";
     }
 
     private static (bool isAvailable, string unavailableReason) DetermineAvailability(string? availability) =>
