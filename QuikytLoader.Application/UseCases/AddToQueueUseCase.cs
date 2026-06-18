@@ -68,7 +68,7 @@ public class AddToQueueUseCase(
     /// </summary>
     private async Task EnrichAsync(QueueItem queueItem)
     {
-        var metadataResult = await ytDlpService.GetVideoMetadataAsync(queueItem.Source.Url);
+        var metadataResult = await ytDlpService.GetVideoMetadataAsync(queueItem.Source.SourceId);
         if (!metadataResult.IsSuccess)
         {
             queueItem.Status = DownloadStatus.Failed;

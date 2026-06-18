@@ -78,7 +78,7 @@ MainWindow contains:
 
 ### Download History and Duplicate Detection
 - HomeViewModel checks for duplicates before adding to queue using IDownloadHistoryRepository
-- Duplicate detection extracts Youtube ID via IYoutubeExtractorService and queries IDownloadHistoryRepository
+- Duplicate detection
 - After successful Telegram send, saves record to history with:
   - Youtube video ID (11 chars, primary key)
   - Video title (custom or original from filename)

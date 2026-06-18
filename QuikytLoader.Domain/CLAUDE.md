@@ -13,18 +13,6 @@ Core domain layer with no external dependencies. Contains entities, value object
 - Factory method `Create()` returning `Result<DownloadHistoryEntity>`
 - Propagates failure from YoutubeVideoId validation if invalid
 
-## Value Objects
-
-**YoutubeVideoId** - Youtube video ID (always 11 characters)
-- Private constructor with factory method `Create()` returning `Result<YoutubeVideoId>`
-- Validates length and non-empty
-- Implicit conversion to string
-
-**YoutubeUrl** - Validated Youtube URL
-- Factory method `Create()` returning `Result<YoutubeUrl>`
-- Validates: non-empty, valid URI format, HTTP/HTTPS scheme, youtube.com or youtu.be host
-- Implicit conversion to string
-
 ## Common Types
 
 **Result / Result&lt;T&gt;** - Railway-oriented error handling

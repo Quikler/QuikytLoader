@@ -44,8 +44,7 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
 
         if (result is null) return null;
 
-        var createResult = DownloadHistoryEntity.Create(result.YoutubeVideoId, result.VideoTitle, result.DownloadedAt);
-        return createResult.IsSuccess ? createResult.Value : null;
+        return new DownloadHistoryEntity(result.YoutubeVideoId, result.VideoTitle, result.DownloadedAt);
     }
 
     // Should be internal for Dapper.AOT compatibility

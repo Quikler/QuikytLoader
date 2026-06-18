@@ -1,10 +1,14 @@
-﻿using QuikytLoader.Application.Interfaces.Parsers;
+﻿using System.Text.RegularExpressions;
+using QuikytLoader.Application.Interfaces.Parsers;
 using QuikytLoader.Domain.Common;
 
 namespace QuikytLoader.Infrastructure.Parsers;
 
 public sealed partial class YoutubeVideoIdParser : IYoutubeVideoIdParser
 {
+    [GeneratedRegex("^[a-zA-Z0-9_-]{11}$")]
+    private static partial Regex YoutubeVideoIdRegex();
+
     private static readonly HashSet<string> SupportedHosts =
     [
         "youtube.com",
@@ -26,7 +30,7 @@ public sealed partial class YoutubeVideoIdParser : IYoutubeVideoIdParser
         if (string.IsNullOrWhiteSpace(videoId))
             return Result<string>.Failure("Youtube video ID not found.");
 
-        if (videoId.Length != 11)
+        if (!YoutubeVideoIdRegex().IsMatch(videoId))
             return Result<string>.Failure("Invalid Youtube video ID.");
 
         return videoId;
@@ -45,7 +49,7 @@ public sealed partial class YoutubeVideoIdParser : IYoutubeVideoIdParser
                 .Split('/')
                 .FirstOrDefault();
 
-        if (uri.AbsolutePath == "/watch")
+        if (uri.AbsolutePath.TrimEnd('/') == "/watch")
             return System.Web.HttpUtility.ParseQueryString(uri.Query)["v"];
 
         var segments = uri.AbsolutePath

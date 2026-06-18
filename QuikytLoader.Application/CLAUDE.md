@@ -11,7 +11,7 @@ Application layer containing use cases and interface definitions. References Dom
 - Returns DownloadResultDto
 
 **FindExistingDownloadUseCase** - Duplicate detection
-- Extracts Youtube ID from URL via IYoutubeExtractorService
+- Extracts Youtube ID from URL via IYoutubeVideoIdParser
 - Checks history via IDownloadHistoryRepository
 - Returns DownloadHistoryDto if found
 
@@ -31,7 +31,6 @@ Application layer containing use cases and interface definitions. References Dom
 - **IYtDlpService** - yt-dlp process execution
 - **IThumbnailService** - Thumbnail processing
 - **ITelegramBotService** - Telegram integration
-- **IYoutubeExtractorService** - Youtube ID extraction
 
 ### Repositories (in `Interfaces/Repositories/`)
 
