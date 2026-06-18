@@ -68,7 +68,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     public bool IsMetadataLoaded => Model.Metadata is not null;
 
     // Only initialized once, because `model.Source` is `init`
-    public string Url => Model.Source.Url;
+    public string Url => Model.Source.YoutubeVideoUrl;
 
     #endregion
 

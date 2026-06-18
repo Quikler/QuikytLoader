@@ -14,13 +14,13 @@ public class DownloadAndSendUseCase(
     ITelegramBotService telegramService)
 {
     public async Task<Result> ExecuteAsync(
-        string youtubeVideoId,
+        DownloadSource downloadSource,
         string? customTitle,
         IProgress<double> progress,
         CancellationToken cancellationToken = default)
     {
         // 1. Download video
-        var downloadResult = await youtubeDownloadService.DownloadAudioAsync(youtubeVideoId, customTitle, progress, cancellationToken);
+        var downloadResult = await youtubeDownloadService.DownloadAudioAsync(downloadSource, customTitle, progress, cancellationToken);
         if (!downloadResult.IsSuccess)
             return downloadResult.Error;
 
@@ -49,9 +49,8 @@ public class DownloadAndSendUseCase(
         }
         finally
         {
-            // 4. Cleanup temp files — no longer needed after Telegram send
-            try { File.Delete(downloadResultEntity.TempMp3FilePath); } catch { }
-            try { File.Delete(downloadResultEntity.TempThumbnailFilePath); } catch { }
+            // 4. Delete created temporary directory that contains files — no longer needed after Telegram send
+            try { Directory.Delete(downloadResultEntity.DownloadDirectory, true); } catch { }
         }
     }
 }

@@ -11,14 +11,16 @@ namespace QuikytLoader.Infrastructure.Youtube;
 
 internal partial class YtDlpService : IYtDlpService
 {
-    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(string youtubeVideoId, CancellationToken cancellationToken = default)
+    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(
+        DownloadSource downloadSource,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "id", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--print", "availability", "--", youtubeVideoId },
+                ArgumentList = { "--quiet", "--skip-download", "--no-playlist", "--print", "id", "--print", "title", "--print", "channel", "--print", "duration_string", "--print", "thumbnail", "--print", "availability", "--", downloadSource.YoutubeVideoId },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
                 UseShellExecute = false,
@@ -32,13 +34,13 @@ internal partial class YtDlpService : IYtDlpService
             await WaitForProcessExit(process, cancellationToken);
 
             if (process.ExitCode != 0)
-                return Errors.Youtube.MetadataFetchFailed(youtubeVideoId);
+                return Errors.Youtube.MetadataFetchFailed(downloadSource.YoutubeVideoId);
 
             var output = await outputTask;
             var lines = output.Split('\n');
 
             if (lines.Length < 6)
-                return Errors.Youtube.MetadataFetchFailed(youtubeVideoId);
+                return Errors.Youtube.MetadataFetchFailed(downloadSource.YoutubeVideoId);
 
             var (isAvailable, unavailableReason) = DetermineAvailability(lines[5].Trim());
 
@@ -56,11 +58,14 @@ internal partial class YtDlpService : IYtDlpService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return Errors.Youtube.YtDlpException(youtubeVideoId, ex.GetType().Name);
+            return Errors.Youtube.YtDlpException(downloadSource.YoutubeVideoId, ex.GetType().Name);
         }
     }
 
-    public async Task<Result<PlaylistMetadataDto>> GetPlaylistMetadataAsync(string youtubePlaylistId, uint maxItems, CancellationToken cancellationToken = default)
+    public async Task<Result<PlaylistMetadataDto>> GetPlaylistMetadataAsync(
+        DownloadPlaylistSource downloadPlaylistSource,
+        uint maxItems,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -73,7 +78,7 @@ internal partial class YtDlpService : IYtDlpService
                     "--flat-playlist",
                     "--playlist-items", $"1:{maxItems}",
                     "--dump-single-json",
-                    "--", youtubePlaylistId
+                    "--", downloadPlaylistSource.YoutubePlaylistUrl
                 },
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
@@ -88,7 +93,7 @@ internal partial class YtDlpService : IYtDlpService
             await WaitForProcessExit(process, cancellationToken);
 
             if (process.ExitCode != 0)
-                return Errors.Youtube.PlaylistMetadataFetchFailed(youtubePlaylistId);
+                return Errors.Youtube.PlaylistMetadataFetchFailed(downloadPlaylistSource.YoutubePlaylistUrl);
 
             var playlistOutput = await playlistOutputTask;
             var parsedPlaylist = JsonSerializer.Deserialize(playlistOutput, AppJsonSerializerContext.Default.YtDlpPlaylistJson)!;
@@ -114,7 +119,7 @@ internal partial class YtDlpService : IYtDlpService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return Errors.Youtube.YtDlpException(youtubePlaylistId, ex.GetType().Name);
+            return Errors.Youtube.YtDlpException(downloadPlaylistSource.YoutubePlaylistId, ex.GetType().Name);
         }
     }
 
@@ -137,15 +142,19 @@ internal partial class YtDlpService : IYtDlpService
             _ => (false, availability ?? "Unknown")
         };
 
-    // TODO: we are specifying "tempDirectory", so makes sense to return the download location info in return type
-    public async Task<Result> DownloadAudioAsync(string youtubeVideoId, string tempDirectory, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<Result> DownloadAudioAsync(
+        DownloadSource downloadSource,
+        string downloadDirectory,
+        string? customTitle = null,
+        IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             var startInfo = new ProcessStartInfo
             {
                 FileName = "yt-dlp",
-                Arguments = BuildAudioDownloadArguments(youtubeVideoId, tempDirectory, customTitle),
+                Arguments = BuildAudioDownloadArguments(downloadSource.YoutubeVideoId, downloadDirectory, customTitle),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -165,11 +174,11 @@ internal partial class YtDlpService : IYtDlpService
             await WaitForProcessExit(process, cancellationToken);
             return process.ExitCode == 0
                 ? Result.Success()
-                : Errors.Youtube.DownloadFailed(youtubeVideoId, process.ExitCode);
+                : Errors.Youtube.DownloadFailed(downloadSource.YoutubeVideoId, process.ExitCode);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return Errors.Youtube.YtDlpException(youtubeVideoId, ex.GetType().Name);
+            return Errors.Youtube.YtDlpException(downloadSource.YoutubeVideoId, ex.GetType().Name);
         }
     }
 

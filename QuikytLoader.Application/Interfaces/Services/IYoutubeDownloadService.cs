@@ -12,5 +12,9 @@ public interface IYoutubeDownloadService
     /// Downloads a video from Youtube and converts it to MP3 format.
     /// </summary>
     /// <param name="customTitle">Optional custom filename (without extension)</param>
-    Task<Result<DownloadResultEntity>> DownloadAudioAsync(string youtubeVideoId, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default);
+    Task<Result<DownloadResultEntity>> DownloadAudioAsync(
+        DownloadSource downloadSource,
+        string? customTitle = null,
+        IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default);
 }

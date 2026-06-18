@@ -12,19 +12,25 @@ internal partial class YoutubeDownloadService(IYtDlpService ytDlpService, IThumb
     /// Downloads a video from Youtube and converts it to MP3 format
     /// Files are kept in temp directory for sending to Telegram
     /// </summary>
-    public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(string youtubeVideoId, string? customTitle = null, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(
+        DownloadSource downloadSource,
+        string? customTitle = null,
+        IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default)
     {
-        var operationDirectory = Path.Combine(_tempDownloadDirectory, youtubeVideoId);
-        Directory.CreateDirectory(operationDirectory);
+        var downloadDirectory = Path.Combine(_tempDownloadDirectory, downloadSource.YoutubeVideoId);
+        Directory.CreateDirectory(downloadDirectory);
 
-        var downloadAudioResult = await ytDlpService.DownloadAudioAsync(youtubeVideoId, operationDirectory, customTitle: customTitle, progress: progress, cancellationToken: cancellationToken);
-        if (!downloadAudioResult.IsSuccess)
-            return Result<DownloadResultEntity>.Failure(downloadAudioResult.Error);
+        var downloadAudioResult = await ytDlpService.DownloadAudioAsync(
+            downloadSource,
+            downloadDirectory,
+            customTitle,
+            progress,
+            cancellationToken);
 
-        var findResult = FindDownloadedFiles(operationDirectory, youtubeVideoId);
-        return findResult.IsSuccess
-            ? findResult.Value
-            : Result<DownloadResultEntity>.Failure(findResult.Error);
+        return downloadAudioResult.IsSuccess
+            ? FindDownloadedFiles(downloadDirectory, downloadSource.YoutubeVideoId)
+            : downloadAudioResult.Error;
     }
 
     private static string NormalizeWhitespace(string filename)
@@ -34,24 +40,24 @@ internal partial class YoutubeDownloadService(IYtDlpService ytDlpService, IThumb
     /// Finds downloaded files in temp directory and normalizes filenames
     /// Files remain in temp directory for sending to Telegram
     /// </summary>
-    private Result<DownloadResultEntity> FindDownloadedFiles(string operationDirectory, string youtubeVideoId)
+    private Result<DownloadResultEntity> FindDownloadedFiles(string downloadDirectory, string youtubeVideoId)
     {
-        var files = Directory.EnumerateFiles(operationDirectory)
+        var files = Directory.EnumerateFiles(downloadDirectory)
             .Where(f => f.EndsWith(".mp3") || f.EndsWith(".jpg"))
             .OrderByDescending(File.GetCreationTime)
             .ToList();
 
         var tempMp3File = files.Find(f => f.EndsWith(".mp3"));
-        if (tempMp3File is null) return Errors.Youtube.FileNotFound(operationDirectory);
+        if (tempMp3File is null) return Errors.Youtube.FileNotFound(downloadDirectory);
 
         var tempThumbnailFile = files.Find(f => f.EndsWith(".jpg"));
-        if (tempThumbnailFile is null) return Errors.Thumbnail.FileNotFound(operationDirectory);
+        if (tempThumbnailFile is null) return Errors.Thumbnail.FileNotFound(downloadDirectory);
 
-        var normalizedMp3Path = Path.Combine(operationDirectory, NormalizeWhitespace(Path.GetFileName(tempMp3File)));
+        var normalizedMp3Path = Path.Combine(downloadDirectory, NormalizeWhitespace(Path.GetFileName(tempMp3File)));
         File.Move(tempMp3File, normalizedMp3Path, overwrite: true);
 
         // Normalize whitespace and convert to .jpeg for Telegram compatibility
-        var normalizedThumbnailPath = Path.Combine(operationDirectory, $"{NormalizeWhitespace(Path.GetFileNameWithoutExtension(tempThumbnailFile))}.jpeg");
+        var normalizedThumbnailPath = Path.Combine(downloadDirectory, $"{NormalizeWhitespace(Path.GetFileNameWithoutExtension(tempThumbnailFile))}.jpeg");
         File.Move(tempThumbnailFile, normalizedThumbnailPath, overwrite: true);
 
         var processResult = thumbnailService.ProcessForTelegram(normalizedThumbnailPath);
@@ -62,6 +68,7 @@ internal partial class YoutubeDownloadService(IYtDlpService ytDlpService, IThumb
             youtubeVideoId,
             Path.GetFileNameWithoutExtension(normalizedMp3Path),
             normalizedMp3Path,
-            normalizedThumbnailPath);
+            normalizedThumbnailPath,
+            downloadDirectory);
     }
 }

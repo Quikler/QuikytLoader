@@ -15,7 +15,7 @@ public sealed class DownloadQueue : IDownloadQueue
     public void EnqueueItem(QueueItem item)
     {
         _itemsById[item.Id] = item;
-        _itemsBySourceId[item.Source.SourceId] = item;
+        _itemsBySourceId[item.Source.YoutubeVideoId] = item;
 
         Changed?.Invoke(new QueueEvent.ItemAdded(item));
     }
@@ -27,7 +27,7 @@ public sealed class DownloadQueue : IDownloadQueue
         foreach (var item in items)
         {
             _itemsById[item.Id] = item;
-            _itemsBySourceId[item.Source.SourceId] = item;
+            _itemsBySourceId[item.Source.YoutubeVideoId] = item;
         }
 
         Changed?.Invoke(new QueueEvent.GroupAdded(group));

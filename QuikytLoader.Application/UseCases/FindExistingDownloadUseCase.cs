@@ -27,7 +27,7 @@ public class FindExistingDownloadUseCase(IDownloadHistoryRepository historyRepo)
         var duplicateCheckTasks = playlistVideoDtos
             .Select(async playlistVideoDto => (
                 PlaylistVideoDto: playlistVideoDto,
-                DuplicateCheck: await FindByIdAsync(playlistVideoDto.Source.SourceId)
+                DuplicateCheck: await FindByIdAsync(playlistVideoDto.Source.YoutubeVideoId)
             ));
 
         return await Task.WhenAll(duplicateCheckTasks);

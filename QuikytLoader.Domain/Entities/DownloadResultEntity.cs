@@ -9,4 +9,5 @@ public record DownloadResultEntity(
     string YoutubeVideoId,
     string VideoTitle,
     string TempMp3FilePath,
-    string TempThumbnailFilePath);
+    string TempThumbnailFilePath,
+    string DownloadDirectory);

@@ -28,9 +28,9 @@ public sealed class QueueItem
             or DownloadStatus.Editing;
 }
 
-// Note: SourceId = Youtube VideoId in our app
-// SourceId is just generic name not tied specifically to Youtube
-public record DownloadSource(string Url, string SourceId);
+public record DownloadSource(string YoutubeVideoUrl, string YoutubeVideoId);
+
+public record DownloadPlaylistSource(string YoutubePlaylistUrl, string YoutubePlaylistId);
 
 public record VideoMetadata(
     string VideoId,

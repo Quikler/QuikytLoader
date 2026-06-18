@@ -96,7 +96,7 @@ public sealed class DownloadQueueProcessor(
             });
 
             var result = await downloadAndSendUseCase.ExecuteAsync(
-                queueItem.Source.SourceId,
+                queueItem.Source,
                 queueItem.CustomTitle,
                 progress,
                 _currentCancellationTokenSource.Token);
