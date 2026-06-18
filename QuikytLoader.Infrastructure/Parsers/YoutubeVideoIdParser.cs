@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using QuikytLoader.Application.Interfaces.Parsers;
 using QuikytLoader.Domain.Common;
+using QuikytLoader.Infrastructure.Constants;
 
 namespace QuikytLoader.Infrastructure.Parsers;
 
@@ -8,14 +9,6 @@ public sealed partial class YoutubeVideoIdParser : IYoutubeVideoIdParser
 {
     [GeneratedRegex("^[a-zA-Z0-9_-]{11}$")]
     private static partial Regex YoutubeVideoIdRegex();
-
-    private static readonly HashSet<string> SupportedHosts =
-    [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "youtu.be"
-    ];
 
     public Result<string> Parse(string value)
     {
@@ -40,7 +33,7 @@ public sealed partial class YoutubeVideoIdParser : IYoutubeVideoIdParser
     {
         var host = uri.Host.ToLowerInvariant();
 
-        if (!SupportedHosts.Contains(host))
+        if (!YoutubeConstants.SupportedHosts.Contains(host))
             return null;
 
         if (host == "youtu.be")
