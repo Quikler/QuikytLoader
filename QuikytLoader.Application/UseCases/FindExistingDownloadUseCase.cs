@@ -1,6 +1,7 @@
 using QuikytLoader.Application.DTOs;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Domain.Common;
+using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.UseCases;
 
@@ -22,12 +23,12 @@ public class FindExistingDownloadUseCase(IDownloadHistoryRepository historyRepo)
         return Result<DownloadHistoryDto?>.Success(duplicateResult);
     }
 
-    public async Task<(PlaylistVideoDto PlaylistVideoDto, Result<DownloadHistoryDto?> DuplicateCheck)[]> FindMultipleAsync(IEnumerable<PlaylistVideoDto> playlistVideoDtos)
+    public async Task<(PlaylistVideo PlaylistVideo, Result<DownloadHistoryDto?> DuplicateCheck)[]> FindMultipleAsync(IEnumerable<PlaylistVideo> playlistVideoDtos)
     {
         var duplicateCheckTasks = playlistVideoDtos
-            .Select(async playlistVideoDto => (
-                PlaylistVideoDto: playlistVideoDto,
-                DuplicateCheck: await FindByIdAsync(playlistVideoDto.Source.YoutubeVideoId)
+            .Select(async playlistVideo => (
+                PlaylistVideo: playlistVideo,
+                DuplicateCheck: await FindByIdAsync(playlistVideo.Source.YoutubeVideoId)
             ));
 
         return await Task.WhenAll(duplicateCheckTasks);

@@ -12,6 +12,8 @@ using QuikytLoader.Infrastructure.Queue;
 using QuikytLoader.Infrastructure.Services;
 using QuikytLoader.Infrastructure.Telegram;
 using QuikytLoader.Infrastructure.Youtube;
+using QuikytLoader.Infrastructure.Youtube.ACL.Services;
+using QuikytLoader.Infrastructure.Youtube.YtDlp;
 
 namespace QuikytLoader.Infrastructure.DependencyInjection;
 
@@ -26,8 +28,12 @@ public static class InfrastructureServiceExtensions
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
         // Youtube services
-        services.AddSingleton<IYtDlpService, YtDlpService>();
         services.AddSingleton<IYoutubeDownloadService, YoutubeDownloadService>();
+
+        services.AddSingleton<IYoutubeMetadataService, YoutubeMetadataService>();
+
+        services.AddSingleton<IYtDlpProcessClient, YtDlpProcessClient>();
+        services.AddSingleton<IYtDlpAcl, YtDlpAcl>();
 
         services.AddSingleton<IYoutubeVideoIdParser, YoutubeVideoIdParser>();
         services.AddSingleton<IYoutubePlaylistIdParser, YoutubePlaylistIdParser>();

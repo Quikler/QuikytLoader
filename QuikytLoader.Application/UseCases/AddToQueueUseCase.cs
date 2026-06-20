@@ -10,8 +10,8 @@ namespace QuikytLoader.Application.UseCases;
 
 public class AddToQueueUseCase(
     FindExistingDownloadUseCase findExistingDownloadUseCase,
-    IYtDlpService ytDlpService,
     IDownloadQueue queue,
+    IYoutubeMetadataService youtubeMetadataService,
     IYoutubeVideoIdParser youtubeVideoIdParser,
     IYoutubePlaylistIdParser youtubePlaylistIdParser)
 {
@@ -67,7 +67,7 @@ public class AddToQueueUseCase(
     /// </summary>
     private async Task EnrichAsync(QueueItem queueItem)
     {
-        var metadataResult = await ytDlpService.GetVideoMetadataAsync(queueItem.Source);
+        var metadataResult = await youtubeMetadataService.GetVideoMetadataAsync(queueItem.Source, CancellationToken.None);
         if (!metadataResult.IsSuccess)
         {
             queueItem.Status = DownloadStatus.Failed;
@@ -91,7 +91,7 @@ public class AddToQueueUseCase(
         if (queue.ContainsGroup(downloadPlaylistSource.YoutubePlaylistId))
             return new AddToQueueResult.PlaylistAlreadyQueued(downloadPlaylistSource.YoutubePlaylistId);
 
-        var playlistMetadataResult = await ytDlpService.GetPlaylistMetadataAsync(downloadPlaylistSource, 15);
+        var playlistMetadataResult = await youtubeMetadataService.GetPlaylistMetadataAsync(downloadPlaylistSource, 15, CancellationToken.None);
         if (!playlistMetadataResult.IsSuccess)
             return new AddToQueueResult.Failed(playlistMetadataResult.Error);
         var playlistMetadata = playlistMetadataResult.Value;

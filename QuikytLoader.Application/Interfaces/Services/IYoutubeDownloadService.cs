@@ -3,9 +3,6 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.Interfaces.Services;
 
-/// <summary>
-/// Service interface for downloading videos from Youtube
-/// </summary>
 public interface IYoutubeDownloadService
 {
     /// <summary>

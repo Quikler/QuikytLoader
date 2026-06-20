@@ -17,8 +17,8 @@ public static class Errors
         public static Error YtDlpStartFailed() => new(
             "Failed to start yt-dlp process");
 
-        public static Error YtDlpException(string id, string exceptionType) => new(
-            $"Unexpected error running yt-dlp for '{id}': {exceptionType}");
+        public static Error YtDlpException(string exceptionType) => new(
+            $"Unexpected error running yt-dlp: {exceptionType}");
 
         public static Error MetadataFetchFailed(string youtubeVideoId) => new(
             $"Failed to fetch video metadata from '{youtubeVideoId}'");
@@ -28,6 +28,9 @@ public static class Errors
 
         public static Error YtDlpFailed(int exitCode) => new(
             $"yt-dlp failed with exit code: {exitCode}");
+
+        public static Error YtDlpMalformed(int expectedLinesLength, int actualLinesLength) => new(
+            $"yt-dlp outputted {actualLinesLength} lines when {expectedLinesLength} is expected");
     }
 
     public static class Telegram

@@ -1,36 +1,66 @@
+using System.Text.RegularExpressions;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
+using QuikytLoader.Infrastructure.Youtube.ACL.Services;
 
 namespace QuikytLoader.Infrastructure.Youtube;
 
-internal partial class YoutubeDownloadService(IYtDlpService ytDlpService, IThumbnailService thumbnailService) : IYoutubeDownloadService
+internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailService thumbnailService) : IYoutubeDownloadService
 {
     private static readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
 
-    /// <summary>
-    /// Downloads a video from Youtube and converts it to MP3 format
-    /// Files are kept in temp directory for sending to Telegram
-    /// </summary>
     public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(
         DownloadSource downloadSource,
         string? customTitle = null,
         IProgress<double>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
         var downloadDirectory = Path.Combine(_tempDownloadDirectory, downloadSource.YoutubeVideoId);
         Directory.CreateDirectory(downloadDirectory);
 
-        var downloadAudioResult = await ytDlpService.DownloadAudioAsync(
+        var downloadAudioResult = await ytDlpAcl.DownloadAudioAsync(
             downloadSource,
             downloadDirectory,
-            customTitle,
-            progress,
-            cancellationToken);
+            SanitizeFileName(customTitle),
+            onOutputLine: line =>
+            {
+                var p = ExtractProgress(line);
+                if (p.HasValue)
+                    progress?.Report(p.Value);
+            },
+            onErrorLine: line =>
+            {
+                var p = ExtractProgress(line);
+                if (p.HasValue)
+                    progress?.Report(p.Value);
+            },
+            ct);
 
         return downloadAudioResult.IsSuccess
             ? FindDownloadedFiles(downloadDirectory, downloadSource.YoutubeVideoId)
             : downloadAudioResult.Error;
+    }
+
+    private static string? SanitizeFileName(string? customTitle) =>
+        string.IsNullOrWhiteSpace(customTitle)
+            ? null
+            : string.Join(
+                "_",
+                customTitle.Split(
+                    Path.GetInvalidFileNameChars(),
+                    StringSplitOptions.RemoveEmptyEntries))
+                .Trim();
+
+    private static double? ExtractProgress(string output)
+    {
+        // yt-dlp outputs progress like: [download]  45.2% of 3.5MiB at 1.2MiB/s ETA 00:02
+        var match = ProgressRegex().Match(output);
+
+        if (match.Success && double.TryParse(match.Groups[1].Value, out var percentage))
+            return percentage;
+
+        return null;
     }
 
     private static string NormalizeWhitespace(string filename)
@@ -71,4 +101,7 @@ internal partial class YoutubeDownloadService(IYtDlpService ytDlpService, IThumb
             normalizedThumbnailPath,
             downloadDirectory);
     }
+
+    [GeneratedRegex(@"\[download\]\s+(\d+\.?\d*)%")]
+    private static partial Regex ProgressRegex();
 }
