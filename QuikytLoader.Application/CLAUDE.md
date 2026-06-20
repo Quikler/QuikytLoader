@@ -5,23 +5,19 @@ Application layer containing use cases and interface definitions. References Dom
 ## Use Cases
 
 **DownloadAndSendUseCase** - Main workflow orchestration
-- Downloads YouTube video as MP3 via IYouTubeDownloadService
+- Downloads Youtube video as MP3 via IYoutubeDownloadService
 - Sends to Telegram via ITelegramBotService
 - Saves to history via IDownloadHistoryRepository
 - Returns DownloadResultDto
 
 **FindExistingDownloadUseCase** - Duplicate detection
-- Extracts YouTube ID from URL via IYoutubeExtractorService
+- Extracts Youtube ID from URL via IYoutubeVideoIdParser
 - Checks history via IDownloadHistoryRepository
 - Returns DownloadHistoryDto if found
 
 **GetVideoTitleUseCase** - Fetch video title
-- Extracts title from YouTube URL via IYtDlpService
+- Extracts title from Youtube URL via IYtDlpService
 - Used for custom title editing workflow
-
-**ValidateYouTubeUrlUseCase** - URL validation
-- Creates YouTubeUrl value object
-- Returns Result with validation errors
 
 **ManageSettingsUseCase** - Settings management
 - Load/save operations via IUserSettings
@@ -31,11 +27,10 @@ Application layer containing use cases and interface definitions. References Dom
 
 ### Services (in `Interfaces/Services/`)
 
-- **IYouTubeDownloadService** - Download orchestration
+- **IYoutubeDownloadService** - Download orchestration
 - **IYtDlpService** - yt-dlp process execution
 - **IThumbnailService** - Thumbnail processing
 - **ITelegramBotService** - Telegram integration
-- **IYoutubeExtractorService** - YouTube ID extraction
 
 ### Repositories (in `Interfaces/Repositories/`)
 
@@ -58,5 +53,4 @@ Application layer containing use cases and interface definitions. References Dom
 - DownloadAndSendUseCase
 - FindExistingDownloadUseCase
 - GetVideoTitleUseCase
-- ValidateYouTubeUrlUseCase
 - ManageSettingsUseCase

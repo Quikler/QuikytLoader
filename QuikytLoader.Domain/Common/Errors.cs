@@ -1,17 +1,15 @@
+
 namespace QuikytLoader.Domain.Common;
 
 public static class Errors
 {
-    public static class YouTube
+    public static class Youtube
     {
         public static Error InvalidUrl(string url) => new(
-            $"The provided URL '{url}' is not a valid YouTube URL");
+            $"The provided URL '{url}' is not a valid Youtube URL");
 
-        public static Error DownloadFailed(string url, int exitCode) => new(
-            $"Failed to download video from '{url}' (yt-dlp exit code: {exitCode})");
-
-        public static Error TitleFetchFailed(string url) => new(
-            $"Failed to fetch video title from '{url}'");
+        public static Error DownloadFailed(string youtubeVideoId, int exitCode) => new(
+            $"Failed to download video from '{youtubeVideoId}' (yt-dlp exit code: {exitCode})");
 
         public static Error FileNotFound(string directory) => new(
             $"Downloaded file not found in directory: {directory}");
@@ -19,20 +17,20 @@ public static class Errors
         public static Error YtDlpStartFailed() => new(
             "Failed to start yt-dlp process");
 
-        public static Error YtDlpExtractionFailed(string url, int exitCode) => new(
-            $"yt-dlp failed to extract video ID from '{url}' (exit code: {exitCode})");
+        public static Error YtDlpException(string exceptionType) => new(
+            $"Unexpected error running yt-dlp: {exceptionType}");
 
-        public static Error YtDlpException(string url, string exceptionType) => new(
-            $"Unexpected error running yt-dlp for '{url}': {exceptionType}");
+        public static Error MetadataFetchFailed(string youtubeVideoId) => new(
+            $"Failed to fetch video metadata from '{youtubeVideoId}'");
 
-        public static Error MetadataFetchFailed(string url) => new(
-            $"Failed to fetch video metadata from '{url}'");
+        public static Error PlaylistMetadataFetchFailed(string youtubePlaylistId) => new(
+            $"Failed to fetch playlist metadata from '{youtubePlaylistId}'");
 
-        public static Error InvalidPlaylistUrl(string url) => new(
-            $"The provided URL '{url}' is not a valid YouTube playlist URL");
+        public static Error YtDlpFailed(int exitCode) => new(
+            $"yt-dlp failed with exit code: {exitCode}");
 
-        public static Error PlaylistFetchFailed(string url) => new(
-            $"Failed to fetch playlist metadata from '{url}'");
+        public static Error YtDlpMalformed(int expectedLinesLength, int actualLinesLength) => new(
+            $"yt-dlp outputted {actualLinesLength} lines when {expectedLinesLength} is expected");
     }
 
     public static class Telegram

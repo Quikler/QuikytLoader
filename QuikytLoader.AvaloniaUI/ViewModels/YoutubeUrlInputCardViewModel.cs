@@ -3,11 +3,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.Services;
+using QuikytLoader.AvaloniaUI.Validators;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 public partial class YoutubeUrlInputCardViewModel(
-    ValidateYouTubeUrlUseCase validateYouTubeUrlUseCase,
+    YoutubeUrlValidator youtubeUrlValidator,
     AddToQueueUseCase addToQueueUseCase,
     IDialogService dialogService,
     IUiNotificationService uiNotificationService) : ViewModelBase
@@ -65,7 +66,8 @@ public partial class YoutubeUrlInputCardViewModel(
         uiNotificationService.SetMessageInfo(FormatResult(addToQueueResult));
     }
 
-    private bool CanExecuteAddToQueue => validateYouTubeUrlUseCase.IsValid(YoutubeUrl);
+    // Note: No need to validate URL in UseCases
+    private bool CanExecuteAddToQueue => youtubeUrlValidator.Validate(YoutubeUrl).IsSuccess;
 
     private string FormatResult(AddToQueueResult result) => result switch
     {

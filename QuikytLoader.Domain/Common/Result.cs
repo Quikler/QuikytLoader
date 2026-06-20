@@ -18,6 +18,7 @@ public readonly struct Result
 
     public static Result Success() => new(true, null);
     public static Result Failure(Error error) => new(false, error);
+    public static Result Failure(string errorMessage) => new(false, new Error(errorMessage));
 
     public static implicit operator Result(Error error) => Failure(error);
 }
@@ -40,6 +41,7 @@ public readonly struct Result<TValue>
 
     public static Result<TValue> Success(TValue value) => new(true, value, null);
     public static Result<TValue> Failure(Error error) => new(false, default, error);
+    public static Result<TValue> Failure(string errorMessage) => new(false, default, new Error(errorMessage));
 
     public static implicit operator Result<TValue>(TValue value) => Success(value);
     public static implicit operator Result<TValue>(Error error) => Failure(error);

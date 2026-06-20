@@ -1,7 +1,6 @@
 using Dapper;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Domain.Entities;
-using QuikytLoader.Domain.ValueObjects;
 
 namespace QuikytLoader.Infrastructure.Persistence.Repositories;
 
@@ -17,35 +16,37 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
     public async Task UpsertAsync(DownloadHistoryEntity downloadEntity)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync();
+
         const string upsertSql = """
-            INSERT OR REPLACE INTO DownloadHistory (YouTubeId, VideoTitle, DownloadedAt)
-            VALUES (@YouTubeId, @VideoTitle, @DownloadedAt)
+            INSERT OR REPLACE INTO DownloadHistory (YoutubeVideoId, VideoTitle, DownloadedAt)
+            VALUES (@YoutubeVideoId, @VideoTitle, @DownloadedAt)
             """;
 
         await connection.ExecuteAsync(upsertSql, new
         {
-            YouTubeId = downloadEntity.YouTubeId.Id,
+            downloadEntity.YoutubeVideoId,
             downloadEntity.VideoTitle,
             downloadEntity.DownloadedAt
         });
     }
 
-    public async Task<DownloadHistoryEntity?> GetByIdAsync(YouTubeId id)
+    public async Task<DownloadHistoryEntity?> GetByYoutubeVideoIdAsync(string youtubeVideoId)
     {
         await using var connection = await dbConnectionFactory.GetConnectionAsync();
+
         const string query = """
-            SELECT YouTubeId, VideoTitle, DownloadedAt
+            SELECT YoutubeVideoId, VideoTitle, DownloadedAt
             FROM DownloadHistory
-            WHERE YouTubeId = @YouTubeId
+            WHERE YoutubeVideoId = @YoutubeVideoId
             """;
 
-        var result = await connection.QuerySingleOrDefaultAsync<DownloadHistoryDto>(query, new { YouTubeId = id.Id });
+        var result = await connection.QuerySingleOrDefaultAsync<DownloadHistoryDto>(query, new { YoutubeVideoId = youtubeVideoId });
+
         if (result is null) return null;
 
-        var createResult = DownloadHistoryEntity.Create(result.YouTubeId, result.VideoTitle, result.DownloadedAt);
-        return createResult.IsSuccess ? createResult.Value : null;
+        return new DownloadHistoryEntity(result.YoutubeVideoId, result.VideoTitle, result.DownloadedAt);
     }
 
     // Should be internal for Dapper.AOT compatibility
-    internal record DownloadHistoryDto(string YouTubeId, string VideoTitle, string DownloadedAt);
+    internal record DownloadHistoryDto(string YoutubeVideoId, string VideoTitle, string DownloadedAt);
 }

@@ -1,5 +1,4 @@
 using QuikytLoader.Domain.Entities;
-using QuikytLoader.Domain.ValueObjects;
 
 namespace QuikytLoader.Application.Interfaces.Repositories;
 
@@ -13,12 +12,12 @@ namespace QuikytLoader.Application.Interfaces.Repositories;
 public interface IDownloadHistoryRepository
 {
     /// <summary>
-    /// Upserts a download history record. Inserts new record or updates existing record if YouTubeId already exists.
+    /// Upserts a download history record. Inserts new record or updates existing record if YoutubeVideoId already exists.
     /// </summary>
     Task UpsertAsync(DownloadHistoryEntity downloadEntity);
 
     /// <summary>
-    /// Gets a download record by YouTube ID.
+    /// Gets a download record by Youtube ID.
     /// </summary>
-    Task<DownloadHistoryEntity?> GetByIdAsync(YouTubeId id);
+    Task<DownloadHistoryEntity?> GetByYoutubeVideoIdAsync(string youtubeVideoId);
 }

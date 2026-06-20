@@ -17,10 +17,7 @@ public static class ApplicationServiceExtensions
         services.AddSingleton<AddToQueueUseCase>();
         services.AddSingleton<DownloadAndSendUseCase>();
         services.AddSingleton<FindExistingDownloadUseCase>();
-        services.AddSingleton<GetVideoMetadataUseCase>();
-        services.AddSingleton<GetPlaylistMetadataUseCase>();
         services.AddSingleton<ManageSettingsUseCase>();
-        services.AddSingleton<ValidateYouTubeUrlUseCase>();
 
         return services;
     }

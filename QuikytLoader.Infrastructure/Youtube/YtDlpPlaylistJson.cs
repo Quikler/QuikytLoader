@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace QuikytLoader.Infrastructure.YouTube;
+namespace QuikytLoader.Infrastructure.Youtube;
 
 /// <summary>
 /// Shape of yt-dlp --flat-playlist --dump-single-json output (minimal fields we need).

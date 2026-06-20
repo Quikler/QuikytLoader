@@ -4,14 +4,13 @@ External service implementations. References Application and Domain layers.
 
 ## Services
 
-**YouTubeDownloadService** - Download orchestration
+**YoutubeDownloadService** - Download orchestration
 - Coordinates download workflow by delegating to specialized services
 - Downloads to system temp directory (`/tmp/QuikytLoader`) only
 - Files not saved to user's Downloads - temporary for Telegram upload
 - Delegates yt-dlp execution to IYtDlpService
 - Delegates thumbnail processing to IThumbnailService
-- Uses IYoutubeExtractorService to extract video IDs
-- Returns DownloadResultEntity with YouTubeId, TempMediaFilePath, TempThumbnailPath
+- Returns DownloadResultEntity with YoutubeVideoId, TempMediaFilePath, TempThumbnailPath
 
 **YtDlpService** - yt-dlp process wrapper
 - Executes yt-dlp process for audio downloads and metadata extraction
@@ -27,10 +26,16 @@ External service implementations. References Application and Domain layers.
 - Crops images to square aspect ratio
 - Resizes to 320x320 max dimensions for Telegram
 
-**YoutubeExtractorService** - YouTube ID extraction
-- Fast regex-based extraction for common URL formats (youtube.com/watch?v=ID, youtu.be/ID)
-- Fallback to yt-dlp `--print id` for edge cases
-- Returns 11-character YouTube video ID
+**YoutubeVideoIdParser** - Extract single video ID from URL
+- Validates URLs against host allowlist (youtube.com, youtu.be, etc.)
+- Multi-pattern regex matching for watch?v=, /v/, /embed/, youtu.be/, etc.
+- Validates extracted ID is exactly 11 characters
+- Returns Result<string> with video ID or error
+
+**YoutubePlaylistIdParser** - Extract playlist ID from URL
+- Extracts `list=` query parameter from URL
+- Validates playlist ID format
+- Returns Result<string> with playlist ID or error
 
 **TelegramBotService** - Telegram integration
 - Lazy initialization: bot client created on first SendAudioAsync call
@@ -40,11 +45,11 @@ External service implementations. References Application and Domain layers.
 - Implements IDisposable for proper cleanup on app shutdown
 
 **DownloadHistoryRepository** - Download history tracking
-- Stores YouTube download history in SQLite database
-- Checks for duplicate downloads by YouTube ID
+- Stores Youtube download history in SQLite database
+- Checks for duplicate downloads by Youtube ID
 - Saves download records with video title and timestamp
 - Uses INSERT OR REPLACE for upserts (updates DownloadedAt on re-downloads)
-- Provides GetThumbnailUrlAsync (derives from YouTube ID via yt-dlp or CDN fallback)
+- Provides GetThumbnailUrlAsync (derives from Youtube ID via yt-dlp or CDN fallback)
 
 **DbConnectionFactory** - Database connection management
 - Manages SQLite at `~/.config/QuikytLoader/history.db`
@@ -70,11 +75,3 @@ External service implementations. References Application and Domain layers.
 ## Dependency Injection
 
 `InfrastructureServiceExtensions.cs` registers services as Singleton:
-- IUserSettings -> UserSettings
-- IYouTubeDownloadService -> YouTubeDownloadService
-- IYtDlpService -> YtDlpService
-- IThumbnailService -> ThumbnailService
-- ITelegramBotService -> TelegramBotService
-- IYoutubeExtractorService -> YoutubeExtractorService
-- IDbConnectionFactory -> DbConnectionFactory
-- IDownloadHistoryRepository -> DownloadHistoryRepository
