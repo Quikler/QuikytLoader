@@ -36,7 +36,4 @@ public record VideoMetadata(
     string VideoId,
     string Title,
     string Channel,
-    TimeSpan DurationInSeconds,
-    string ThumbnailUrl,
-    bool IsAvailable,
-    string UnavailableReason);
+    TimeSpan DurationInSeconds);

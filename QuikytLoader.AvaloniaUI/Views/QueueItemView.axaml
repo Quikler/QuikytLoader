@@ -27,44 +27,40 @@
 
             <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
 
-                <!-- Thumbnail with duration overlay -->
-                <Panel Grid.Row="0" Grid.Column="0"
-                       Width="120" Height="68"
-                       Margin="0,0,12,0"
-                       IsVisible="{Binding IsMetadataLoaded}">
-                    <Border CornerRadius="4" ClipToBounds="True">
-                        <Image Width="120" Height="68"
-                               Stretch="UniformToFill"
-                               asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"/>
+                <Grid Grid.Row="0" Grid.Column="0"
+                      Width="120" Height="68"
+                      Margin="0,0,12,0">
+                    <!-- Placeholder when image hasn't loaded by URL yet -->
+                    <Border CornerRadius="4"
+                            Background="{DynamicResource LayerFillColorDefaultBrush}">
+                        <ui:SymbolIcon Symbol="Video"
+                                       FontSize="24"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
                     </Border>
-                    <!-- Duration overlay -->
-                    <Border Background="#CC000000"
-                            CornerRadius="3"
-                            Padding="4,2"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Bottom"
-                            Margin="0,0,4,4"
-                            IsVisible="{Binding Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                        <TextBlock Text="{Binding Duration}"
-                                   FontSize="10"
-                                   FontWeight="SemiBold"
-                                   Foreground="White"/>
-                    </Border>
-                </Panel>
 
-                <!-- Placeholder when metadata loading -->
-                <Border Grid.Row="0" Grid.Column="0"
-                        Width="120" Height="68"
-                        Margin="0,0,12,0"
-                        CornerRadius="4"
-                        Background="{DynamicResource LayerFillColorDefaultBrush}"
-                        IsVisible="{Binding !IsMetadataLoaded}">
-                    <ui:SymbolIcon Symbol="Video"
-                                   FontSize="24"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
-                </Border>
+                    <!-- Thumbnail with duration overlay -->
+                    <Panel>
+                        <Border CornerRadius="4" ClipToBounds="True">
+                            <Image Stretch="UniformToFill"
+                                   asyncImageLoader:ImageLoader.Source="{Binding CoverThumbnailUrl}"/>
+                        </Border>
+                        <!-- Duration overlay -->
+                        <Border Background="#CC000000"
+                                CornerRadius="3"
+                                Padding="4,2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Margin="0,0,4,4"
+                                IsVisible="{Binding Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding Duration}"
+                                       FontSize="10"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"/>
+                        </Border>
+                    </Panel>
+                </Grid>
 
                 <!-- Right side: title, channel, status -->
                 <Grid Grid.Column="1"

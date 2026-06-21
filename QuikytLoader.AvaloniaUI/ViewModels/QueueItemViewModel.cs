@@ -56,7 +56,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [NotifyPropertyChangedFor(nameof(Title))]
     [NotifyPropertyChangedFor(nameof(Channel))]
     [NotifyPropertyChangedFor(nameof(Duration))]
-    [NotifyPropertyChangedFor(nameof(ThumbnailUrl))]
+    [NotifyPropertyChangedFor(nameof(CoverThumbnailUrl))]
     [NotifyPropertyChangedFor(nameof(IsMetadataLoaded))]
     [ObservableProperty] private VideoMetadata? _metadata;
 
@@ -76,7 +76,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
                 : $"{ts.Minutes}:{ts.Seconds:D2}";
         }
     }
-    public string? ThumbnailUrl => Model.Metadata?.ThumbnailUrl;
+    public string? CoverThumbnailUrl => $"https://i.ytimg.com/vi/{Model.Source.YoutubeVideoId}/default.jpg";
     public bool IsMetadataLoaded => Model.Metadata is not null;
 
     // Only initialized once, because `model.Source` is `init`

@@ -9,7 +9,7 @@ namespace QuikytLoader.Infrastructure.Youtube.ACL.Services;
 
 internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpAcl
 {
-    private const int ExpectedLinesOutputForVideo = 6;
+    private const int ExpectedLinesOutputForVideo = 4;
 
     public async Task<Result<YtDlpVideoRaw>> GetVideoAsync(
         DownloadSource downloadSource,
@@ -24,13 +24,10 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
             "--print", "title",
             "--print", "channel",
             "--print", "duration",
-            "--print", "thumbnail",
-            "--print", "availability",
             "--", downloadSource.YoutubeVideoId
         };
 
         var outputResult = await ytDlpProcessClient.RunCaptureAsync(args, ct);
-
         if (!outputResult.IsSuccess)
             return outputResult.Error;
 
@@ -50,9 +47,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
                 lines[0],
                 lines[1],
                 lines[2],
-                double.Parse(lines[3]),
-                lines[4],
-                lines[5]));
+                double.Parse(lines[3], System.Globalization.CultureInfo.InvariantCulture)));
     }
 
     public async Task<Result<YtDlpPlaylistRaw>> GetPlaylistAsync(
@@ -86,14 +81,10 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
                     .Select(e =>
                         new YtDlpPlaylistEntryRaw(
                             e.Id,
+                            e.Url,
                             e.Title,
                             e.Channel,
-                            e.Duration,
-                            e.Availability,
-                            e.Thumbnails
-                                .Select(t => new ThumbnailRaw(t.Url))
-                                .ToList(),
-                            e.Url))
+                            e.Duration))
                     .ToList()));
     }
 
