@@ -10,6 +10,7 @@ public interface IYoutubeDownloadService
     /// </summary>
     /// <param name="customTitle">Optional custom filename (without extension)</param>
     Task<Result<DownloadResultEntity>> DownloadAudioAsync(
+        string downloadDirectory,
         DownloadSource downloadSource,
         string? customTitle = null,
         IProgress<double>? progress = null,

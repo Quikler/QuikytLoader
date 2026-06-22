@@ -1,5 +1,6 @@
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Application.Interfaces.Temp;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 
@@ -10,6 +11,7 @@ namespace QuikytLoader.Application.UseCases;
 /// </summary>
 public class DownloadAndSendUseCase(
     IYoutubeDownloadService youtubeDownloadService,
+    ITempDirectoryService tempDirectoryService,
     IDownloadHistoryRepository historyRepo,
     ITelegramBotService telegramService)
 {
@@ -19,15 +21,21 @@ public class DownloadAndSendUseCase(
         IProgress<double> progress,
         CancellationToken cancellationToken = default)
     {
-        // 1. Download video
-        var downloadResult = await youtubeDownloadService.DownloadAudioAsync(downloadSource, customTitle, progress, cancellationToken);
-        if (!downloadResult.IsSuccess)
-            return downloadResult.Error;
-
-        var downloadResultEntity = downloadResult.Value;
-        Console.WriteLine($"Downloaded: {downloadResultEntity.TempMp3FilePath}, Thumbnail: {downloadResultEntity.TempThumbnailFilePath}");
         try
         {
+            // 1. Download video
+            var downloadResult = await youtubeDownloadService.DownloadAudioAsync(
+                tempDirectoryService.CreateSubdirectory(downloadSource.YoutubeVideoId),
+                downloadSource,
+                customTitle,
+                progress,
+                cancellationToken);
+            if (!downloadResult.IsSuccess)
+                return downloadResult.Error;
+
+            var downloadResultEntity = downloadResult.Value;
+            Console.WriteLine($"Downloaded: {downloadResultEntity.TempMp3FilePath}, Thumbnail: {downloadResultEntity.TempThumbnailFilePath}");
+
             await using var mp3FileStream = File.OpenRead(downloadResultEntity.TempMp3FilePath);
             await using var thumbnailFileStream = File.OpenRead(downloadResultEntity.TempThumbnailFilePath);
 
@@ -50,7 +58,7 @@ public class DownloadAndSendUseCase(
         finally
         {
             // 4. Delete created temporary directory that contains files — no longer needed after Telegram send
-            try { Directory.Delete(downloadResultEntity.DownloadDirectory, true); } catch { }
+            tempDirectoryService.DeleteSubdirectory(downloadSource.YoutubeVideoId);
         }
     }
 }
