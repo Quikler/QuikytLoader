@@ -75,6 +75,7 @@
                                   TextTrimming="CharacterEllipsis"
                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                   HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center"
                                   IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}" />
 
                        <TextBox Grid.Column="0"
