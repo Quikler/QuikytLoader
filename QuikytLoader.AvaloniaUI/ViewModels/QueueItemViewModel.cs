@@ -10,13 +10,15 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 {
     protected QueueItem Model { get; }
     private readonly Action<Guid> _proceedCallback;
+    private readonly Action<Guid> _cancelCallback;
 
 #pragma warning disable IDE0290 // Use primary constructor
-    public QueueItemViewModel(QueueItem model, Action<Guid> proceedCallback)
+    public QueueItemViewModel(QueueItem model, Action<Guid> proceedCallback, Action<Guid> cancelCallback)
 #pragma warning restore IDE0290 // Use primary constructor
     {
         Model = model;
         _proceedCallback = proceedCallback;
+        _cancelCallback = cancelCallback;
 
         _status = model.Status;
         _progress = model.Progress;
@@ -27,6 +29,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     [NotifyPropertyChangedFor(nameof(StatusMessage))]
     [NotifyCanExecuteChangedFor(nameof(ProceedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     [ObservableProperty] private DownloadStatus _status;
 
     [ObservableProperty] private double _progress;
@@ -34,6 +37,9 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     [RelayCommand(CanExecute = nameof(CanProceed))]
     private void Proceed() => _proceedCallback(Model.Id);
+
+    [RelayCommand(CanExecute = nameof(CanCancel))]
+    private void Cancel() => _cancelCallback(Model.Id);
 
     public string StatusMessage => Status switch
     {
@@ -50,6 +56,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     public Guid QueueItemId => Model.Id;
     public virtual bool CanProceed => Model.CanStartDownload;
+    public bool CanCancel => Status == DownloadStatus.Downloading;
 
     #region --- Metadata (Updates UI when `Refresh` is executed) ---
 

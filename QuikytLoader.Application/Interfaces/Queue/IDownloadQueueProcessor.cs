@@ -17,7 +17,7 @@ public interface IDownloadQueueProcessor
     void Proceed(Guid queueItemId);
 
     /// <summary>
-    /// Cancels currently running download (if any).
+    /// Cancels downloading queue item by Id.
     /// </summary>
-    void CancelCurrent();
+    void Cancel(Guid queueItemId);
 }

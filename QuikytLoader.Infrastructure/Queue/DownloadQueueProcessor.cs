@@ -11,8 +11,7 @@ public sealed class DownloadQueueProcessor(
     DownloadAndSendUseCase downloadAndSendUseCase) : IDownloadQueueProcessor
 {
     private readonly Queue<Guid> _pendingItems = [];
-
-    private CancellationTokenSource? _currentCancellationTokenSource;
+    private readonly Dictionary<Guid, CancellationTokenSource> _cancellationTokens = [];
 
     private bool _isProcessing;
 
@@ -49,7 +48,7 @@ public sealed class DownloadQueueProcessor(
         Enqueue(itemId);
     }
 
-    public void CancelCurrent() => _currentCancellationTokenSource?.Cancel();
+    public void Cancel(Guid itemId) => _cancellationTokens[itemId].Cancel();
 
     private async Task ProcessLoopAsync()
     {
@@ -85,7 +84,7 @@ public sealed class DownloadQueueProcessor(
 
         queue.UpdateItem(queueItem.Id);
 
-        _currentCancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokens[queueItem.Id] = new CancellationTokenSource();
 
         try
         {
@@ -99,7 +98,7 @@ public sealed class DownloadQueueProcessor(
                 queueItem.Source,
                 queueItem.CustomTitle,
                 progress,
-                _currentCancellationTokenSource.Token);
+                _cancellationTokens[queueItem.Id].Token);
 
             if (result.IsSuccess)
             {
@@ -122,8 +121,8 @@ public sealed class DownloadQueueProcessor(
         }
         finally
         {
-            _currentCancellationTokenSource.Dispose();
-            _currentCancellationTokenSource = null;
+            _cancellationTokens[queueItem.Id].Dispose();
+            _cancellationTokens.Remove(queueItem.Id);
 
             queue.UpdateItem(queueItem.Id);
         }

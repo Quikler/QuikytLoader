@@ -85,11 +85,11 @@ public partial class DownloadQueueManager : ObservableObject
 
     // Single items — no selection needed
     private QueueItemViewModel CreateItemVm(QueueItem item) =>
-        new(item, ProceedItem);
+        new(item, ProceedItem, CancelItem);
 
     // Group items — selectable subtype
     private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item) =>
-        new(item, ProceedItem);
+        new(item, ProceedItem, CancelItem);
 
     private void RegisterItem(QueueItemViewModel vm)
         => _itemViewModels[vm.QueueItemId] = vm;
@@ -105,4 +105,6 @@ public partial class DownloadQueueManager : ObservableObject
             ProceedItem(itemId);
         }
     }
+
+    private void CancelItem(Guid itemId) => _queueProcessor.Cancel(itemId);
 }

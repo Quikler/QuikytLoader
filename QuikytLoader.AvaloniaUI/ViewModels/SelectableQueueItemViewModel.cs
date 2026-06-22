@@ -4,8 +4,8 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-public sealed partial class SelectableQueueItemViewModel(QueueItem model, Action<Guid> proceedCallback)
-    : QueueItemViewModel(model, proceedCallback)
+public sealed partial class SelectableQueueItemViewModel(QueueItem model, Action<Guid> proceedCallback, Action<Guid> cancelCallback)
+    : QueueItemViewModel(model, proceedCallback, cancelCallback)
 {
     [NotifyCanExecuteChangedFor(nameof(ProceedCommand))]
     [ObservableProperty] private bool _isSelected;
