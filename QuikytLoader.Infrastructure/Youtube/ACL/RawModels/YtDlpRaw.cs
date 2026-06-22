@@ -3,7 +3,7 @@
 internal sealed record YtDlpVideoRaw(
     string Id,
     string Title,
-    string Channel,
+    string? Channel,
     double DurationSeconds);
 
 internal sealed record YtDlpPlaylistRaw(
@@ -15,6 +15,6 @@ internal sealed record YtDlpPlaylistEntryRaw(
     string Id,
     string Url,
     string Title,
-    string Channel,
+    string? Channel,
     double DurationSeconds);
 

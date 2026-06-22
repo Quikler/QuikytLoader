@@ -35,8 +35,7 @@ internal sealed class YtDlpPlaylistEntryJson
     public string Url { get; set; } = string.Empty;
 
     [JsonPropertyName("channel")]
-    [JsonRequired]
-    public string Channel { get; set; } = string.Empty;
+    public string? Channel { get; set; }
 
     /// <summary>
     /// Duration in seconds (flat-playlist returns a number, not a formatted string).
