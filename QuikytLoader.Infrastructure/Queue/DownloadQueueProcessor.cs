@@ -113,6 +113,7 @@ public sealed class DownloadQueueProcessor(
         catch (OperationCanceledException)
         {
             queueItem.Status = DownloadStatus.Cancelled;
+            queueItem.Progress = 0d;
         }
         catch (Exception ex)
         {
