@@ -76,12 +76,6 @@ public class AddToQueueUseCase(
             return;
         }
 
-        if (!metadataResult.Value.IsAvailable)
-        {
-            queueItem.Status = DownloadStatus.Disabled;
-            queueItem.Error = new Error(metadataResult.Value.UnavailableReason);
-        }
-
         queueItem.Metadata = metadataResult.Value;
         queue.UpdateItem(queueItem.Id);
     }
@@ -118,11 +112,6 @@ public class AddToQueueUseCase(
             {
                 queueItem.Status = DownloadStatus.Disabled;
                 queueItem.Error = new Error("Already downloaded");
-            }
-            else if (!playlistVideo.Metadata.IsAvailable)
-            {
-                queueItem.Status = DownloadStatus.Disabled;
-                queueItem.Error = new Error(playlistVideo.Metadata.UnavailableReason);
             }
             else if (queue.ContainsSourceId(queueItem.Source.YoutubeVideoId))
             {

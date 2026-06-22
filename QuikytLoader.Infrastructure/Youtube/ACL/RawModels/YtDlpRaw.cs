@@ -3,10 +3,8 @@
 internal sealed record YtDlpVideoRaw(
     string Id,
     string Title,
-    string Channel,
-    double DurationSeconds,
-    string ThumbnailUrl,
-    string? Availability);
+    string? Channel,
+    double DurationSeconds);
 
 internal sealed record YtDlpPlaylistRaw(
     string Id,
@@ -15,11 +13,8 @@ internal sealed record YtDlpPlaylistRaw(
 
 internal sealed record YtDlpPlaylistEntryRaw(
     string Id,
+    string Url,
     string Title,
-    string Channel,
-    double DurationSeconds,
-    string? Availability,
-    IReadOnlyList<ThumbnailRaw> Thumbnails,
-    string Url);
+    string? Channel,
+    double DurationSeconds);
 
-internal sealed record ThumbnailRaw(string Url);

@@ -31,11 +31,7 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
 
             return Result.Success();
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return Errors.Telegram.SendFailed(ex.Message);
         }
@@ -73,11 +69,7 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
             Console.WriteLine($"Telegram bot initialized: @{me.Username}");
             return Result.Success();
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex) when (ex.GetType().Namespace?.StartsWith("Telegram.Bot") == true)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return Errors.Telegram.InitializationFailed(ex.Message);
         }
