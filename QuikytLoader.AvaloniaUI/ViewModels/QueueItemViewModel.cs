@@ -28,17 +28,17 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     #region --- NOT EDITABLE BY USER ---
 
     [NotifyPropertyChangedFor(nameof(StatusMessage))]
-    [NotifyCanExecuteChangedFor(nameof(ProceedCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
+    [NotifyPropertyChangedFor(nameof(CanProceed))]
+    [NotifyPropertyChangedFor(nameof(CanCancel))]
     [ObservableProperty] private DownloadStatus _status;
 
     [ObservableProperty] private double _progress;
     [ObservableProperty] private string? _errorMessage;
 
-    [RelayCommand(CanExecute = nameof(CanProceed))]
+    [RelayCommand]
     private void Proceed() => _proceedCallback(Model.Id);
 
-    [RelayCommand(CanExecute = nameof(CanCancel))]
+    [RelayCommand]
     private void Cancel() => _cancelCallback(Model.Id);
 
     public string StatusMessage => Status switch
@@ -56,7 +56,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     public Guid QueueItemId => Model.Id;
     public virtual bool CanProceed => Model.CanStartDownload;
-    public bool CanCancel => Status == DownloadStatus.Downloading;
+    public virtual bool CanCancel => Status == DownloadStatus.Downloading;
 
     #region --- Metadata (Updates UI when `Refresh` is executed) ---
 

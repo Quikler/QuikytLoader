@@ -98,7 +98,7 @@
                                     FontWeight="SemiBold"
                                     Background="#90EE90"
                                     Foreground="#2D5016"
-                                    IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}">
+                                    IsVisible="{Binding CanProceed}">
                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                     <ui:SymbolIcon Symbol="Play" FontSize="11"/>
                                     <TextBlock Text="Proceed" VerticalAlignment="Center"/>
@@ -111,7 +111,7 @@
                                     FontWeight="SemiBold"
                                     Background="#E74C3C"
                                     Foreground="White"
-                                    IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Downloading}}">
+                                    IsVisible="{Binding CanCancel}">
                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                     <ui:SymbolIcon Symbol="Cancel" FontSize="11"/>
                                     <TextBlock Text="Cancel" VerticalAlignment="Center"/>
