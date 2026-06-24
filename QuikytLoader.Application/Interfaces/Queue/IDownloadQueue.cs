@@ -17,12 +17,11 @@ public interface IDownloadQueue
     void EnqueueItem(QueueItem item);
     void EnqueueGroup(QueueGroup group, IEnumerable<QueueItem> items);
 
-    QueueItem? GetItem(Guid id);
+    QueueItem GetItem(Guid id);
     void UpdateItem(Guid itemId);
 
     bool ContainsGroup(string groupId);
-    bool ContainsItem(Guid itemId);
-    bool ContainsSourceId(string externalId);
+    bool ContainsSourceId(string sourceId);
 
     event Action<QueueEvent> Changed;
 }

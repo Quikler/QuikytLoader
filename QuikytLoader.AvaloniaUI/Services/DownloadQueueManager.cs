@@ -56,7 +56,7 @@ public partial class DownloadQueueManager : ObservableObject
     {
         var itemVms = group.ItemIds
             .Select(_queue.GetItem)
-            .Select(i => CreateGroupItemVm(i!))
+            .Select(CreateGroupItemVm)
             .ToArray();
 
         foreach (var vm in itemVms)

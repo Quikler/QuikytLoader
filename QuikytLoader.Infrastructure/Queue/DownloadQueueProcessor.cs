@@ -28,23 +28,11 @@ public sealed class DownloadQueueProcessor(
     public void Proceed(Guid itemId)
     {
         var queueItem = queue.GetItem(itemId);
-        if (queueItem is null || !queueItem.CanStartDownload) return;
+        if (!queueItem.CanStartDownload) return;
 
-        switch (queueItem.Status)
-        {
-            case DownloadStatus.Editing:
-            case DownloadStatus.Queued:
-            case DownloadStatus.Failed:
-            case DownloadStatus.Cancelled:
-                queueItem.Status = DownloadStatus.Pending;
-                break;
-
-            default:
-                Console.WriteLine($"Item '{queueItem.Metadata?.Title}' is not in correct State for ProceedAsync: {queueItem.Status}");
-                return;
-        }
-
+        queueItem.Status = DownloadStatus.Pending;
         queue.UpdateItem(queueItem.Id);
+
         Enqueue(itemId);
     }
 
@@ -59,7 +47,7 @@ public sealed class DownloadQueueProcessor(
 
         // Mark `Pending` item as `Cancelled` to not process it in queue
         var queueItem = queue.GetItem(itemId);
-        if (queueItem is null || !queueItem.CanCancel) return;
+        if (!queueItem.CanCancel) return;
 
         queueItem.Status = DownloadStatus.Cancelled;
         queue.UpdateItem(queueItem.Id);
@@ -78,8 +66,6 @@ public sealed class DownloadQueueProcessor(
                 }
 
                 var item = queue.GetItem(itemId);
-                if (item is null) continue;
-
                 await ProcessItemAsync(item);
             }
         }
