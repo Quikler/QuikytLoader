@@ -4,10 +4,12 @@ using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Application.Interfaces.Settings;
+using QuikytLoader.Application.Interfaces.Temp;
 using QuikytLoader.Infrastructure.Parsers;
 using QuikytLoader.Infrastructure.Persistence;
 using QuikytLoader.Infrastructure.Persistence.Repositories;
 using QuikytLoader.Infrastructure.Persistence.Settings;
+using QuikytLoader.Infrastructure.Persistence.Temp;
 using QuikytLoader.Infrastructure.Queue;
 using QuikytLoader.Infrastructure.Services;
 using QuikytLoader.Infrastructure.Telegram;
@@ -52,6 +54,7 @@ public static class InfrastructureServiceExtensions
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         services.AddSingleton<IDownloadHistoryRepository, DownloadHistoryRepository>();
         services.AddSingleton<IUserSettings, UserSettings>();
+        services.AddSingleton<ITempDirectoryService, TempDirectoryService>();
 
         return services;
     }

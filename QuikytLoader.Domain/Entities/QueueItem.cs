@@ -26,6 +26,10 @@ public sealed class QueueItem
             or DownloadStatus.Failed
             or DownloadStatus.Cancelled
             or DownloadStatus.Editing;
+
+    public bool CanCancel =>
+        Status is DownloadStatus.Downloading
+            or DownloadStatus.Pending;
 }
 
 public record DownloadSource(string YoutubeVideoUrl, string YoutubeVideoId);

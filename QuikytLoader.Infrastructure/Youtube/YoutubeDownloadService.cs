@@ -8,17 +8,13 @@ namespace QuikytLoader.Infrastructure.Youtube;
 
 internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailService thumbnailService) : IYoutubeDownloadService
 {
-    private static readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
-
     public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(
+        string downloadDirectory,
         DownloadSource downloadSource,
         string? customTitle = null,
         IProgress<double>? progress = null,
         CancellationToken ct = default)
     {
-        var downloadDirectory = Path.Combine(_tempDownloadDirectory, downloadSource.YoutubeVideoId);
-        Directory.CreateDirectory(downloadDirectory);
-
         var downloadAudioResult = await ytDlpAcl.DownloadAudioAsync(
             downloadSource,
             downloadDirectory,
@@ -98,8 +94,7 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailServ
             youtubeVideoId,
             Path.GetFileNameWithoutExtension(normalizedMp3Path),
             normalizedMp3Path,
-            normalizedThumbnailPath,
-            downloadDirectory);
+            normalizedThumbnailPath);
     }
 
     [GeneratedRegex(@"\[download\]\s+(\d+\.?\d*)%")]

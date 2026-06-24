@@ -11,8 +11,7 @@ public sealed class DownloadQueueProcessor(
     DownloadAndSendUseCase downloadAndSendUseCase) : IDownloadQueueProcessor
 {
     private readonly Queue<Guid> _pendingItems = [];
-
-    private CancellationTokenSource? _currentCancellationTokenSource;
+    private readonly Dictionary<Guid, CancellationTokenSource> _cancellationTokens = [];
 
     private bool _isProcessing;
 
@@ -29,27 +28,30 @@ public sealed class DownloadQueueProcessor(
     public void Proceed(Guid itemId)
     {
         var queueItem = queue.GetItem(itemId);
-        if (queueItem is null || !queueItem.CanStartDownload) return;
+        if (!queueItem.CanStartDownload) return;
 
-        switch (queueItem.Status)
-        {
-            case DownloadStatus.Editing:
-            case DownloadStatus.Queued:
-            case DownloadStatus.Failed:
-            case DownloadStatus.Cancelled:
-                queueItem.Status = DownloadStatus.Pending;
-                break;
-
-            default:
-                Console.WriteLine($"Item '{queueItem.Metadata?.Title}' is not in correct State for ProceedAsync: {queueItem.Status}");
-                return;
-        }
-
+        queueItem.Status = DownloadStatus.Pending;
         queue.UpdateItem(queueItem.Id);
+
         Enqueue(itemId);
     }
 
-    public void CancelCurrent() => _currentCancellationTokenSource?.Cancel();
+    public void Cancel(Guid itemId)
+    {
+        // Cancel `Downloading` item
+        if (_cancellationTokens.TryGetValue(itemId, out var cancellationToken))
+        {
+            cancellationToken.Cancel();
+            return;
+        }
+
+        // Mark `Pending` item as `Cancelled` to not process it in queue
+        var queueItem = queue.GetItem(itemId);
+        if (!queueItem.CanCancel) return;
+
+        queueItem.Status = DownloadStatus.Cancelled;
+        queue.UpdateItem(queueItem.Id);
+    }
 
     private async Task ProcessLoopAsync()
     {
@@ -64,8 +66,6 @@ public sealed class DownloadQueueProcessor(
                 }
 
                 var item = queue.GetItem(itemId);
-                if (item is null) continue;
-
                 await ProcessItemAsync(item);
             }
         }
@@ -85,7 +85,7 @@ public sealed class DownloadQueueProcessor(
 
         queue.UpdateItem(queueItem.Id);
 
-        _currentCancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokens[queueItem.Id] = new CancellationTokenSource();
 
         try
         {
@@ -99,7 +99,7 @@ public sealed class DownloadQueueProcessor(
                 queueItem.Source,
                 queueItem.CustomTitle,
                 progress,
-                _currentCancellationTokenSource.Token);
+                _cancellationTokens[queueItem.Id].Token);
 
             if (result.IsSuccess)
             {
@@ -114,6 +114,7 @@ public sealed class DownloadQueueProcessor(
         catch (OperationCanceledException)
         {
             queueItem.Status = DownloadStatus.Cancelled;
+            queueItem.Progress = 0d;
         }
         catch (Exception ex)
         {
@@ -122,8 +123,8 @@ public sealed class DownloadQueueProcessor(
         }
         finally
         {
-            _currentCancellationTokenSource.Dispose();
-            _currentCancellationTokenSource = null;
+            _cancellationTokens[queueItem.Id].Dispose();
+            _cancellationTokens.Remove(queueItem.Id);
 
             queue.UpdateItem(queueItem.Id);
         }
