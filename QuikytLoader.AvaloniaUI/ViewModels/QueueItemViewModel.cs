@@ -56,7 +56,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     public Guid QueueItemId => Model.Id;
     public virtual bool CanProceed => Model.CanStartDownload;
-    public virtual bool CanCancel => Status == DownloadStatus.Downloading;
+    public virtual bool CanCancel => Model.CanCancel;
 
     #region --- Metadata (Updates UI when `Refresh` is executed) ---
 

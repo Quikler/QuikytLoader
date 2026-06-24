@@ -48,7 +48,22 @@ public sealed class DownloadQueueProcessor(
         Enqueue(itemId);
     }
 
-    public void Cancel(Guid itemId) => _cancellationTokens[itemId].Cancel();
+    public void Cancel(Guid itemId)
+    {
+        // Cancel `Downloading` item
+        if (_cancellationTokens.TryGetValue(itemId, out var cancellationToken))
+        {
+            cancellationToken.Cancel();
+            return;
+        }
+
+        // Mark `Pending` item as `Cancelled` to not process it in queue
+        var queueItem = queue.GetItem(itemId);
+        if (queueItem is null || !queueItem.CanCancel) return;
+
+        queueItem.Status = DownloadStatus.Cancelled;
+        queue.UpdateItem(queueItem.Id);
+    }
 
     private async Task ProcessLoopAsync()
     {
