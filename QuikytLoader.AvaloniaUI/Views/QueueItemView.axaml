@@ -8,7 +8,9 @@
              xmlns:asyncImageLoader="using:AsyncImageLoader"
              xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueItemView"
-             x:DataType="vm:QueueItemViewModel">
+             x:DataType="vm:QueueItemViewModel"
+             IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
+             ToolTip.Tip="{Binding Url}">
 
         <DockPanel LastChildFill="True">
             <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
