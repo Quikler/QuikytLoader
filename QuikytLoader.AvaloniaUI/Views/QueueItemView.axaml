@@ -12,147 +12,140 @@
              IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
              ToolTip.Tip="{Binding Url}">
 
-        <DockPanel LastChildFill="True">
-            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
 
-                <Grid Grid.Row="0" Grid.Column="0"
-                      Width="120" Height="68"
-                      Margin="0,0,12,0">
-                    <!-- Placeholder when image hasn't loaded by URL yet -->
-                    <Border CornerRadius="4"
-                            Background="{DynamicResource LayerFillColorDefaultBrush}">
-                        <ui:SymbolIcon Symbol="Video"
-                                       FontSize="24"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                    </Border>
+        <Grid Width="120" Height="68"
+              Margin="0,0,12,0">
+            <!-- Placeholder when image hasn't loaded by URL yet -->
+            <Border CornerRadius="4"
+                    Background="{DynamicResource LayerFillColorDefaultBrush}">
+                <ui:SymbolIcon Symbol="Video"
+                               FontSize="24"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+            </Border>
 
-                    <!-- Thumbnail with duration overlay -->
-                    <Panel>
-                        <Border CornerRadius="4" ClipToBounds="True">
-                            <Image Stretch="UniformToFill"
-                                   asyncImageLoader:ImageLoader.Source="{Binding CoverThumbnailUrl}"/>
-                        </Border>
-                        <!-- Duration overlay -->
-                        <Border Background="#CC000000"
-                                CornerRadius="3"
-                                Padding="4,2"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Bottom"
-                                Margin="0,0,4,4"
-                                IsVisible="{Binding Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                            <TextBlock Text="{Binding Duration}"
-                                       FontSize="10"
-                                       FontWeight="SemiBold"
-                                       Foreground="White"/>
-                        </Border>
-                    </Panel>
+            <!-- Thumbnail with duration overlay -->
+            <Panel>
+                <Border CornerRadius="4" ClipToBounds="True">
+                    <Image Stretch="UniformToFill"
+                           asyncImageLoader:ImageLoader.Source="{Binding CoverThumbnailUrl}"/>
+                </Border>
+                <!-- Duration overlay -->
+                <Border Background="#CC000000"
+                        CornerRadius="3"
+                        Padding="4,2"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,4,4"
+                        IsVisible="{Binding Duration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Text="{Binding Duration}"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                </Border>
+            </Panel>
+        </Grid>
+
+        <!-- Right side: title, channel, status -->
+        <StackPanel Grid.Column="1">
+
+            <Grid ColumnDefinitions="*,Auto"
+                  VerticalAlignment="Center">
+
+                <Grid VerticalAlignment="Center"
+                      Margin="0,0,4,0">
+                   <TextBlock Text="{Binding Title, FallbackValue=''}"
+                              FontSize="13"
+                              FontWeight="SemiBold"
+                              TextTrimming="CharacterEllipsis"
+                              Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                              HorizontalAlignment="Stretch"
+                              IsVisible="{Binding !CanEdit}" />
+
+                   <TextBox Text="{Binding CustomTitle, Mode=TwoWay}"
+                            Watermark="Edit title..."
+                            FontSize="13"
+                            IsVisible="{Binding CanEdit}" />
                 </Grid>
 
-                <!-- Right side: title, channel, status -->
-                <Grid Grid.Column="1"
-                      RowDefinitions="Auto,Auto,Auto" 
-                      ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Spacing="4">
+                    <!-- Proceed or Cancel button -->
+                    <Grid>
+                        <Button Command="{Binding ProceedCommand}"
+                                Padding="8,4"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Background="#90EE90"
+                                Foreground="#2D5016"
+                                IsVisible="{Binding CanProceed}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <ui:SymbolIcon Symbol="Play" FontSize="11"/>
+                                <TextBlock Text="Proceed" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                    <Grid ColumnDefinitions="*,Auto">
-                       <TextBlock Grid.Column="0" 
-                                  Text="{Binding Title, FallbackValue=''}"
-                                  FontSize="13"
-                                  FontWeight="SemiBold"
-                                  TextTrimming="CharacterEllipsis"
-                                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}" />
-
-                       <TextBox Grid.Column="0"
-                                Text="{Binding CustomTitle, Mode=TwoWay}"
-                                Watermark="Edit title..."
-                                FontSize="13"
-                                HorizontalAlignment="Stretch"
-                                IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Editing}}" />
-
+                        <Button Command="{Binding CancelCommand}"
+                                Padding="8,4"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Background="#E74C3C"
+                                Foreground="White"
+                                IsVisible="{Binding CanCancel}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <ui:SymbolIcon Symbol="Cancel" FontSize="11"/>
+                                <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </Grid>
 
-                    <StackPanel Grid.Column="1"
-                                Orientation="Horizontal"
-                                Spacing="4">
-                        <Grid Grid.Column="0"
-                              VerticalAlignment="Top">
-                            <Button Command="{Binding ProceedCommand}"
-                                    Padding="8,4"
-                                    FontSize="11"
-                                    FontWeight="SemiBold"
-                                    Background="#90EE90"
-                                    Foreground="#2D5016"
-                                    IsVisible="{Binding CanProceed}">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <ui:SymbolIcon Symbol="Play" FontSize="11"/>
-                                    <TextBlock Text="Proceed" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                    <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                            CornerRadius="4"
+                            Padding="8,4">
+                        <TextBlock Text="{Binding Status}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"/>
+                    </Border>
+                </StackPanel>
 
-                            <Button Command="{Binding CancelCommand}"
-                                    Padding="8,4"
-                                    FontSize="11"
-                                    FontWeight="SemiBold"
-                                    Background="#E74C3C"
-                                    Foreground="White"
-                                    IsVisible="{Binding CanCancel}">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <ui:SymbolIcon Symbol="Cancel" FontSize="11"/>
-                                    <TextBlock Text="Cancel" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-
-                        <Border Grid.Column="1"
-                                VerticalAlignment="Top"
-                                Background="{DynamicResource AccentFillColorDefaultBrush}"
-                                CornerRadius="4"
-                                Padding="8,4">
-                            <TextBlock Text="{Binding Status}"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="White"/>
-                        </Border>
-                    </StackPanel>
-
-                    <TextBlock Grid.Row="1"
-                               Grid.ColumnSpan="2"
-                               Text="{Binding Channel}"
-                               FontSize="12"
-                               Margin="0,2,0,0"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               IsVisible="{Binding Channel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                    <TextBlock Text="{Binding StatusMessage}"
-                               Grid.Row="2"
-                               Grid.ColumnSpan="2"
-                               VerticalAlignment="Center"
-                               FontSize="12"
-                               Margin="0,2,0,0"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                </Grid>
-
-                <ProgressBar Grid.Row="1"
-                             Grid.ColumnSpan="2"
-                             Value="{Binding Progress}"
-                             Maximum="100"
-                             Height="4"
-                             Margin="0,8,0,0"
-                             IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Downloading}}"
-                             ShowProgressText="False"/>
-
-                <TextBlock Grid.Row="2"
-                           Grid.ColumnSpan="2"
-                           Text="{Binding ErrorMessage}"
-                           FontSize="11"
-                           Margin="0,4,0,0"
-                           Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             </Grid>
-        </DockPanel>
+
+            <StackPanel>
+                <TextBlock Text="{Binding Channel}"
+                           FontSize="12"
+                           Margin="0,2,0,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           IsVisible="{Binding Channel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <TextBlock Text="{Binding StatusMessage}"
+                           FontSize="12"
+                           Margin="0,2,0,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+
+        </StackPanel>
+
+        <ProgressBar Grid.Row="1"
+                     Grid.ColumnSpan="2"
+                     Value="{Binding Progress}"
+                     Maximum="100"
+                     Height="4"
+                     Margin="0,8,0,0"
+                     IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:DownloadStatus.Downloading}}"
+                     ShowProgressText="False"/>
+
+        <TextBlock Grid.Row="2"
+                   Grid.ColumnSpan="2"
+                   Text="{Binding ErrorMessage}"
+                   FontSize="11"
+                   Margin="0,4,0,0"
+                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+    </Grid>
 
 </UserControl>

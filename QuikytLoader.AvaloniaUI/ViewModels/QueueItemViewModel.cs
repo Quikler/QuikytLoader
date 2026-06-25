@@ -30,6 +30,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [NotifyPropertyChangedFor(nameof(StatusMessage))]
     [NotifyPropertyChangedFor(nameof(CanProceed))]
     [NotifyPropertyChangedFor(nameof(CanCancel))]
+    [NotifyPropertyChangedFor(nameof(CanEdit))]
     [ObservableProperty] private DownloadStatus _status;
 
     [ObservableProperty] private double _progress;
@@ -57,6 +58,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     public Guid QueueItemId => Model.Id;
     public virtual bool CanProceed => Model.CanStartDownload;
     public virtual bool CanCancel => Model.CanCancel;
+    public bool CanEdit => Model.CanEdit;
 
     #region --- Metadata (Updates UI when `Refresh` is executed) ---
 
@@ -64,7 +66,6 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [NotifyPropertyChangedFor(nameof(Channel))]
     [NotifyPropertyChangedFor(nameof(Duration))]
     [NotifyPropertyChangedFor(nameof(CoverThumbnailUrl))]
-    [NotifyPropertyChangedFor(nameof(IsMetadataLoaded))]
     [ObservableProperty] private VideoMetadata? _metadata;
 
     // When Metadata is null show Url instead of Title
@@ -84,7 +85,6 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         }
     }
     public string? CoverThumbnailUrl => $"https://i.ytimg.com/vi/{Model.Source.YoutubeVideoId}/default.jpg";
-    public bool IsMetadataLoaded => Model.Metadata is not null;
 
     // Only initialized once, because `model.Source` is `init`
     public string Url => Model.Source.YoutubeVideoUrl;
@@ -119,7 +119,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         ErrorMessage = Model.Error?.Message;
 
         // Setting `CustomTitle` as `Title` if user hasn't typed anything yet
-        if (Status == DownloadStatus.Editing && string.IsNullOrWhiteSpace(CustomTitle))
+        if (CanEdit && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = Model.Metadata?.Title;
     }
 }

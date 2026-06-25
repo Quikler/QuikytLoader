@@ -82,6 +82,7 @@ public sealed class DownloadQueueProcessor(
 
         queueItem.Status = DownloadStatus.Downloading;
         queueItem.Error = null;
+        queueItem.Progress = 0;
 
         queue.UpdateItem(queueItem.Id);
 
