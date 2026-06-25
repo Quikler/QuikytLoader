@@ -30,7 +30,9 @@
                 <ItemsControl ItemsSource="{Binding QueueManager.QueueEntries}">
                     <ItemsControl.DataTemplates>
                         <DataTemplate DataType="{x:Type vm:QueueItemViewModel}">
-                            <views:QueueItemView />
+                            <Border Classes="QueueItemBorder">
+                                <views:QueueItemView />
+                            </Border>
                         </DataTemplate>
 
                         <DataTemplate DataType="{x:Type vm:QueueGroupViewModel}">
