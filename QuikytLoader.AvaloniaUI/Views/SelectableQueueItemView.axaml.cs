@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace QuikytLoader.AvaloniaUI.Views;
 
-public partial class QueueItemView : UserControl
+public partial class SelectableQueueItemView : UserControl
 {
-    public QueueItemView()
+    public SelectableQueueItemView()
     {
         InitializeComponent();
     }

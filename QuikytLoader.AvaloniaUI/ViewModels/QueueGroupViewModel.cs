@@ -10,21 +10,19 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 {
+    private readonly QueueGroup _model;
+
     [ObservableProperty] private int _selectedCount;
     [ObservableProperty] private int _selectableCount;
 
     [NotifyCanExecuteChangedFor(nameof(ProceedAllCommand))]
     [ObservableProperty] private bool _canProceedAll;
 
-    public bool IsGroupContext => true;
-
-    public QueueGroup Model { get; }
-
     public IReadOnlyList<SelectableQueueItemViewModel> Items { get; }
 
     private readonly Action<IEnumerable<Guid>> _proceedGroupCallback;
 
-    public string Title => Model.Title;
+    public string Title => _model.Title;
 
     public void RecomputeCounts()
     {
@@ -49,7 +47,7 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 
     public QueueGroupViewModel(QueueGroup model, IReadOnlyList<SelectableQueueItemViewModel> items, Action<IEnumerable<Guid>> proceedGroupCallback)
     {
-        Model = model;
+        _model = model;
         Items = items;
         _proceedGroupCallback = proceedGroupCallback;
 
