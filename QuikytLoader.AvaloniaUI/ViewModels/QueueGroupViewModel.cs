@@ -14,6 +14,7 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 
     [ObservableProperty] private int _selectedCount;
     [ObservableProperty] private int _selectableCount;
+    [ObservableProperty] private bool _isExpanded = true;
 
     [NotifyCanExecuteChangedFor(nameof(ProceedAllCommand))]
     [ObservableProperty] private bool _canProceedAll;

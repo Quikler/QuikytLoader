@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             x:Class="QuikytLoader.AvaloniaUI.Views.QueueGroupHeaderView"
+             x:DataType="vm:QueueGroupViewModel">
+
+    <Grid ColumnDefinitions="*,Auto,Auto"
+          VerticalAlignment="Center">
+
+        <TextBlock Grid.Column="0"
+                   Text="{Binding Title}"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   TextTrimming="CharacterEllipsis"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+
+        <TextBlock Grid.Column="1"
+                   FontSize="12"
+                   Margin="12,0"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+
+            <TextBlock.Text>
+                <MultiBinding StringFormat="{}{0}/{1}">
+                    <Binding Path="SelectedCount"/>
+                    <Binding Path="SelectableCount"/>
+                </MultiBinding>
+            </TextBlock.Text>
+
+        </TextBlock>
+
+        <Button Grid.Column="2"
+                Command="{Binding ProceedAllCommand}"
+                IsEnabled="{Binding CanProceedAll}"
+                Height="28"
+                Padding="10,0"
+                Background="#21ad42">
+
+            <TextBlock Foreground="White">
+
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="Proceed all ({0}/{1})">
+                        <Binding Path="SelectedCount"/>
+                        <Binding Path="SelectableCount"/>
+                    </MultiBinding>
+                </TextBlock.Text>
+
+            </TextBlock>
+
+        </Button>
+
+    </Grid>
+
+</UserControl>
