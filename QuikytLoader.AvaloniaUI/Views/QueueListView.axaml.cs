@@ -28,6 +28,8 @@ public partial class QueueListView : UserControl
 
         foreach (var container in panel.Children)
         {
+            if (container.DataContext is not QueueGroupViewModel) continue;
+
             var groupView = container.GetVisualChildren().OfType<QueueGroupView>().FirstOrDefault();
             if (groupView is null) continue;
 
@@ -35,7 +37,8 @@ public partial class QueueListView : UserControl
                 new Point(0, 0),
                 QueueScroll);
 
-            if (position is null || position.Value.Y > StickyOffset) continue;
+            if (position is null) continue;
+            if (position.Value.Y > StickyOffset) break;
 
             // Header reached sticky zone
             current = groupView;

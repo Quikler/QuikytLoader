@@ -52,17 +52,13 @@
 
                 <!-- Add to Queue Button -->
                 <Button Command="{Binding AddToQueueCommand}"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        Foreground="White"
                         HorizontalAlignment="Stretch"
                         Padding="0,12"
                         FontSize="16"
                         FontWeight="SemiBold"
                         IsDefault="False">
-                    <Button.Styles>
-                        <Style Selector="Button">
-                            <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            <Setter Property="Foreground" Value="White"/>
-                        </Style>
-                    </Button.Styles>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <ui:SymbolIcon Symbol="Add" FontSize="20"/>
                         <TextBlock Text="Add to Queue" VerticalAlignment="Center"/>
