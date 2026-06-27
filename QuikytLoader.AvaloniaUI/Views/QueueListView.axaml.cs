@@ -21,23 +21,24 @@ public partial class QueueListView : UserControl
 
     private void QueueScroll_ScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
-        var groups = QueueItems
-            .GetVisualDescendants()
-            .OfType<QueueGroupView>()
-            .ToList();
+        var panel = QueueItems.Presenter?.Panel;
+        if (panel is null) return;
 
         QueueGroupView? current = null;
 
-        foreach (var group in groups)
+        foreach (var container in panel.Children)
         {
-            var position = group.TranslatePoint(
+            var groupView = container.GetVisualChildren().OfType<QueueGroupView>().FirstOrDefault();
+            if (groupView is null) continue;
+
+            var position = groupView.TranslatePoint(
                 new Point(0, 0),
                 QueueScroll);
 
             if (position is null || position.Value.Y > StickyOffset) continue;
 
             // Header reached sticky zone
-            current = group;
+            current = groupView;
         }
 
         if (DataContext is QueueListViewModel vm)
