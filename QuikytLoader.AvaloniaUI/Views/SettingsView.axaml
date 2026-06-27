@@ -122,13 +122,14 @@
             <StackPanel Spacing="12">
                 <Button Content="Save Settings"
                         Command="{Binding SaveSettingsCommand}"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        Foreground="White"
                         IsEnabled="{Binding HasUnsavedChanges}"
                         HorizontalAlignment="Left"
                         Height="40"
                         Padding="24,0"
                         FontSize="14"
-                        FontWeight="SemiBold"
-                        Classes="accent"/>
+                        FontWeight="SemiBold"/>
 
                 <!-- Status Message -->
                 <TextBlock Text="{Binding StatusMessage}"

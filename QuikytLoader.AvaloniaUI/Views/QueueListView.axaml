@@ -26,21 +26,68 @@
             </Border>
 
             <!-- Queue Items -->
-            <ScrollViewer MaxHeight="400">
-                <ItemsControl ItemsSource="{Binding QueueManager.QueueEntries}">
-                    <ItemsControl.DataTemplates>
-                        <DataTemplate DataType="{x:Type vm:QueueItemViewModel}">
-                            <Border Classes="QueueItemBorder">
-                                <views:QueueItemView />
-                            </Border>
-                        </DataTemplate>
+            <Grid>
+                <ScrollViewer x:Name="QueueScroll"
+                              MaxHeight="400"
+                              ScrollChanged="QueueScroll_ScrollChanged">
+                    <ItemsControl x:Name="QueueItems"
+                                  ItemsSource="{Binding QueueManager.QueueEntries}">
+                        <ItemsControl.DataTemplates>
+                            <DataTemplate DataType="vm:QueueGroupViewModel">
+                                <views:QueueGroupView/>
+                            </DataTemplate>
+                            <DataTemplate DataType="vm:QueueItemViewModel">
+                                <Border Classes="QueueItemBorder">
+                                    <views:QueueItemView/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.DataTemplates>
+                    </ItemsControl>
+                </ScrollViewer>
 
-                        <DataTemplate DataType="{x:Type vm:QueueGroupViewModel}">
-                            <views:QueueGroupView />
-                        </DataTemplate>
-                    </ItemsControl.DataTemplates>
-                </ItemsControl>
-            </ScrollViewer>
+                <!-- Sticky header -->
+                <Expander IsExpanded="{Binding StickyQueueGroup.IsExpanded}"
+                          Background="Transparent"
+                          VerticalAlignment="Top"
+                          HorizontalAlignment="Stretch"
+                          IsVisible="{Binding StickyQueueGroup, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                    <Expander.Styles>
+                        <Style Selector="ToggleButton">
+                            <Setter Property="Background"
+                                    Value="{DynamicResource ExpanderHeaderBrush}" />
+                            <Setter Property="HorizontalContentAlignment"
+                                    Value="Stretch" />
+                            <Setter Property="BorderThickness"
+                                    Value="0" />
+                        </Style>
+
+                        <Style Selector="Expander">
+                            <Setter Property="Template">
+                                <ControlTemplate>
+                                    <DockPanel MinWidth="{TemplateBinding MinWidth}"
+                                               MaxWidth="{TemplateBinding MaxWidth}">
+                                        <!-- Only leave ToggleButton since we don't need Content -->
+                                        <ToggleButton Name="ExpanderHeader"
+                                                      MinHeight="{TemplateBinding MinHeight}"
+                                                      IsEnabled="{TemplateBinding IsEnabled}"
+                                                      HorizontalAlignment="Stretch"
+                                                      VerticalAlignment="Stretch"
+                                                      IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"
+                                                      Content="{TemplateBinding Header}"
+                                                      ContentTemplate="{TemplateBinding HeaderTemplate}" />
+                                    </DockPanel>
+                                </ControlTemplate>
+                            </Setter>
+                        </Style>
+                    </Expander.Styles>
+
+                    <Expander.Header>
+                        <views:QueueGroupHeaderView DataContext="{Binding StickyQueueGroup}" />
+                    </Expander.Header>
+
+                </Expander>
+            </Grid>
         </StackPanel>
     </Border>
 

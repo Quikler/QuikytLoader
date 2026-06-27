@@ -1,0 +1,18 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="ExpanderHeaderColor">#FEFEFE</Color>
+            <SolidColorBrush x:Key="ExpanderHeaderBrush" Color="{StaticResource ExpanderHeaderColor}" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="ExpanderHeaderColor">#363637</Color>
+            <SolidColorBrush x:Key="ExpanderHeaderBrush" Color="{StaticResource ExpanderHeaderColor}" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

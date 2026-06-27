@@ -9,4 +9,12 @@
         <StyleInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Styles/ButtonStyles.axaml" />
         <StyleInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Styles/RadioButtonStyles.axaml" />
     </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Colors/ThemeColors.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>
