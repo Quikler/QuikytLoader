@@ -32,7 +32,7 @@
     <Style Selector="Button.navButton.selected">
         <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
     </Style>
-    <Style Selector="Button.navButton.selected ui|SymbolIcon">
+    <Style Selector="Button.navButton.selected ui|FASymbolIcon">
         <Setter Property="Foreground" Value="White"/>
     </Style>
     <Style Selector="Button.navButton.selected TextBlock">
@@ -49,7 +49,7 @@
         <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
         <Setter Property="Opacity" Value="1"/>
     </Style>
-    <Style Selector="Button.navButton.selected:disabled ui|SymbolIcon">
+    <Style Selector="Button.navButton.selected:disabled ui|FASymbolIcon">
         <Setter Property="Foreground" Value="White"/>
     </Style>
     <Style Selector="Button.navButton.selected:disabled TextBlock">

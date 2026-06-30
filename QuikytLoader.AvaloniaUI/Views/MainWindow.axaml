@@ -35,7 +35,7 @@
                         BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1">
                     <StackPanel Spacing="8">
-                        <ui:SymbolIcon Symbol="Globe"
+                        <ui:FASymbolIcon Symbol="Globe"
                                        FontSize="32"
                                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
                         <TextBlock Text="QuikytLoader"
@@ -62,7 +62,7 @@
                             VerticalContentAlignment="Center"
                             CornerRadius="8">
                         <StackPanel Spacing="4">
-                            <ui:SymbolIcon Symbol="Home"
+                            <ui:FASymbolIcon Symbol="Home"
                                            FontSize="24"/>
                             <TextBlock Text="Home"
                                        FontSize="10"
@@ -81,7 +81,7 @@
                             VerticalContentAlignment="Center"
                             CornerRadius="8">
                         <StackPanel Spacing="4">
-                            <ui:SymbolIcon Symbol="Setting"
+                            <ui:FASymbolIcon Symbol="Setting"
                                            FontSize="24"/>
                             <TextBlock Text="Settings"
                                        FontSize="10"

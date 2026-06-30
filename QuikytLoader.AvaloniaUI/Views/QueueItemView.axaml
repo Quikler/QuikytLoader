@@ -19,7 +19,7 @@
             <!-- Placeholder when image hasn't loaded by URL yet -->
             <Border CornerRadius="4"
                     Background="{DynamicResource LayerFillColorDefaultBrush}">
-                <ui:SymbolIcon Symbol="Video"
+                <ui:FASymbolIcon Symbol="Video"
                                FontSize="24"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                HorizontalAlignment="Center"
@@ -84,7 +84,7 @@
                                 Foreground="#2D5016"
                                 IsVisible="{Binding CanProceed}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <ui:SymbolIcon Symbol="Play" FontSize="11"/>
+                                <ui:FASymbolIcon Symbol="Play" FontSize="11"/>
                                 <TextBlock Text="Proceed" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -97,7 +97,7 @@
                                 Foreground="White"
                                 IsVisible="{Binding CanCancel}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <ui:SymbolIcon Symbol="Cancel" FontSize="11"/>
+                                <ui:FASymbolIcon Symbol="Cancel" FontSize="11"/>
                                 <TextBlock Text="Cancel" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
