@@ -1,10 +1,9 @@
 using System;
-using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
-using QuikytLoader.AvaloniaUI;
 using QuikytLoader.AvaloniaUI.DependencyInjection;
 using QuikytLoader.Application.DependencyInjection;
 using QuikytLoader.Infrastructure.DependencyInjection;
+using QuikytLoader.Application;
 
 namespace QuikytLoader.Startup;
 
@@ -24,12 +23,9 @@ class Program
             ValidateOnBuild = true,
             ValidateScopes = true,
         });
-        BuildAvaloniaApp(serviceProvider).StartWithClassicDesktopLifetime(args);
-    }
 
-    private static AppBuilder BuildAvaloniaApp(IServiceProvider serviceProvider)
-        => AppBuilder.Configure(() => new App(serviceProvider))
-            .UsePlatformDetect()
-            .WithInterFont()
-            .LogToTrace();
+        serviceProvider
+            .GetRequiredService<IApplication>()
+            .Run(args);
+    }
 }
