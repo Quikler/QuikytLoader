@@ -80,7 +80,7 @@
                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
 
                         <TextBox Text="{Binding BotToken, Mode=TwoWay}"
-                                 Watermark="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+                                 PlaceholderText="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
                                  FontSize="14"
                                  Height="40"
                                  VerticalContentAlignment="Center"/>
@@ -102,7 +102,7 @@
                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
 
                         <TextBox Text="{Binding ChatId, Mode=TwoWay}"
-                                 Watermark="123456789"
+                                 PlaceholderText="123456789"
                                  FontSize="14"
                                  Height="40"
                                  VerticalContentAlignment="Center"/>

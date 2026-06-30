@@ -34,7 +34,7 @@
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
 
                     <TextBox Text="{Binding YoutubeUrl, Mode=TwoWay}"
-                             Watermark="https://www.youtube.com/watch?v=..."
+                             PlaceholderText="https://www.youtube.com/watch?v=..."
                              FontSize="14"
                              Padding="10"
                              VerticalContentAlignment="Center"

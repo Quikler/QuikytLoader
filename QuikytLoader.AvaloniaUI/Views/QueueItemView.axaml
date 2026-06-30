@@ -65,7 +65,7 @@
                               IsVisible="{Binding !CanEdit}" />
 
                    <TextBox Text="{Binding CustomTitle, Mode=TwoWay}"
-                            Watermark="Edit title..."
+                            PlaceholderText="Edit title..."
                             FontSize="13"
                             IsVisible="{Binding CanEdit}" />
                 </Grid>
