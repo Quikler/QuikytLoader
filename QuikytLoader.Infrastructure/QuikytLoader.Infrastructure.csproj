@@ -8,10 +8,16 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.79" />
     <PackageReference Include="Dapper.AOT" Version="1.0.52" />
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.9" />
+    <!--<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />-->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
     <PackageReference Include="SixLabors.ImageSharp" Version="[3.1.12]" />
     <PackageReference Include="Telegram.Bot" Version="22.10.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+      <!-- Temporary workaround until vulnerability fixed: https://github.com/dotnet/efcore/issues/38257 -->
+      <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" VersionOverride="3.0.3" />
+      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.9" />
   </ItemGroup>
 
   <PropertyGroup>

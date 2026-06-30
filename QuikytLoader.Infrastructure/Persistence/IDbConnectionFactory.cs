@@ -1,11 +1,11 @@
 using Microsoft.Data.Sqlite;
 
-namespace QuikytLoader.Application.Interfaces.Repositories;
+namespace QuikytLoader.Infrastructure.Persistence;
 
 /// <summary>
 /// Factory for creating database connections
 /// </summary>
-public interface IDbConnectionFactory
+internal interface IDbConnectionFactory
 {
     /// <summary>
     /// Gets an open SQLite connection with initialized schema
