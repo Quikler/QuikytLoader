@@ -34,7 +34,7 @@
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
 
                     <TextBox Text="{Binding YoutubeUrl, Mode=TwoWay}"
-                             Watermark="https://www.youtube.com/watch?v=..."
+                             PlaceholderText="https://www.youtube.com/watch?v=..."
                              FontSize="14"
                              Padding="10"
                              VerticalContentAlignment="Center"
@@ -60,7 +60,7 @@
                         FontWeight="SemiBold"
                         IsDefault="False">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ui:SymbolIcon Symbol="Add" FontSize="20"/>
+                        <ui:FASymbolIcon Symbol="Add" FontSize="20"/>
                         <TextBlock Text="Add to Queue" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>

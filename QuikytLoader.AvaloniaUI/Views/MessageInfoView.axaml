@@ -13,7 +13,7 @@
             CornerRadius="6"
             IsVisible="{Binding MessageInfo, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
         <StackPanel Orientation="Horizontal" Spacing="8">
-            <ui:SymbolIcon Symbol="Alert"
+            <ui:FASymbolIcon Symbol="Alert"
                            FontSize="16"
                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
             <TextBlock Text="{Binding MessageInfo}"

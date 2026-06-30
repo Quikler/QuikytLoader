@@ -1,6 +1,5 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
-using QuikytLoader.Application.Interfaces.Repositories;
 
 namespace QuikytLoader.Infrastructure.Persistence;
 
