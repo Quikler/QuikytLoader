@@ -8,7 +8,9 @@ namespace QuikytLoader.Infrastructure.Youtube;
 
 internal sealed class YoutubeMetadataService(IYtDlpAcl ytDlpAcl) : IYoutubeMetadataService
 {
-    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(DownloadSource downloadSource, CancellationToken ct)
+    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(
+        DownloadSource downloadSource,
+        CancellationToken ct)
     {
         var raw = await ytDlpAcl.GetVideoAsync(downloadSource, ct);
         return raw.IsSuccess
@@ -16,7 +18,10 @@ internal sealed class YoutubeMetadataService(IYtDlpAcl ytDlpAcl) : IYoutubeMetad
             : raw.Error;
     }
 
-    public async Task<Result<PlaylistMetadata>> GetPlaylistMetadataAsync(DownloadPlaylistSource downloadPlaylistSource, int maxItems, CancellationToken ct)
+    public async Task<Result<PlaylistMetadata>> GetPlaylistMetadataAsync(
+        DownloadPlaylistSource downloadPlaylistSource,
+        int maxItems,
+        CancellationToken ct)
     {
         var raw = await ytDlpAcl.GetPlaylistAsync(downloadPlaylistSource, maxItems, ct);
         return raw.IsSuccess

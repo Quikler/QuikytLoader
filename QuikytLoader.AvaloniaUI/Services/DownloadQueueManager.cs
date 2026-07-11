@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.Interfaces.Queue;
+using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.ViewModels;
 using QuikytLoader.Domain.Entities;
 
@@ -14,14 +15,24 @@ public partial class DownloadQueueManager : ObservableObject
     private readonly IDownloadQueue _queue;
     private readonly IDownloadQueueProcessor _queueProcessor;
 
+    private readonly FetchSubtitlesUseCase _fetchSubtitlesUseCase;
+    private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
+
     private readonly Dictionary<Guid, QueueItemViewModel> _itemViewModels = [];
 
-    public DownloadQueueManager(IDownloadQueue queue, IDownloadQueueProcessor queueProcessor)
+    public DownloadQueueManager(
+        IDownloadQueue queue,
+        IDownloadQueueProcessor queueProcessor,
+        FetchSubtitlesUseCase fetchSubtitlesUseCase,
+        CancelSubtitlesUseCase cancelSubtitlesUseCase)
     {
         _queue = queue;
         _queue.Changed += OnQueueChanged;
 
         _queueProcessor = queueProcessor;
+
+        _fetchSubtitlesUseCase = fetchSubtitlesUseCase;
+        _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
     }
 
     private void OnQueueChanged(QueueEvent evt)
@@ -85,11 +96,11 @@ public partial class DownloadQueueManager : ObservableObject
 
     // Single items — no selection needed
     private QueueItemViewModel CreateItemVm(QueueItem item) =>
-        new(item, ProceedItem, CancelItem);
+        new(item, ProceedItem, CancelItem, FetchItemSubtitles, CancelItemSubtitles);
 
     // Group items — selectable subtype
     private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item) =>
-        new(item, ProceedItem, CancelItem);
+        new(item, ProceedItem, CancelItem, FetchItemSubtitles, CancelItemSubtitles);
 
     private void RegisterItem(QueueItemViewModel vm)
         => _itemViewModels[vm.QueueItemId] = vm;
@@ -107,4 +118,8 @@ public partial class DownloadQueueManager : ObservableObject
     }
 
     private void CancelItem(Guid itemId) => _queueProcessor.Cancel(itemId);
+
+    private void FetchItemSubtitles(Guid itemId) => _fetchSubtitlesUseCase.Execute(itemId);
+
+    private void CancelItemSubtitles(Guid itemId) => _cancelSubtitlesUseCase.Execute(itemId);
 }

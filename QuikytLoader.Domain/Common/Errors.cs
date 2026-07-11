@@ -31,6 +31,12 @@ public static class Errors
 
         public static Error YtDlpMalformed(int expectedLinesLength, int actualLinesLength) => new(
             $"yt-dlp outputted {actualLinesLength} lines when {expectedLinesLength} is expected");
+
+        public static Error SubtitlesFetchFailed(Error ytDlpError) => new(
+            $"Failed to load subtitles: {ytDlpError.Message}");
+
+        public static Error SubtitlesNotFound() => new(
+            "Subtitles not found");
     }
 
     public static class Telegram

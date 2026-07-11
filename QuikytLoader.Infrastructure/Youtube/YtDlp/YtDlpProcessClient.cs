@@ -52,7 +52,7 @@ internal sealed class YtDlpProcessClient : IYtDlpProcessClient
 
             process.ErrorDataReceived += (_, e) =>
             {
-                if (e.Data is not null)
+                if (e.Data is not null && e.Data.StartsWith("ERROR:"))
                     onErrorLine?.Invoke(e.Data);
             };
 

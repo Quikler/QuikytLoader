@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Domain.Entities;
@@ -11,18 +12,27 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     protected QueueItem Model { get; }
     private readonly Action<Guid> _proceedCallback;
     private readonly Action<Guid> _cancelCallback;
+    private readonly Action<Guid> _fetchSubtitlesCallback;
+    private readonly Action<Guid> _cancelSubtitlesCallback;
 
 #pragma warning disable IDE0290 // Use primary constructor
-    public QueueItemViewModel(QueueItem model, Action<Guid> proceedCallback, Action<Guid> cancelCallback)
+    public QueueItemViewModel(QueueItem model,
+        Action<Guid> proceedCallback,
+        Action<Guid> cancelCallback,
+        Action<Guid> fetchSubtitlesCallback,
+        Action<Guid> cancelSubtitlesCallback)
 #pragma warning restore IDE0290 // Use primary constructor
     {
         Model = model;
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;
+        _fetchSubtitlesCallback = fetchSubtitlesCallback;
+        _cancelSubtitlesCallback = cancelSubtitlesCallback;
 
         _status = model.Status;
         _progress = model.Progress;
         _errorMessage = model.Error?.Message;
+        _subtitlesErrorMessage = model.SubtitlesError?.Message;
     }
 
     #region --- NOT EDITABLE BY USER ---
@@ -35,12 +45,20 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     [ObservableProperty] private double _progress;
     [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty] private string? _subtitlesErrorMessage;
+    [ObservableProperty] private bool _areSubtitlesLoading;
 
     [RelayCommand]
     private void Proceed() => _proceedCallback(Model.Id);
 
     [RelayCommand]
     private void Cancel() => _cancelCallback(Model.Id);
+
+    [RelayCommand]
+    private void FetchSubtitles() => _fetchSubtitlesCallback(Model.Id);
+
+    [RelayCommand]
+    private void CancelSubtitles() => _cancelSubtitlesCallback(Model.Id);
 
     public string StatusMessage => Status switch
     {
@@ -67,6 +85,8 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [NotifyPropertyChangedFor(nameof(Duration))]
     [NotifyPropertyChangedFor(nameof(CoverThumbnailUrl))]
     [ObservableProperty] private VideoMetadata? _metadata;
+
+    [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
 
     // When Metadata is null show Url instead of Title
     public string? Title => CustomTitle ?? Model.Metadata?.Title ?? Url;
@@ -118,8 +138,17 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         Progress = Model.Progress;
         ErrorMessage = Model.Error?.Message;
 
+        SubtitlesErrorMessage = Model.SubtitlesError?.Message;
+        AreSubtitlesLoading = Model.AreSubtitlesLoading;
+
+        // Assign only if tabs were not initialized and if subtitles are not null
+        if (SubtitleTabs is null && Model.Subtitles is not null)
+            SubtitleTabs = [.. Model.Subtitles.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+
         // Setting `CustomTitle` as `Title` if user hasn't typed anything yet
         if (CanEdit && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = Model.Metadata?.Title;
     }
 }
+
+public record TabItemViewModel(string Header, string Content);

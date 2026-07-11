@@ -33,6 +33,7 @@ public static class InfrastructureServiceExtensions
         services.AddSingleton<IYoutubeDownloadService, YoutubeDownloadService>();
 
         services.AddSingleton<IYoutubeMetadataService, YoutubeMetadataService>();
+        services.AddSingleton<IYoutubeSubtitlesService, YoutubeSubtitlesService>();
 
         services.AddSingleton<IYtDlpProcessClient, YtDlpProcessClient>();
         services.AddSingleton<IYtDlpAcl, YtDlpAcl>();

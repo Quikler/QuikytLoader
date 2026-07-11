@@ -4,8 +4,18 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-public sealed partial class SelectableQueueItemViewModel(QueueItem model, Action<Guid> proceedCallback, Action<Guid> cancelCallback)
-    : QueueItemViewModel(model, proceedCallback, cancelCallback)
+public sealed partial class SelectableQueueItemViewModel(
+    QueueItem model,
+    Action<Guid> proceedCallback,
+    Action<Guid> cancelCallback,
+    Action<Guid> fetchSubtitlesCallback,
+    Action<Guid> cancelSubtitlesCallback)
+    : QueueItemViewModel(
+        model,
+        proceedCallback,
+        cancelCallback,
+        fetchSubtitlesCallback,
+        cancelSubtitlesCallback)
 {
     [NotifyPropertyChangedFor(nameof(CanProceed))]
     [NotifyPropertyChangedFor(nameof(CanCancel))]

@@ -21,6 +21,12 @@ public sealed class QueueItem
 
     public Error? Error { get; set; }
 
+    public IReadOnlyDictionary<string, string>? Subtitles { get; set; }
+
+    public Error? SubtitlesError { get; set; }
+
+    public bool AreSubtitlesLoading { get; set; }
+
     public bool CanStartDownload =>
         Status is DownloadStatus.Queued
             or DownloadStatus.Failed
