@@ -23,16 +23,23 @@ internal sealed class YoutubeSubtitlesService(IDownloadQueue queue, IYtDlpAcl yt
 
         using var cancellationTokenSource = _cancellationTokens[queueItem.Id] = new CancellationTokenSource();
 
-        var subtitlesResult = await GetVideoSubtitlesAsync(queueItem.Source, cancellationTokenSource.Token);
-        if (!subtitlesResult.IsSuccess)
+        try
         {
-            queueItem.SubtitlesError = subtitlesResult.Error;
+            var subtitlesResult = await GetVideoSubtitlesAsync(queueItem.Source, cancellationTokenSource.Token);
+            if (!subtitlesResult.IsSuccess)
+            {
+                queueItem.SubtitlesError = subtitlesResult.Error;
+            }
+            else
+            {
+                queueItem.Subtitles = subtitlesResult.Value;
+                if (subtitlesResult.Value.Count == 0)
+                    queueItem.SubtitlesError = Errors.Youtube.SubtitlesNotFound();
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            queueItem.Subtitles = subtitlesResult.Value;
-            if (subtitlesResult.Value.Count == 0)
-                queueItem.SubtitlesError = Errors.Youtube.SubtitlesNotFound();
+            queueItem.SubtitlesError = new Error("Subtitles fetch canceled");
         }
 
         queueItem.AreSubtitlesLoading = false;
