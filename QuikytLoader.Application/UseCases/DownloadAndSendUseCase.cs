@@ -21,11 +21,13 @@ public class DownloadAndSendUseCase(
         IProgress<double> progress,
         CancellationToken cancellationToken = default)
     {
+        var mediaDirectory = Path.Combine(downloadSource.YoutubeVideoId, "media");
+
         try
         {
             // 1. Download video
             var downloadResult = await youtubeDownloadService.DownloadAudioAsync(
-                tempDirectoryService.CreateSubdirectory(downloadSource.YoutubeVideoId),
+                tempDirectoryService.CreateSubdirectory(mediaDirectory),
                 downloadSource,
                 customTitle,
                 progress,
@@ -58,7 +60,7 @@ public class DownloadAndSendUseCase(
         finally
         {
             // 4. Delete created temporary directory that contains files — no longer needed after Telegram send
-            tempDirectoryService.DeleteSubdirectory(downloadSource.YoutubeVideoId);
+            tempDirectoryService.DeleteSubdirectory(mediaDirectory);
         }
     }
 }

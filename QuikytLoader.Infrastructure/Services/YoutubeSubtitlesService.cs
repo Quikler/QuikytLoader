@@ -60,8 +60,9 @@ internal sealed class YoutubeSubtitlesService(IDownloadQueue queue, IYtDlpAcl yt
         DownloadSource downloadSource,
         CancellationToken ct)
     {
+        var subtitlesSubdirectory = Path.Combine(downloadSource.YoutubeVideoId, "subtitles");
         var subtitleDirectory =
-            tempDirectoryService.CreateSubdirectory(downloadSource.YoutubeVideoId);
+            tempDirectoryService.CreateSubdirectory(subtitlesSubdirectory);
 
         try
         {
@@ -116,7 +117,7 @@ internal sealed class YoutubeSubtitlesService(IDownloadQueue queue, IYtDlpAcl yt
         }
         finally
         {
-            tempDirectoryService.DeleteSubdirectory(downloadSource.YoutubeVideoId);
+            tempDirectoryService.DeleteSubdirectory(subtitlesSubdirectory);
         }
     }
 
