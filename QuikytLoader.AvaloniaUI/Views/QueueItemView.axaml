@@ -179,7 +179,6 @@
                     <Button Command="{Binding CancelSubtitlesCommand}"
                             FontWeight="SemiBold"
                             Padding="0"
-                            DockPanel.Dock="Bottom"
                             Background="Transparent"
                             BorderThickness="0"
                             HorizontalAlignment="Center"
@@ -197,13 +196,32 @@
             <Grid IsVisible="{Binding !AreSubtitlesLoading}">
 
                 <!-- Error -->
-                <TextBlock Text="{Binding SubtitlesErrorMessage}"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                           IsVisible="{Binding SubtitlesErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="4"
+                            Orientation="Horizontal"
+                            IsVisible="{Binding SubtitlesErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <Button Command="{Binding FetchSubtitlesCommand}"
+                            FontWeight="SemiBold"
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding AllowSubtitlesLoading}">
+                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                         Symbol="Refresh"
+                                         FontSize="18"/>
+                    </Button>
 
-                <TabControl ItemsSource="{Binding SubtitleTabs}">
+                    <TextBlock Text="{Binding SubtitlesErrorMessage}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
+                </StackPanel>
+
+                <TabControl ItemsSource="{Binding SubtitleTabs}"
+                            IsVisible="{Binding SubtitleTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <TabControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:TabItemViewModel">
                             <TextBlock Text="{Binding Header}" />

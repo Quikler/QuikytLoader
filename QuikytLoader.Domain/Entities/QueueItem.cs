@@ -27,6 +27,8 @@ public sealed class QueueItem
 
     public bool AreSubtitlesLoading { get; set; }
 
+    public bool AllowSubtitlesLoading { get; set; } = true;
+
     public bool CanStartDownload =>
         Status is DownloadStatus.Queued
             or DownloadStatus.Failed

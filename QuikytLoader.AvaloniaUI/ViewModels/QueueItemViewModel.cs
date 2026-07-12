@@ -45,6 +45,9 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     [ObservableProperty] private double _progress;
     [ObservableProperty] private string? _errorMessage;
+
+    [NotifyPropertyChangedFor(nameof(AllowSubtitlesLoading))]
+    [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
     [ObservableProperty] private string? _subtitlesErrorMessage;
     [ObservableProperty] private bool _areSubtitlesLoading;
 
@@ -78,6 +81,8 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     public virtual bool CanCancel => Model.CanCancel;
     public bool CanEdit => Model.CanEdit;
 
+    public bool AllowSubtitlesLoading => Model.AllowSubtitlesLoading;
+
     #region --- Metadata (Updates UI when `Refresh` is executed) ---
 
     [NotifyPropertyChangedFor(nameof(Title))]
@@ -85,8 +90,6 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [NotifyPropertyChangedFor(nameof(Duration))]
     [NotifyPropertyChangedFor(nameof(CoverThumbnailUrl))]
     [ObservableProperty] private VideoMetadata? _metadata;
-
-    [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
 
     // When Metadata is null show Url instead of Title
     public string? Title => CustomTitle ?? Model.Metadata?.Title ?? Url;

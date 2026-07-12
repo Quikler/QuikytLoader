@@ -14,18 +14,20 @@ internal sealed class YoutubeSubtitlesService(IDownloadQueue queue, IYtDlpAcl yt
     public async Task FetchSubtitlesAsync(Guid itemId)
     {
         var queueItem = queue.GetItem(itemId);
-        // Subtitles have already been loaded or are currently loading
-        if (queueItem.Subtitles is not null || queueItem.AreSubtitlesLoading) return;
+        // Subtitles have already been loaded or are currently loading or are not allowed to be loaded
+        if (queueItem.Subtitles is not null ||
+            queueItem.AreSubtitlesLoading ||
+            !queueItem.AllowSubtitlesLoading) return;
 
         queueItem.AreSubtitlesLoading = true;
         queueItem.SubtitlesError = null;
         queue.UpdateItem(queueItem.Id);
 
-        using var cancellationTokenSource = _cancellationTokens[queueItem.Id] = new CancellationTokenSource();
+        _cancellationTokens[queueItem.Id] = new CancellationTokenSource();
 
         try
         {
-            var subtitlesResult = await GetVideoSubtitlesAsync(queueItem.Source, cancellationTokenSource.Token);
+            var subtitlesResult = await GetVideoSubtitlesAsync(queueItem.Source, _cancellationTokens[queueItem.Id].Token);
             if (!subtitlesResult.IsSuccess)
             {
                 queueItem.SubtitlesError = subtitlesResult.Error;
@@ -33,13 +35,19 @@ internal sealed class YoutubeSubtitlesService(IDownloadQueue queue, IYtDlpAcl yt
             else
             {
                 queueItem.Subtitles = subtitlesResult.Value;
-                if (subtitlesResult.Value.Count == 0)
+                queueItem.AllowSubtitlesLoading = false;
+                if (queueItem.Subtitles.Count == 0)
                     queueItem.SubtitlesError = Errors.Youtube.SubtitlesNotFound();
             }
         }
         catch (OperationCanceledException)
         {
             queueItem.SubtitlesError = new Error("Subtitles fetch canceled");
+        }
+        finally
+        {
+            _cancellationTokens[queueItem.Id].Dispose();
+            _cancellationTokens.Remove(queueItem.Id);
         }
 
         queueItem.AreSubtitlesLoading = false;
