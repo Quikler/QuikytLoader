@@ -2,7 +2,7 @@
 
 public interface ITempDirectoryService
 {
-    string CreateSubdirectory(string directoryName);
+    string CreateSubdirectory(params string[] directoryNames);
 
-    void DeleteSubdirectory(string directoryName);
+    void DeleteSubdirectory(params string[] directoryNames);
 }

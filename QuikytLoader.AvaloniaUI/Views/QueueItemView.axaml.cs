@@ -16,8 +16,7 @@ public partial class QueueItemView : UserControl
             SubtitlesIcon.Symbol = FluentAvalonia.UI.Controls.FASymbol.ClosedCaptionFilled;
             SubtitlesChevron.Symbol = FluentAvalonia.UI.Controls.FASymbol.ChevronUp;
 
-            var vm = (DataContext as QueueItemViewModel)!;
-            if (vm.FetchSubtitlesCommand.CanExecute(null))
+            if (DataContext is QueueItemViewModel vm && vm.FetchSubtitlesCommand.CanExecute(null))
                 vm.FetchSubtitlesCommand.Execute(null);
         }
         else

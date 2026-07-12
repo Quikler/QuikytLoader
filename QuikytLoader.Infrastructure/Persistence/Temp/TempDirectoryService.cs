@@ -6,16 +6,25 @@ public class TempDirectoryService : ITempDirectoryService
 {
     private static readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
 
-    public string CreateSubdirectory(string directoryName)
+    public string CreateSubdirectory(params string[] directoryNames)
     {
-        var subdirectoryPath = Path.Combine(_tempDownloadDirectory, directoryName);
+        var subdirectoryPath = Path.Combine(_tempDownloadDirectory, Path.Combine(directoryNames));
         Directory.CreateDirectory(subdirectoryPath);
         return subdirectoryPath;
     }
 
-    public void DeleteSubdirectory(string directoryName)
+    public void DeleteSubdirectory(params string[] directoryNames)
     {
-        var subdirectoryPath = Path.Combine(_tempDownloadDirectory, directoryName);
+        var subdirectoryPath = Path.Combine(_tempDownloadDirectory, Path.Combine(directoryNames));
         try { Directory.Delete(subdirectoryPath, recursive: true); } catch { }
+
+        // Cleanup of the parent directory once it's empty.
+        var parentPath = Path.GetDirectoryName(subdirectoryPath);
+        if (Directory.Exists(parentPath) &&
+            !Directory.EnumerateFileSystemEntries(parentPath).Any())
+        {
+            // TOCTOU
+            try { Directory.Delete(parentPath); } catch { }
+        }
     }
 }

@@ -93,7 +93,6 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
         string downloadDirectory,
         string? fileName,
         Action<string>? onOutputLine,
-        Action<string>? onErrorLine,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(fileName))
@@ -134,7 +133,6 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
         return ytDlpProcessClient.RunStreamingAsync(
             args,
             onOutputLine,
-            onErrorLine,
             ct);
     }
 

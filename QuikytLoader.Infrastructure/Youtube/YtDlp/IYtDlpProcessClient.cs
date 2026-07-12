@@ -11,6 +11,5 @@ internal interface IYtDlpProcessClient
     Task<Result> RunStreamingAsync(
         IReadOnlyList<string> args,
         Action<string>? onOutputLine = null,
-        Action<string>? onErrorLine = null,
         CancellationToken ct = default);
 }

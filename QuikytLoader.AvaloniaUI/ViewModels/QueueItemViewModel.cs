@@ -46,10 +46,10 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [ObservableProperty] private double _progress;
     [ObservableProperty] private string? _errorMessage;
 
-    [NotifyPropertyChangedFor(nameof(AllowSubtitlesLoading))]
     [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
     [ObservableProperty] private string? _subtitlesErrorMessage;
     [ObservableProperty] private bool _areSubtitlesLoading;
+    [ObservableProperty] private bool _allowSubtitlesLoading;
 
     [RelayCommand]
     private void Proceed() => _proceedCallback(Model.Id);
@@ -80,8 +80,6 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     public virtual bool CanProceed => Model.CanStartDownload;
     public virtual bool CanCancel => Model.CanCancel;
     public bool CanEdit => Model.CanEdit;
-
-    public bool AllowSubtitlesLoading => Model.AllowSubtitlesLoading;
 
     #region --- Metadata (Updates UI when `Refresh` is executed) ---
 
@@ -143,6 +141,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
         SubtitlesErrorMessage = Model.SubtitlesError?.Message;
         AreSubtitlesLoading = Model.AreSubtitlesLoading;
+        AllowSubtitlesLoading = Model.AllowSubtitlesLoading;
 
         // Assign only if tabs were not initialized and if subtitles are not null
         if (SubtitleTabs is null && Model.Subtitles is not null)

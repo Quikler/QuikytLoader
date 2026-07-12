@@ -49,7 +49,7 @@ Application layer containing use cases and interface definitions. References Dom
 
 ## Dependency Injection
 
-`ApplicationServiceExtensions.cs` registers use cases as Transient:
+`ApplicationServiceExtensions.cs` registers use cases:
 - DownloadAndSendUseCase
 - FindExistingDownloadUseCase
 - GetVideoTitleUseCase

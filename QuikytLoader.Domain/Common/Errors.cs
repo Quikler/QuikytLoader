@@ -37,6 +37,9 @@ public static class Errors
 
         public static Error SubtitlesNotFound() => new(
             "Subtitles not found");
+
+        public static Error SubtitlesFetchCanceled() => new(
+            "Subtitles fetch canceled");
     }
 
     public static class Telegram

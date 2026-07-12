@@ -20,7 +20,6 @@ internal interface IYtDlpAcl
         string downloadDirectory,
         string? fileName,
         Action<string>? onOutputLine,
-        Action<string>? onErrorLine,
         CancellationToken ct);
 
     Task<Result> DownloadSubtitlesAsync(

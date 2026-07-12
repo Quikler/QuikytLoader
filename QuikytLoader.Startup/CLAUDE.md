@@ -7,9 +7,9 @@ Entry point and composition root. References Application, Infrastructure, and Av
 Program.cs composes all DI registrations:
 
 ```csharp
-services.AddApplicationServices();      // Use cases (Transient)
-services.AddInfrastructureServices();   // External services (Singleton)
-services.AddAvaloniaUIServices();       // ViewModels (Transient)
+services.AddApplicationServices();
+services.AddInfrastructureServices();
+services.AddAvaloniaUIServices();
 ```
 
 This is the only project that references Infrastructure, achieving architectural purity where UI layer only depends on Application layer.
