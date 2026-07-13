@@ -128,7 +128,7 @@ public class AddToQueueUseCase(
         }
 
         var queueGroup = new QueueGroup(
-            playlistMetadata.PlaylistId,
+            downloadPlaylistSource.YoutubePlaylistId,
             playlistMetadata.PlaylistTitle,
             [.. items.Select(i => i.Id)]);
 

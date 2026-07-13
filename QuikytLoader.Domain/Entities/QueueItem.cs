@@ -50,7 +50,7 @@ public record DownloadSource(string YoutubeVideoUrl, string YoutubeVideoId);
 public record DownloadPlaylistSource(string YoutubePlaylistUrl, string YoutubePlaylistId);
 
 public record VideoMetadata(
-    string VideoId,
     string Title,
     string? Channel,
+    string Description,
     TimeSpan DurationInSeconds);
