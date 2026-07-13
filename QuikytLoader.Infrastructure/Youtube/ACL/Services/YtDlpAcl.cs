@@ -9,9 +9,7 @@ namespace QuikytLoader.Infrastructure.Youtube.ACL.Services;
 
 internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpAcl
 {
-    public async Task<Result<YtDlpVideoRaw>> GetVideoAsync(
-        DownloadSource downloadSource,
-        CancellationToken ct)
+    public async Task<Result<YtDlpVideoRaw>> GetVideoAsync(DownloadSource downloadSource)
     {
         var args = new[]
         {
@@ -22,7 +20,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
             "--", downloadSource.YoutubeVideoId
         };
 
-        var outputResult = await ytDlpProcessClient.RunCaptureAsync(args, ct);
+        var outputResult = await ytDlpProcessClient.RunCaptureAsync(args);
         if (!outputResult.IsSuccess)
             return outputResult.Error;
 
@@ -40,8 +38,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
 
     public async Task<Result<YtDlpPlaylistRaw>> GetPlaylistAsync(
         DownloadPlaylistSource downloadPlaylistSource,
-        int maxItems,
-        CancellationToken ct)
+        int maxItems)
     {
         var args = new[]
         {
@@ -52,7 +49,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
             "--", downloadPlaylistSource.YoutubePlaylistUrl
         };
 
-        var outputResult = await ytDlpProcessClient.RunCaptureAsync(args, ct);
+        var outputResult = await ytDlpProcessClient.RunCaptureAsync(args);
         if (!outputResult.IsSuccess)
             return outputResult.Error;
 

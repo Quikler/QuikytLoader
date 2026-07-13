@@ -10,14 +10,12 @@ internal sealed class YoutubeMetadataService(IYtDlpAcl ytDlpAcl) : IYoutubeMetad
 {
     private readonly Dictionary<DownloadSource, Task<Result<ACL.RawModels.YtDlpVideoRaw>>> _videoMetadataTasks = [];
 
-    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(
-        DownloadSource downloadSource,
-        CancellationToken ct)
+    public async Task<Result<VideoMetadata>> GetVideoMetadataAsync(DownloadSource downloadSource)
     {
         Task<Result<ACL.RawModels.YtDlpVideoRaw>> rawResultTask =
             _videoMetadataTasks.TryGetValue(downloadSource, out var task)
                 ? task
-                : _videoMetadataTasks[downloadSource] = ytDlpAcl.GetVideoAsync(downloadSource, ct);
+                : _videoMetadataTasks[downloadSource] = ytDlpAcl.GetVideoAsync(downloadSource);
 
         var rawResult = await rawResultTask;
         return rawResult.IsSuccess
@@ -27,10 +25,9 @@ internal sealed class YoutubeMetadataService(IYtDlpAcl ytDlpAcl) : IYoutubeMetad
 
     public async Task<Result<PlaylistMetadata>> GetPlaylistMetadataAsync(
         DownloadPlaylistSource downloadPlaylistSource,
-        int maxItems,
-        CancellationToken ct)
+        int maxItems)
     {
-        var raw = await ytDlpAcl.GetPlaylistAsync(downloadPlaylistSource, maxItems, ct);
+        var raw = await ytDlpAcl.GetPlaylistAsync(downloadPlaylistSource, maxItems);
         return raw.IsSuccess
             ? raw.Value.ToDomain()
             : raw.Error;

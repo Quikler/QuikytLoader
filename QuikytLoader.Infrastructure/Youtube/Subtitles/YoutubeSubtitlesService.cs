@@ -85,7 +85,7 @@ internal sealed class YoutubeSubtitlesService(
             var videoMetadata = queueItem.Metadata;
             if (videoMetadata is null)
             {
-                var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(queueItem.Source, ct);
+                var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(queueItem.Source);
                 if (!videoMetadataResult.IsSuccess) return videoMetadataResult.Error;
                 videoMetadata = videoMetadataResult.Value;
             }

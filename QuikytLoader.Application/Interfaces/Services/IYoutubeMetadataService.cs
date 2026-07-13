@@ -5,7 +5,7 @@ namespace QuikytLoader.Application.Interfaces.Services;
 
 public interface IYoutubeMetadataService
 {
-    Task<Result<VideoMetadata>> GetVideoMetadataAsync(DownloadSource downloadSource, CancellationToken ct);
+    Task<Result<VideoMetadata>> GetVideoMetadataAsync(DownloadSource downloadSource);
 
-    Task<Result<PlaylistMetadata>> GetPlaylistMetadataAsync(DownloadPlaylistSource downloadPlaylistSource, int maxItems, CancellationToken ct);
+    Task<Result<PlaylistMetadata>> GetPlaylistMetadataAsync(DownloadPlaylistSource downloadPlaylistSource, int maxItems);
 }

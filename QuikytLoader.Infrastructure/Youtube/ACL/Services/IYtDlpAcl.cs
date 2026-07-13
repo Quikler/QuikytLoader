@@ -7,13 +7,11 @@ namespace QuikytLoader.Infrastructure.Youtube.ACL.Services;
 internal interface IYtDlpAcl
 {
     Task<Result<YtDlpVideoRaw>> GetVideoAsync(
-        DownloadSource downloadSource,
-        CancellationToken ct);
+        DownloadSource downloadSource);
 
     Task<Result<YtDlpPlaylistRaw>> GetPlaylistAsync(
         DownloadPlaylistSource downloadPlaylistSource,
-        int maxItems,
-        CancellationToken ct);
+        int maxItems);
 
     Task<Result> DownloadAudioAsync(
         DownloadSource downloadSource,

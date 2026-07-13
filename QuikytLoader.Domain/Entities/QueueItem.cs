@@ -52,5 +52,5 @@ public record DownloadPlaylistSource(string YoutubePlaylistUrl, string YoutubePl
 public record VideoMetadata(
     string Title,
     string? Channel,
-    string Description,
+    string? Description,
     TimeSpan DurationInSeconds);
