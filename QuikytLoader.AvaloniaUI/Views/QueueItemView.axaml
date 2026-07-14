@@ -127,7 +127,7 @@
                                        Foreground="White"/>
                         </Border>
 
-                        <Button Click="OnSubtitlesClick"
+                        <Button Command="{Binding ToggleSubtitlesCommand}"
                                 FontWeight="SemiBold"
                                 Padding="0"
                                 DockPanel.Dock="Bottom"
@@ -136,8 +136,8 @@
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom">
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <ui:FASymbolIcon x:Name="SubtitlesChevron" Symbol="ChevronDown" FontSize="16"/>
-                                <ui:FASymbolIcon x:Name="SubtitlesIcon" Symbol="ClosedCaption" FontSize="32"/>
+                                <ui:FASymbolIcon Symbol="{Binding SubtitlesChevronSymbol}" FontSize="16"/>
+                                <ui:FASymbolIcon Symbol="{Binding SubtitlesIconSymbol}" FontSize="32"/>
                             </StackPanel>
                         </Button>
                     </DockPanel>
@@ -163,7 +163,7 @@
                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         </Grid>
 
-        <Grid x:Name="SubtitlesGrid" IsVisible="false">
+        <Grid IsVisible="{Binding AreSubtitlesVisible}">
             <!-- Loading -->
             <StackPanel IsVisible="{Binding AreSubtitlesLoading}"
                         HorizontalAlignment="Center"

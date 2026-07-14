@@ -2,6 +2,7 @@
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.Enums;
 
@@ -50,6 +51,28 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [ObservableProperty] private string? _subtitlesErrorMessage;
     [ObservableProperty] private bool _areSubtitlesLoading;
     [ObservableProperty] private bool _allowSubtitlesLoading;
+
+    [ObservableProperty] private bool _areSubtitlesVisible;
+    [ObservableProperty] private FASymbol _subtitlesIconSymbol = FASymbol.ClosedCaption;
+    [ObservableProperty] private FASymbol _subtitlesChevronSymbol = FASymbol.ChevronDown;
+
+    [RelayCommand]
+    private void ToggleSubtitles()
+    {
+        AreSubtitlesVisible = !AreSubtitlesVisible;
+        if (AreSubtitlesVisible)
+        {
+            SubtitlesIconSymbol = FASymbol.ClosedCaptionFilled;
+            SubtitlesChevronSymbol = FASymbol.ChevronUp;
+            if (FetchSubtitlesCommand.CanExecute(null))
+                FetchSubtitlesCommand.Execute(null);
+        }
+        else
+        {
+            SubtitlesIconSymbol = FASymbol.ClosedCaption;
+            SubtitlesChevronSymbol = FASymbol.ChevronDown;
+        }
+    }
 
     [RelayCommand]
     private void Proceed() => _proceedCallback(Model.Id);
