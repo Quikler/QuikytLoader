@@ -13,6 +13,10 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
+    private bool _languageDetectionForAutoSubtitles;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
     private ThemePreference _themePreference;
 
     [ObservableProperty]
@@ -26,11 +30,13 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
+    private bool _savedLanguageDetectionForAutoSubtitles;
     private ThemePreference _savedThemePreference;
     private string _savedBotToken = string.Empty;
     private string _savedChatId = string.Empty;
 
     public bool HasUnsavedChanges =>
+        LanguageDetectionForAutoSubtitles != _savedLanguageDetectionForAutoSubtitles ||
         ThemePreference != _savedThemePreference ||
         BotToken != _savedBotToken ||
         ChatId != _savedChatId;
@@ -39,6 +45,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     {
         var settings = manageSettingsUseCase.LoadSettings();
 
+        LanguageDetectionForAutoSubtitles = settings.LanguageDetectionForAutoSubtitles;
         ThemePreference = settings.ThemePreference;
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
@@ -52,6 +59,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
         manageSettingsUseCase.SaveSettings(
             new UserSettingsDto
             {
+                LanguageDetectionForAutoSubtitles = LanguageDetectionForAutoSubtitles,
                 ThemePreference = ThemePreference,
                 ChatId = ChatId,
                 BotToken = BotToken
@@ -64,6 +72,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
 
     private void MarkAsSaved()
     {
+        _savedLanguageDetectionForAutoSubtitles = LanguageDetectionForAutoSubtitles;
         _savedThemePreference = ThemePreference;
         _savedBotToken = BotToken;
         _savedChatId = ChatId;
