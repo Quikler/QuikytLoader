@@ -9,9 +9,9 @@ namespace QuikytLoader.Application.DTOs;
 public record UserSettingsDto
 {
     /// <summary>
-    /// Language detection for auto subtitles
+    /// Auto subtitles option
     /// </summary>
-    public bool LanguageDetectionForAutoSubtitles { get; set; }
+    public AutoSubtitlesOption AutoSubtitlesOption { get; set; }
 
     /// <summary>
     /// User's preferred application theme. Stored as string in JSON - not integer (e.g., "Light" instead of 0)

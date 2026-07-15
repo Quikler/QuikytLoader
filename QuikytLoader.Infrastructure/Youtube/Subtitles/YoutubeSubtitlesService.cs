@@ -4,6 +4,7 @@ using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Application.Interfaces.Temp;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
+using QuikytLoader.Domain.Enums;
 using QuikytLoader.Infrastructure.LanguageIdentification;
 using QuikytLoader.Infrastructure.Youtube.ACL.Services;
 
@@ -85,7 +86,7 @@ internal sealed class YoutubeSubtitlesService(
 
             // -- Auto Generated Subtitles Fetch
             string language = "en";
-            if (userSettings.Load().LanguageDetectionForAutoSubtitles)
+            if (userSettings.Load().AutoSubtitlesOption == AutoSubtitlesOption.AutoLanguageDetection)
             {
                 var videoMetadata = queueItem.Metadata;
                 if (videoMetadata is null)

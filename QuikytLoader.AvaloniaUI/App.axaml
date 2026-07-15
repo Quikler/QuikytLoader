@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:converters="using:QuikytLoader.AvaloniaUI.Converters"
              x:Class="QuikytLoader.AvaloniaUI.App"
              RequestedThemeVariant="Default">
     <Application.Styles>
@@ -16,5 +17,8 @@
                 <ResourceInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Colors/ThemeColors.axaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
+
+        <converters:EnumToSpacedStringConverter x:Key="EnumToSpacedStringConverter" />
+
     </Application.Resources>
 </Application>
