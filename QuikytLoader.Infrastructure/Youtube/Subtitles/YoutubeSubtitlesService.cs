@@ -1,110 +1,80 @@
-﻿using QuikytLoader.Application.Interfaces.Queue;
-using QuikytLoader.Application.Interfaces.Services;
-using QuikytLoader.Application.Interfaces.Settings;
-using QuikytLoader.Application.Interfaces.Temp;
+﻿using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
-using QuikytLoader.Domain.Enums;
 using QuikytLoader.Infrastructure.LanguageIdentification;
 using QuikytLoader.Infrastructure.Youtube.ACL.Services;
 
 namespace QuikytLoader.Infrastructure.Youtube.Subtitles;
 
 internal sealed class YoutubeSubtitlesService(
-    IDownloadQueue queue,
     IYtDlpAcl ytDlpAcl,
-    ITempDirectoryService tempDirectoryService,
     ILanguageIdentifier languageIdentifier,
-    IYoutubeMetadataService youtubeMetadataService,
-    IUserSettings userSettings) : IYoutubeSubtitlesService
+    IYoutubeMetadataService youtubeMetadataService) : IYoutubeSubtitlesService
 {
     private readonly Dictionary<Guid, CancellationTokenSource> _cancellationTokens = [];
 
-    public async Task FetchSubtitlesAsync(Guid itemId)
-    {
-        var queueItem = queue.GetItem(itemId);
-        // Subtitles have already been loaded or are currently loading or are not allowed to be loaded
-        if (queueItem.Subtitles is not null ||
-            queueItem.AreSubtitlesLoading ||
-            !queueItem.AllowSubtitlesLoading) return;
-
-        queueItem.AreSubtitlesLoading = true;
-        queueItem.SubtitlesError = null;
-        queue.UpdateItem(queueItem.Id);
-
-        _cancellationTokens[queueItem.Id] = new CancellationTokenSource();
-
-        try
-        {
-            var subtitlesResult = await GetSubtitlesAsync(queueItem.Source, queueItem, _cancellationTokens[queueItem.Id].Token);
-            if (!subtitlesResult.IsSuccess)
-            {
-                queueItem.SubtitlesError = subtitlesResult.Error;
-                return;
-            }
-
-            queueItem.Subtitles = subtitlesResult.Value;
-            queueItem.AllowSubtitlesLoading = false;
-            if (queueItem.Subtitles is null)
-                queueItem.SubtitlesError = Errors.Youtube.SubtitlesNotFound();
-        }
-        catch (OperationCanceledException)
-        {
-            queueItem.SubtitlesError = Errors.Youtube.SubtitlesFetchCanceled();
-        }
-        finally
-        {
-            _cancellationTokens[queueItem.Id].Dispose();
-            _cancellationTokens.Remove(queueItem.Id);
-            queueItem.AreSubtitlesLoading = false;
-            queue.UpdateItem(queueItem.Id);
-        }
-    }
-
-    public void CancelSubtitles(Guid itemId) => _cancellationTokens[itemId].Cancel();
-
-    private async Task<Result<IReadOnlyDictionary<string, string>?>> GetSubtitlesAsync(
+    public async Task<Result<IReadOnlyDictionary<string, string>?>> FetchManualSubtitlesAsync(
+        Guid itemId,
         DownloadSource downloadSource,
-        QueueItem queueItem,
-        CancellationToken ct)
+        string tempDirectory)
     {
-        var subtitlesDirectory =
-            tempDirectoryService.CreateSubdirectory(downloadSource.YoutubeVideoId, "subtitles");
+        var cts = _cancellationTokens[itemId] = new CancellationTokenSource();
+        var ct = cts.Token;
 
         try
         {
-            // -- Manual Subtitles Fetch
             var downloadSubtitlesResult = await ytDlpAcl.DownloadSubtitlesAsync(
                 downloadSource.YoutubeVideoId,
-                subtitlesDirectory,
-                ct);
-            if (!downloadSubtitlesResult.IsSuccess) return downloadSubtitlesResult.Error;
-            var subtitleFiles = Directory.GetFiles(subtitlesDirectory, "*.srt");
+                tempDirectory,
+                _cancellationTokens[itemId].Token);
+
+            if (!downloadSubtitlesResult.IsSuccess)
+                return downloadSubtitlesResult.Error;
+
+            var subtitleFiles = Directory.GetFiles(tempDirectory, "*.srt");
             if (subtitleFiles.Length != 0)
                 return Result<IReadOnlyDictionary<string, string>?>.Success(
                     await GetSubtitleFileContentsAsync(subtitleFiles, false, ct));
 
-            // -- Auto Generated Subtitles Fetch
-            string language = "en";
-            if (userSettings.Load().AutoSubtitlesOption == AutoSubtitlesOption.AutoLanguageDetection)
+            // -- No Subtitles Found
+            return Result<IReadOnlyDictionary<string, string>?>.Success(null);
+        }
+        finally
+        {
+            cts.Dispose();
+            _cancellationTokens.Remove(itemId);
+        }
+    }
+
+    public async Task<Result<IReadOnlyDictionary<string, string>?>> FetchAutoSubtitlesAsync(
+        Guid itemId,
+        DownloadSource downloadSource,
+        string tempDirectory,
+        string? language)
+    {
+        var cts = _cancellationTokens[itemId] = new CancellationTokenSource();
+        var ct = cts.Token;
+
+        try
+        {
+            if (language is null)
             {
-                var videoMetadata = queueItem.Metadata;
-                if (videoMetadata is null)
-                {
-                    var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(queueItem.Source);
-                    if (!videoMetadataResult.IsSuccess) return videoMetadataResult.Error;
-                    videoMetadata = videoMetadataResult.Value;
-                }
+                var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(downloadSource);
+                if (!videoMetadataResult.IsSuccess) return videoMetadataResult.Error;
+                var videoMetadata = videoMetadataResult.Value;
                 language = languageIdentifier.Identify($"{videoMetadata.Title}\n{videoMetadata.Description}");
             }
 
-            downloadSubtitlesResult = await ytDlpAcl.DownloadAutoGeneratedSubtitlesAsync(
+            var downloadSubtitlesResult = await ytDlpAcl.DownloadAutoGeneratedSubtitlesAsync(
                 downloadSource.YoutubeVideoId,
-                subtitlesDirectory,
+                tempDirectory,
                 language,
                 ct);
-            if (!downloadSubtitlesResult.IsSuccess) return downloadSubtitlesResult.Error;
-            subtitleFiles = Directory.GetFiles(subtitlesDirectory, "*.srt");
+
+            if (!downloadSubtitlesResult.IsSuccess)
+                return downloadSubtitlesResult.Error;
+
+            var subtitleFiles = Directory.GetFiles(tempDirectory, "*.srt");
             if (subtitleFiles.Length != 0)
                 return Result<IReadOnlyDictionary<string, string>?>.Success(
                     await GetSubtitleFileContentsAsync(subtitleFiles, true, ct));
@@ -114,9 +84,12 @@ internal sealed class YoutubeSubtitlesService(
         }
         finally
         {
-            tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
+            cts.Dispose();
+            _cancellationTokens.Remove(itemId);
         }
     }
+
+    public void CancelSubtitlesFetching(Guid itemId) => _cancellationTokens[itemId].Cancel();
 
     private async Task<IReadOnlyDictionary<string, string>> GetSubtitleFileContentsAsync(
         string[] subtitleFiles,

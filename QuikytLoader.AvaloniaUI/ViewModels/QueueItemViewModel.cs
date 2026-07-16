@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using QuikytLoader.Application.UseCases;
+using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.Enums;
 
@@ -11,29 +14,31 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 public partial class QueueItemViewModel : QueueEntryViewModel
 {
     protected QueueItem Model { get; }
+
     private readonly Action<Guid> _proceedCallback;
     private readonly Action<Guid> _cancelCallback;
-    private readonly Action<Guid> _fetchSubtitlesCallback;
-    private readonly Action<Guid> _cancelSubtitlesCallback;
+
+    private readonly FetchSubtitlesUseCase _fetchSubtitlesUseCase;
+    private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
 #pragma warning disable IDE0290 // Use primary constructor
-    public QueueItemViewModel(QueueItem model,
+    public QueueItemViewModel(
+        QueueItem model,
         Action<Guid> proceedCallback,
         Action<Guid> cancelCallback,
-        Action<Guid> fetchSubtitlesCallback,
-        Action<Guid> cancelSubtitlesCallback)
+        FetchSubtitlesUseCase fetchSubtitlesUseCase,
+        CancelSubtitlesUseCase cancelSubtitlesUseCase)
 #pragma warning restore IDE0290 // Use primary constructor
     {
         Model = model;
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;
-        _fetchSubtitlesCallback = fetchSubtitlesCallback;
-        _cancelSubtitlesCallback = cancelSubtitlesCallback;
+        _fetchSubtitlesUseCase = fetchSubtitlesUseCase;
+        _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
 
         _status = model.Status;
         _progress = model.Progress;
         _errorMessage = model.Error?.Message;
-        _subtitlesErrorMessage = model.SubtitlesError?.Message;
     }
 
     #region --- NOT EDITABLE BY USER ---
@@ -49,6 +54,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
     [ObservableProperty] private string? _subtitlesErrorMessage;
+    [ObservableProperty] private string? _autoSubtitlesMessage;
     [ObservableProperty] private bool _areSubtitlesLoading;
     [ObservableProperty] private bool _allowSubtitlesLoading;
 
@@ -81,10 +87,24 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     private void Cancel() => _cancelCallback(Model.Id);
 
     [RelayCommand]
-    private void FetchSubtitles() => _fetchSubtitlesCallback(Model.Id);
+    private async Task FetchSubtitles(Language? language)
+    {
+        AutoSubtitlesMessage = null;
+
+        var result = await _fetchSubtitlesUseCase.ExecuteAsync(QueueItemId, language?.Iso6391Name);
+        switch (result)
+        {
+            case FetchSubtitlesResult.ManualLanguageSelectionRequired r:
+                AutoSubtitlesMessage = r.Message;
+                break;
+            case FetchSubtitlesResult.ManuallySelectedLanguageMightBeWrong r:
+                AutoSubtitlesMessage = r.Message;
+                break;
+        }
+    }
 
     [RelayCommand]
-    private void CancelSubtitles() => _cancelSubtitlesCallback(Model.Id);
+    private void CancelSubtitles() => _cancelSubtitlesUseCase.Execute(Model.Id);
 
     public string StatusMessage => Status switch
     {

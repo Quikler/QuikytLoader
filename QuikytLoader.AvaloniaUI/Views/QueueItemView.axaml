@@ -7,6 +7,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:asyncImageLoader="using:AsyncImageLoader"
              xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
+             xmlns:common="using:QuikytLoader.Domain.Common"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueItemView"
              x:DataType="vm:QueueItemViewModel"
              IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
@@ -172,10 +173,10 @@
                 <ProgressBar IsIndeterminate="True"
                              Width="200"/>
 
-                <StackPanel HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Spacing="4"
-                            Orientation="Horizontal">
+                <Grid HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      ColumnSpacing="4"
+                      ColumnDefinitions="Auto,*">
                     <Button Command="{Binding CancelSubtitlesCommand}"
                             FontWeight="SemiBold"
                             Padding="0"
@@ -188,37 +189,89 @@
                                          FontSize="18"/>
                     </Button>
 
-                    <TextBlock Text="Loading subtitles..."/>
-                </StackPanel>
+                    <TextBlock Grid.Column="1"
+                               Text="Loading subtitles..."
+                               TextWrapping="Wrap"/>
+                </Grid>
             </StackPanel>
 
             <!-- Content -->
             <Grid IsVisible="{Binding !AreSubtitlesLoading}">
 
-                <!-- Error -->
-                <StackPanel HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Spacing="4"
-                            Orientation="Horizontal"
-                            IsVisible="{Binding SubtitlesErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <Button Command="{Binding FetchSubtitlesCommand}"
-                            FontWeight="SemiBold"
-                            Padding="0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding AllowSubtitlesLoading}">
-                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                         Symbol="Refresh"
-                                         FontSize="18"/>
-                    </Button>
+                <Grid ColumnDefinitions="*"
+                      ColumnSpacing="8"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Center">
 
-                    <TextBlock Text="{Binding SubtitlesErrorMessage}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
-                </StackPanel>
+                    <!-- Error -->
+                    <Grid ColumnDefinitions="Auto,*"
+                          ColumnSpacing="4"
+                          HorizontalAlignment="Center"
+                          IsVisible="{Binding SubtitlesErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Button Command="{Binding FetchSubtitlesCommand}"
+                                FontWeight="SemiBold"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding AllowSubtitlesLoading}">
+                            <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                             Symbol="Refresh"
+                                             FontSize="18"/>
+                        </Button>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding SubtitlesErrorMessage}"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
+                    </Grid>
+
+                    <!-- Information -->
+                    <Grid Grid.Column="0"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="4"
+                          HorizontalAlignment="Center"
+                          IsVisible="{Binding AutoSubtitlesMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Grid ColumnDefinitions="Auto,*"
+                              ColumnSpacing="4">
+                            <Button Command="{Binding FetchSubtitlesCommand}"
+                                    CommandParameter="{Binding #LanguagesComboBox.SelectedItem}"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    IsVisible="{Binding AllowSubtitlesLoading}">
+                                <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                                 Symbol="Checkmark"
+                                                 FontSize="18"/>
+                            </Button>
+
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding AutoSubtitlesMessage}"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SystemFillColorSuccessBrush}"/>
+                        </Grid>
+
+                        <ComboBox x:Name="LanguagesComboBox"
+                                  Grid.Column="1"
+                                  VerticalAlignment="Center"
+                                  ItemsSource="{x:Static common:Languages.All}"
+                                  SelectedIndex="0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="common:Language">
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+
+                </Grid>
 
                 <TabControl ItemsSource="{Binding SubtitleTabs}"
                             IsVisible="{Binding SubtitleTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
