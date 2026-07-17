@@ -25,12 +25,6 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailServ
                 if (p.HasValue)
                     progress?.Report(p.Value);
             },
-            onErrorLine: line =>
-            {
-                var p = ExtractProgress(line);
-                if (p.HasValue)
-                    progress?.Report(p.Value);
-            },
             ct);
 
         return downloadAudioResult.IsSuccess

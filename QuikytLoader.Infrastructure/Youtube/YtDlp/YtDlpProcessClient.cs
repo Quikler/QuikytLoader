@@ -34,7 +34,6 @@ internal sealed class YtDlpProcessClient : IYtDlpProcessClient
     public async Task<Result> RunStreamingAsync(
         IReadOnlyList<string> args,
         Action<string>? onOutputLine = null,
-        Action<string>? onErrorLine = null,
         CancellationToken ct = default)
     {
         try
@@ -48,12 +47,6 @@ internal sealed class YtDlpProcessClient : IYtDlpProcessClient
             {
                 if (e.Data is not null)
                     onOutputLine?.Invoke(e.Data);
-            };
-
-            process.ErrorDataReceived += (_, e) =>
-            {
-                if (e.Data is not null)
-                    onErrorLine?.Invoke(e.Data);
             };
 
             process.BeginOutputReadLine();

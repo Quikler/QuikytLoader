@@ -90,7 +90,7 @@ MainWindow contains:
 
 ## Dependency Injection
 
-`AvaloniaUIServiceExtensions.cs` registers ViewModels as Transient:
+`AvaloniaUIServiceExtensions.cs` registers ViewModels and other classes:
 - AppViewModel
 - HomeViewModel
 - SettingsViewModel

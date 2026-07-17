@@ -8,7 +8,7 @@
         <Setter.Value>
           <ControlTemplate>
             <Border Background="Transparent">
-              <RadioButton Content="{TemplateBinding ContentPresenter.Content}"
+              <RadioButton Content="{TemplateBinding ContentPresenter.Content, Converter={StaticResource EnumToSpacedStringConverter}}"
                            VerticalAlignment="Center"
                            IsChecked="{Binding Path=IsSelected,RelativeSource={RelativeSource TemplatedParent},Mode=TwoWay}"/>
             </Border>

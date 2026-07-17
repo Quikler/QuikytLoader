@@ -9,6 +9,11 @@ namespace QuikytLoader.Application.DTOs;
 public record UserSettingsDto
 {
     /// <summary>
+    /// Auto subtitles option
+    /// </summary>
+    public AutoSubtitlesOption AutoSubtitlesOption { get; set; }
+
+    /// <summary>
     /// User's preferred application theme. Stored as string in JSON - not integer (e.g., "Light" instead of 0)
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter<ThemePreference>))]

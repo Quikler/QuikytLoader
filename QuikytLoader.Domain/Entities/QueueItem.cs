@@ -21,6 +21,14 @@ public sealed class QueueItem
 
     public Error? Error { get; set; }
 
+    public IReadOnlyDictionary<string, string>? Subtitles { get; set; }
+
+    public Error? SubtitlesError { get; set; }
+
+    public bool AreSubtitlesLoading { get; set; }
+
+    public bool AllowSubtitlesLoading { get; set; } = true;
+
     public bool CanStartDownload =>
         Status is DownloadStatus.Queued
             or DownloadStatus.Failed
@@ -42,7 +50,7 @@ public record DownloadSource(string YoutubeVideoUrl, string YoutubeVideoId);
 public record DownloadPlaylistSource(string YoutubePlaylistUrl, string YoutubePlaylistId);
 
 public record VideoMetadata(
-    string VideoId,
     string Title,
     string? Channel,
+    string? Description,
     TimeSpan DurationInSeconds);

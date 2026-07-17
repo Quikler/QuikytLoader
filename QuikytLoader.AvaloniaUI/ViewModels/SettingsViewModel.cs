@@ -1,3 +1,4 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
@@ -10,6 +11,12 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCase, IThemeApplier themeApplier) : ViewModelBase
 {
     public IThemeApplier ThemeApplier => themeApplier;
+
+    public AutoSubtitlesOption[] AutoSubtitlesOptions { get; } = Enum.GetValues<AutoSubtitlesOption>();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
+    private AutoSubtitlesOption _autoSubtitlesOption;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
@@ -26,11 +33,13 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
+    private AutoSubtitlesOption _savedAutoSubtitlesOption;
     private ThemePreference _savedThemePreference;
     private string _savedBotToken = string.Empty;
     private string _savedChatId = string.Empty;
 
     public bool HasUnsavedChanges =>
+        AutoSubtitlesOption != _savedAutoSubtitlesOption ||
         ThemePreference != _savedThemePreference ||
         BotToken != _savedBotToken ||
         ChatId != _savedChatId;
@@ -39,6 +48,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
     {
         var settings = manageSettingsUseCase.LoadSettings();
 
+        AutoSubtitlesOption = settings.AutoSubtitlesOption;
         ThemePreference = settings.ThemePreference;
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
@@ -52,6 +62,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
         manageSettingsUseCase.SaveSettings(
             new UserSettingsDto
             {
+                AutoSubtitlesOption = AutoSubtitlesOption,
                 ThemePreference = ThemePreference,
                 ChatId = ChatId,
                 BotToken = BotToken
@@ -64,6 +75,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
 
     private void MarkAsSaved()
     {
+        _savedAutoSubtitlesOption = AutoSubtitlesOption;
         _savedThemePreference = ThemePreference;
         _savedBotToken = BotToken;
         _savedChatId = ChatId;

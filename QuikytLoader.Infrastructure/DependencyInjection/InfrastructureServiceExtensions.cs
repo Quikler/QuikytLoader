@@ -5,6 +5,7 @@ using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Application.Interfaces.Temp;
+using QuikytLoader.Infrastructure.LanguageIdentification;
 using QuikytLoader.Infrastructure.Parsers;
 using QuikytLoader.Infrastructure.Persistence;
 using QuikytLoader.Infrastructure.Persistence.Repositories;
@@ -15,6 +16,7 @@ using QuikytLoader.Infrastructure.Services;
 using QuikytLoader.Infrastructure.Telegram;
 using QuikytLoader.Infrastructure.Youtube;
 using QuikytLoader.Infrastructure.Youtube.ACL.Services;
+using QuikytLoader.Infrastructure.Youtube.Subtitles;
 using QuikytLoader.Infrastructure.Youtube.YtDlp;
 
 namespace QuikytLoader.Infrastructure.DependencyInjection;
@@ -29,10 +31,14 @@ public static class InfrastructureServiceExtensions
     /// </summary>
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
+        // Language identification
+        services.AddSingleton<ILanguageIdentifier, LanguageIdentifier>();
+
         // Youtube services
         services.AddSingleton<IYoutubeDownloadService, YoutubeDownloadService>();
 
         services.AddSingleton<IYoutubeMetadataService, YoutubeMetadataService>();
+        services.AddSingleton<IYoutubeSubtitlesService, YoutubeSubtitlesService>();
 
         services.AddSingleton<IYtDlpProcessClient, YtDlpProcessClient>();
         services.AddSingleton<IYtDlpAcl, YtDlpAcl>();

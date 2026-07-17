@@ -14,9 +14,10 @@
             BorderThickness="1"
             CornerRadius="8"
             IsVisible="{Binding QueueManager.QueueEntries.Count}">
-        <StackPanel>
+        <Grid RowDefinitions="Auto,*">
             <!-- Queue Header -->
             <Border Background="{DynamicResource LayerFillColorDefaultBrush}"
+                    Grid.Row="0"
                     Padding="16,12"
                     CornerRadius="8,8,0,0">
                 <TextBlock Text="Download Queue"
@@ -26,9 +27,8 @@
             </Border>
 
             <!-- Queue Items -->
-            <Grid>
+            <Grid Grid.Row="1">
                 <ScrollViewer x:Name="QueueScroll"
-                              MaxHeight="400"
                               ScrollChanged="QueueScroll_ScrollChanged">
                     <ItemsControl x:Name="QueueItems"
                                   ItemsSource="{Binding QueueManager.QueueEntries}">
@@ -88,7 +88,7 @@
 
                 </Expander>
             </Grid>
-        </StackPanel>
+        </Grid>
     </Border>
 
 </UserControl>

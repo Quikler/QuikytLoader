@@ -2,15 +2,28 @@ using System.Text.Json.Serialization;
 
 namespace QuikytLoader.Infrastructure.Youtube;
 
+internal sealed class YtDlpVideoJson
+{
+    [JsonPropertyName("title")]
+    [JsonRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [JsonPropertyName("channel")]
+    public string? Channel { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("duration")]
+    [JsonRequired]
+    public double Duration { get; set; }
+}
+
 /// <summary>
 /// Shape of yt-dlp --flat-playlist --dump-single-json output (minimal fields we need).
 /// </summary>
 internal sealed class YtDlpPlaylistJson
 {
-    [JsonPropertyName("id")]
-    [JsonRequired]
-    public string Id { get; set; } = string.Empty;
-
     [JsonPropertyName("title")]
     [JsonRequired]
     public string Title { get; set; } = string.Empty;
@@ -37,9 +50,9 @@ internal sealed class YtDlpPlaylistEntryJson
     [JsonPropertyName("channel")]
     public string? Channel { get; set; }
 
-    /// <summary>
-    /// Duration in seconds (flat-playlist returns a number, not a formatted string).
-    /// </summary>
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
     [JsonPropertyName("duration")]
     [JsonRequired]
     public double Duration { get; set; }

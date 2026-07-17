@@ -14,4 +14,5 @@ namespace QuikytLoader.Infrastructure.Persistence.Json;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(UserSettingsDto))]
 [JsonSerializable(typeof(YtDlpPlaylistJson))]
+[JsonSerializable(typeof(YtDlpVideoJson))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;
