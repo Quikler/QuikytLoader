@@ -13,9 +13,8 @@ public class TempDirectoryService : ITempDirectoryService
         return subdirectoryPath;
     }
 
-    public void DeleteSubdirectory(params string[] directoryNames)
+    public void DeleteSubdirectory(string subdirectoryPath)
     {
-        var subdirectoryPath = Path.Combine(_tempDownloadDirectory, Path.Combine(directoryNames));
         try { Directory.Delete(subdirectoryPath, recursive: true); } catch { }
 
         // Cleanup of the parent directory once it's empty.

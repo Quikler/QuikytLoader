@@ -1,6 +1,6 @@
 ﻿namespace QuikytLoader.Infrastructure.LanguageIdentification;
 
-public interface ILanguageIdentifier
+internal interface ILanguageIdentifier
 {
     public string Identify(string text);
 }

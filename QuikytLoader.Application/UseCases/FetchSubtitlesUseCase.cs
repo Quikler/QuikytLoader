@@ -66,7 +66,12 @@ public class FetchSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitlesServ
                     break;
             }
 
-            subtitlesResult = await youtubeSubtitlesService.FetchAutoSubtitlesAsync(queueItem.Id, queueItem.Source, subtitlesDirectory, manuallySelectedLanguageForAutoSubtitles);
+            subtitlesResult = await youtubeSubtitlesService.FetchAutoSubtitlesAsync(
+                queueItem.Id,
+                queueItem.Source,
+                queueItem.Metadata,
+                subtitlesDirectory,
+                manuallySelectedLanguageForAutoSubtitles);
             if (!subtitlesResult.IsSuccess)
             {
                 if (autoSubtitlesOption == AutoSubtitlesOption.ManualLanguageSelection)
@@ -94,9 +99,9 @@ public class FetchSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitlesServ
         }
         finally
         {
-            tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
             queueItem.AreSubtitlesLoading = false;
             queue.UpdateItem(queueItem.Id);
+            tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
         }
     }
 }

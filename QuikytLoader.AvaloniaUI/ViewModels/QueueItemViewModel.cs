@@ -55,8 +55,16 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
     [ObservableProperty] private string? _subtitlesErrorMessage;
     [ObservableProperty] private string? _autoSubtitlesMessage;
+
+    [NotifyCanExecuteChangedFor(nameof(FetchSubtitlesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelSubtitlesCommand))]
     [ObservableProperty] private bool _areSubtitlesLoading;
+
+    [NotifyCanExecuteChangedFor(nameof(FetchSubtitlesCommand))]
     [ObservableProperty] private bool _allowSubtitlesLoading;
+
+    private bool CanFetchSubtitles => AllowSubtitlesLoading && !AreSubtitlesLoading;
+    private bool CanCancelSubtitles => AreSubtitlesLoading;
 
     [ObservableProperty] private bool _areSubtitlesVisible;
     [ObservableProperty] private FASymbol _subtitlesIconSymbol = FASymbol.ClosedCaption;
@@ -86,7 +94,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [RelayCommand]
     private void Cancel() => _cancelCallback(Model.Id);
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanFetchSubtitles))]
     private async Task FetchSubtitles(Language? language)
     {
         AutoSubtitlesMessage = null;
@@ -103,7 +111,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanCancelSubtitles))]
     private void CancelSubtitles() => _cancelSubtitlesUseCase.Execute(Model.Id);
 
     public string StatusMessage => Status switch

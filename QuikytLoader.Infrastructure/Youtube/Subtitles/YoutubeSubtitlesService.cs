@@ -49,6 +49,7 @@ internal sealed class YoutubeSubtitlesService(
     public async Task<Result<IReadOnlyDictionary<string, string>?>> FetchAutoSubtitlesAsync(
         Guid itemId,
         DownloadSource downloadSource,
+        VideoMetadata? videoMetadata,
         string tempDirectory,
         string? language)
     {
@@ -59,9 +60,12 @@ internal sealed class YoutubeSubtitlesService(
         {
             if (language is null)
             {
-                var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(downloadSource);
-                if (!videoMetadataResult.IsSuccess) return videoMetadataResult.Error;
-                var videoMetadata = videoMetadataResult.Value;
+                if (videoMetadata is null)
+                {
+                    var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(downloadSource);
+                    if (!videoMetadataResult.IsSuccess) return videoMetadataResult.Error;
+                    videoMetadata = videoMetadataResult.Value;
+                }
                 language = languageIdentifier.Identify($"{videoMetadata.Title}\n{videoMetadata.Description}");
             }
 

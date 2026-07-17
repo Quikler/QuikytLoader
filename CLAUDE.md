@@ -56,7 +56,7 @@ QuikytLoader.Domain               <- Core entities and value objects
 └── No external dependencies
 ```
 
-This achieves architectural purity: UI layer only depends on Application layer, with Infrastructure reference isolated to the Startup composition root.
+This achieves architectural purity: UI layer only depends on Domain and Application layers, with Infrastructure reference isolated to the Startup composition root.
 
 ## Key Design Patterns
 

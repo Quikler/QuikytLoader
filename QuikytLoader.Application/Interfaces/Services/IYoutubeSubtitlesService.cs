@@ -13,6 +13,7 @@ public interface IYoutubeSubtitlesService
     Task<Result<IReadOnlyDictionary<string, string>?>> FetchAutoSubtitlesAsync(
         Guid itemId,
         DownloadSource downloadSource,
+        VideoMetadata? videoMetadata,
         string tempDirectory,
         string? language);
 
