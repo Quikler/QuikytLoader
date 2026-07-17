@@ -3,9 +3,9 @@
 # Default target
 all: trimmed
 
-TFM ?= $(shell . ./config.sh && echo $$TFM)
-RID ?= $(shell . ./config.sh && echo $$RID)
-STARTUP_PROJ_NAME := $(shell . ./config.sh && echo $$STARTUP_PROJ_NAME)
+TFM ?= $(shell . ./scripts/config.sh && echo $$TFM)
+RID ?= $(shell . ./scripts/config.sh && echo $$RID)
+STARTUP_PROJ_NAME := $(shell . ./scripts/config.sh && echo $$STARTUP_PROJ_NAME)
 PUBLISH_BASE_CMD = dotnet publish $(STARTUP_PROJ_NAME) -r $(RID) -c Release
 
 # IN OUR CASE
