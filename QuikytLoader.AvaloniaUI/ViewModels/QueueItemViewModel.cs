@@ -31,14 +31,14 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 #pragma warning restore IDE0290 // Use primary constructor
     {
         Model = model;
+
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;
+
         _fetchSubtitlesUseCase = fetchSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
 
-        _status = model.Status;
-        _progress = model.Progress;
-        _errorMessage = model.Error?.Message;
+        Refresh();
     }
 
     #region --- NOT EDITABLE BY USER ---
