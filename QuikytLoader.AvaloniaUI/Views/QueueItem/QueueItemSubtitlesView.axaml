@@ -1,0 +1,140 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:common="using:QuikytLoader.Domain.Common"
+             x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.QueueItemSubtitlesView"
+             x:DataType="vm:QueueItemViewModel">
+
+    <Grid IsVisible="{Binding AreSubtitlesVisible}">
+        <!-- Loading -->
+        <StackPanel IsVisible="{Binding AreSubtitlesLoading}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="10">
+            <ProgressBar IsIndeterminate="True"
+                         Width="200"/>
+
+            <Grid HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  ColumnSpacing="4"
+                  ColumnDefinitions="Auto,*">
+                <Button Command="{Binding CancelSubtitlesCommand}"
+                        FontWeight="SemiBold"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                     Symbol="Cancel"
+                                     FontSize="18"/>
+                </Button>
+
+                <TextBlock Grid.Column="1"
+                           Text="Loading subtitles..."
+                           TextWrapping="Wrap"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Content -->
+        <Grid IsVisible="{Binding !AreSubtitlesLoading}">
+
+            <Grid ColumnDefinitions="*"
+                  ColumnSpacing="8"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Center">
+
+                <!-- Error -->
+                <Grid ColumnDefinitions="Auto,*"
+                      ColumnSpacing="4"
+                      HorizontalAlignment="Center"
+                      IsVisible="{Binding SubtitlesErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <Button Command="{Binding FetchSubtitlesCommand}"
+                            FontWeight="SemiBold"
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding AllowSubtitlesLoading}">
+                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                         Symbol="Refresh"
+                                         FontSize="18"/>
+                    </Button>
+
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding SubtitlesErrorMessage}"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
+                </Grid>
+
+                <!-- Information -->
+                <Grid Grid.Column="0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="4"
+                      HorizontalAlignment="Center"
+                      IsVisible="{Binding AutoSubtitlesMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <Grid ColumnDefinitions="Auto,*"
+                          ColumnSpacing="4">
+                        <Button Command="{Binding FetchSubtitlesCommand}"
+                                CommandParameter="{Binding #LanguagesComboBox.SelectedItem}"
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                IsVisible="{Binding AllowSubtitlesLoading}">
+                            <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                             Symbol="Checkmark"
+                                             FontSize="18"/>
+                        </Button>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding AutoSubtitlesMessage}"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SystemFillColorSuccessBrush}"/>
+                    </Grid>
+
+                    <ComboBox x:Name="LanguagesComboBox"
+                              Grid.Column="1"
+                              VerticalAlignment="Center"
+                              ItemsSource="{x:Static common:Languages.All}"
+                              SelectedIndex="0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="common:Language">
+                                <TextBlock Text="{Binding DisplayName}"
+                                           VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+
+            </Grid>
+
+            <TabControl ItemsSource="{Binding SubtitleTabs}"
+                        IsVisible="{Binding SubtitleTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TabItemViewModel">
+                        <TextBlock Text="{Binding Header}" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+
+                <TabControl.ContentTemplate>
+                    <DataTemplate x:DataType="vm:TabItemViewModel">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto">
+                            <SelectableTextBlock Text="{Binding Content}"
+                                                 TextWrapping="NoWrap"
+                                                 Padding="0,16"/>
+                        </ScrollViewer>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+        </Grid>
+    </Grid>
+
+</UserControl>

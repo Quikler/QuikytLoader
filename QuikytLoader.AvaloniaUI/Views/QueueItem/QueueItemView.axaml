@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:qi="using:QuikytLoader.AvaloniaUI.Views.QueueItem"
+             xmlns:enums="using:QuikytLoader.Domain.Enums"
+             x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.QueueItemView"
+             x:DataType="vm:QueueItemViewModel"
+             IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
+             ToolTip.Tip="{Binding Url}">
+
+    <Border Classes="QueueItemBorder">
+        <StackPanel Spacing="8">
+
+            <qi:QueueItemBodyView />
+
+            <qi:QueueItemSubtitlesView />
+
+        </StackPanel>
+    </Border>
+
+</UserControl>
