@@ -38,7 +38,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         _fetchSubtitlesUseCase = fetchSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
 
-        Refresh();
+        RefreshInternal();
     }
 
     #region --- NOT EDITABLE BY USER ---
@@ -182,7 +182,10 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     #endregion
 
-    public virtual void Refresh()
+    public virtual void Refresh() => RefreshInternal();
+
+    // This exists to avoid "CA2214: Do not call overridable methods in constructors"
+    private void RefreshInternal()
     {
         Metadata = Model.Metadata;
 
