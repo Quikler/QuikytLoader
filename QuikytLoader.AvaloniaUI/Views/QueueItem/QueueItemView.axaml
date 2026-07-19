@@ -8,14 +8,14 @@
              IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
              ToolTip.Tip="{Binding Url}">
 
-    <Border Classes="QueueItemBorder">
-        <StackPanel Spacing="8">
+    <StackPanel>
 
+        <Border Classes="QueueItemBorder">
             <qi:QueueItemBodyView />
+        </Border>
 
-            <qi:QueueItemSubtitlesView />
+        <qi:QueueItemSubtitlesView />
 
-        </StackPanel>
-    </Border>
+    </StackPanel>
 
 </UserControl>

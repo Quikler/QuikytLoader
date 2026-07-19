@@ -8,22 +8,21 @@
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.SelectableQueueItemView"
              x:DataType="vm:SelectableQueueItemViewModel">
 
-    <Border Classes="QueueItemBorder">
-        <StackPanel Spacing="8">
+    <StackPanel>
 
-            <Grid ColumnDefinitions="Auto,*">
+        <Border Classes="QueueItemBorder">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                 <CheckBox Grid.Column="0"
                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
                           IsEnabled="{Binding IsSelectable}"
-                          VerticalAlignment="Center"
-                          Margin="0,0,12,0"/>
+                          VerticalAlignment="Center"/>
         
                 <qi:QueueItemBodyView Grid.Column="1" />
             </Grid>
+        </Border>
 
-            <qi:QueueItemSubtitlesView />
+        <qi:QueueItemSubtitlesView />
 
-        </StackPanel>
-    </Border>
+    </StackPanel>
 
 </UserControl>

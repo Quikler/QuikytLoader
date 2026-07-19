@@ -5,4 +5,10 @@
         <Setter Property="Padding" Value="16,12"/>
         <Setter Property="Background" Value="Transparent"/>
     </Style>
+    <Style Selector="Border.QueueItemBorderBottom">
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="Padding" Value="16,12"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
 </Styles>
