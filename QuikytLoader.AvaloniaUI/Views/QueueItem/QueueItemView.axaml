@@ -5,8 +5,7 @@
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.QueueItemView"
              x:DataType="vm:QueueItemViewModel"
-             IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}"
-             ToolTip.Tip="{Binding Url}">
+             IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}">
 
     <StackPanel>
 

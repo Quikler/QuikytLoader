@@ -5,7 +5,8 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:asyncImageLoader="using:AsyncImageLoader"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.QueueItemBodyView"
-             x:DataType="vm:QueueItemViewModel">
+             x:DataType="vm:QueueItemViewModel"
+             ToolTip.Tip="{Binding Url}">
 
     <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
 
