@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.Domain.Entities;
 
-namespace QuikytLoader.AvaloniaUI.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 public sealed partial class SelectableQueueItemViewModel(
     QueueItem model,

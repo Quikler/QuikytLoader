@@ -9,7 +9,7 @@ using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.Enums;
 
-namespace QuikytLoader.AvaloniaUI.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 public partial class QueueItemViewModel : QueueEntryViewModel
 {

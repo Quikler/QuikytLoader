@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueGroupHeaderView"
-             x:DataType="vm:QueueGroupViewModel">
+             x:DataType="vmqe:QueueGroupViewModel">
 
     <Grid ColumnDefinitions="*,Auto,Auto"
           VerticalAlignment="Center">

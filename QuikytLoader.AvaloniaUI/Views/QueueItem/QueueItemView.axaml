@@ -1,10 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:qi="using:QuikytLoader.AvaloniaUI.Views.QueueItem"
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.QueueItemView"
-             x:DataType="vm:QueueItemViewModel"
+             x:DataType="vmqe:QueueItemViewModel"
              IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}">
 
     <StackPanel>

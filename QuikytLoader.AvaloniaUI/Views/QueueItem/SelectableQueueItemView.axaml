@@ -1,12 +1,12 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:local="using:QuikytLoader.AvaloniaUI.Views"
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:qi="using:QuikytLoader.AvaloniaUI.Views.QueueItem"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.SelectableQueueItemView"
-             x:DataType="vm:SelectableQueueItemViewModel">
+             x:DataType="vmqe:SelectableQueueItemViewModel">
 
     <StackPanel>
 

@@ -1,10 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
              xmlns:qi="using:QuikytLoader.AvaloniaUI.Views.QueueItem"
              x:Class="QuikytLoader.AvaloniaUI.Views.QueueGroupView"
-             x:DataType="vm:QueueGroupViewModel">
+             x:DataType="vmqe:QueueGroupViewModel">
 
     <!-- Playlist: Expander with header + batch button -->
     <Expander IsExpanded="{Binding IsExpanded}"
@@ -27,7 +27,7 @@
 
         <ItemsControl ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="vm:SelectableQueueItemViewModel">
+                <DataTemplate DataType="vmqe:SelectableQueueItemViewModel">
                     <qi:SelectableQueueItemView />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

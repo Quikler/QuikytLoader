@@ -5,7 +5,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.UseCases;
-using QuikytLoader.AvaloniaUI.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.Services;

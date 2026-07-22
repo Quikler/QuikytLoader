@@ -3,7 +3,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
-using QuikytLoader.AvaloniaUI.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 namespace QuikytLoader.AvaloniaUI.Views;
 
