@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
@@ -10,7 +9,7 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.Services;
 
-public partial class DownloadQueueManager : ObservableObject
+public class DownloadQueueManager
 {
     private readonly IDownloadQueue _queue;
     private readonly IDownloadQueueProcessor _queueProcessor;
