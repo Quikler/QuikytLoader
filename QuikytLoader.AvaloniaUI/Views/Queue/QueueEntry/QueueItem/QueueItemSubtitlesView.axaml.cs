@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace QuikytLoader.AvaloniaUI.Views.QueueItem;
+namespace QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem;
 
 public partial class QueueItemSubtitlesView : UserControl
 {

@@ -1,11 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
-             xmlns:local="using:QuikytLoader.AvaloniaUI.Views"
-             xmlns:enums="using:QuikytLoader.Domain.Enums"
+             xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:qi="using:QuikytLoader.AvaloniaUI.Views.QueueItem"
-             x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.SelectableQueueItemView"
+             x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.SelectableQueueItemView"
              x:DataType="vmqe:SelectableQueueItemViewModel">
 
     <StackPanel>
@@ -17,11 +15,11 @@
                           IsEnabled="{Binding IsSelectable}"
                           VerticalAlignment="Center"/>
         
-                <qi:QueueItemBodyView Grid.Column="1" />
+                <vqeqi:QueueItemBodyView Grid.Column="1" />
             </Grid>
         </Border>
 
-        <qi:QueueItemSubtitlesView />
+        <vqeqi:QueueItemSubtitlesView />
 
     </StackPanel>
 

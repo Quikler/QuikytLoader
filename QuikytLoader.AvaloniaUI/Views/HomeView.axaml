@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
+             xmlns:vq="using:QuikytLoader.AvaloniaUI.Views.Queue"
              xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
              x:Class="QuikytLoader.AvaloniaUI.Views.HomeView"
              x:DataType="vm:HomeViewModel">
@@ -9,7 +10,7 @@
 
         <views:YoutubeUrlInputCardView Grid.Row="0" />
 
-        <views:QueueListView Grid.Row="1" Margin="0,24,0,0" />
+        <vq:QueueListView Grid.Row="1" Margin="0,24,0,0" />
 
         <views:MessageInfoView Grid.Row="2" />
 

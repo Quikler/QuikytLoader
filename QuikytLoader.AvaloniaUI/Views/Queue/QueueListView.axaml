@@ -2,9 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vmq="using:QuikytLoader.AvaloniaUI.ViewModels.Queue"
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
-             xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
-             xmlns:qi="using:QuikytLoader.AvaloniaUI.Views.QueueItem"
-             x:Class="QuikytLoader.AvaloniaUI.Views.QueueListView"
+             xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
+             xmlns:vqeqg="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueGroup"
+             x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueListView"
              x:DataType="vmq:QueueListViewModel">
 
     <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
@@ -32,10 +32,10 @@
                                   ItemsSource="{Binding QueueManager.QueueEntries}">
                         <ItemsControl.DataTemplates>
                             <DataTemplate DataType="vmqe:QueueGroupViewModel">
-                                <views:QueueGroupView/>
+                                <vqeqg:QueueGroupView/>
                             </DataTemplate>
                             <DataTemplate DataType="vmqe:QueueItemViewModel">
-                                <qi:QueueItemView/>
+                                <vqeqi:QueueItemView/>
                             </DataTemplate>
                         </ItemsControl.DataTemplates>
                     </ItemsControl>
@@ -79,7 +79,7 @@
                     </Expander.Styles>
 
                     <Expander.Header>
-                        <views:QueueGroupHeaderView DataContext="{Binding StickyQueueGroup}" />
+                        <vqeqg:QueueGroupHeaderView DataContext="{Binding StickyQueueGroup}" />
                     </Expander.Header>
 
                 </Expander>

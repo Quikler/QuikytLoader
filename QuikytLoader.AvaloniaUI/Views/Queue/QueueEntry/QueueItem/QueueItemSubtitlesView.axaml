@@ -3,7 +3,7 @@
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:common="using:QuikytLoader.Domain.Common"
-             x:Class="QuikytLoader.AvaloniaUI.Views.QueueItem.QueueItemSubtitlesView"
+             x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemSubtitlesView"
              x:DataType="vmqe:QueueItemViewModel"
              IsVisible="{Binding AreSubtitlesVisible}">
 
