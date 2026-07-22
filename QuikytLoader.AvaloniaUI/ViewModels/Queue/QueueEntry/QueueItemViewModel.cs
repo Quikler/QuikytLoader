@@ -9,7 +9,7 @@ using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.Enums;
 
-namespace QuikytLoader.AvaloniaUI.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 public partial class QueueItemViewModel : QueueEntryViewModel
 {
@@ -31,14 +31,14 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 #pragma warning restore IDE0290 // Use primary constructor
     {
         Model = model;
+
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;
+
         _fetchSubtitlesUseCase = fetchSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
 
-        _status = model.Status;
-        _progress = model.Progress;
-        _errorMessage = model.Error?.Message;
+        RefreshInternal();
     }
 
     #region --- NOT EDITABLE BY USER ---
@@ -182,7 +182,10 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     #endregion
 
-    public virtual void Refresh()
+    public virtual void Refresh() => RefreshInternal();
+
+    // This exists to avoid "CA2214: Do not call overridable methods in constructors"
+    private void RefreshInternal()
     {
         Metadata = Model.Metadata;
 

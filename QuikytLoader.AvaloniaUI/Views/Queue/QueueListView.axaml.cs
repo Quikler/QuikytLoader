@@ -3,9 +3,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
-using QuikytLoader.AvaloniaUI.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
+using QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueGroup;
 
-namespace QuikytLoader.AvaloniaUI.Views;
+namespace QuikytLoader.AvaloniaUI.Views.Queue;
 
 public partial class QueueListView : UserControl
 {

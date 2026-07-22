@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Domain.Entities;
 
-namespace QuikytLoader.AvaloniaUI.ViewModels;
+namespace QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 public sealed partial class QueueGroupViewModel : QueueEntryViewModel
 {
