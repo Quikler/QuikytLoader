@@ -1,4 +1,5 @@
 <UserControl xmlns="https://github.com/avaloniaui"
+             x:Name="QueueItemSubtitlesViewName"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -8,135 +9,328 @@
              IsVisible="{Binding AreSubtitlesVisible}">
 
     <Border Classes="QueueItemBorderBottom">
-        <Grid>
-            <!-- Loading -->
-            <StackPanel IsVisible="{Binding AreSubtitlesLoading}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="10">
-                <ProgressBar IsIndeterminate="True"
-                             Width="200"/>
+        <Grid RowDefinitions="Auto,Auto">
 
-                <Grid HorizontalAlignment="Center"
-                      VerticalAlignment="Center"
-                      ColumnSpacing="4"
-                      ColumnDefinitions="Auto,*">
-                    <Button Command="{Binding CancelSubtitlesCommand}"
-                            FontWeight="SemiBold"
-                            Padding="0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                         Symbol="Cancel"
-                                         FontSize="18"/>
-                    </Button>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          Padding="0,0,0,10">
+                <Grid RowDefinitions="Auto,Auto">
 
-                    <TextBlock Grid.Column="1"
-                               Text="Loading subtitles..."
-                               TextWrapping="Wrap"/>
+                    <!-- Tabs -->
+                    <TabStrip Grid.Row="0"
+                              ItemsSource="{Binding SubtitleTabs}"
+                              SelectedItem="{Binding SelectedTab}"
+                              IsVisible="{Binding SubtitleTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TabStrip.ItemTemplate>
+                            <DataTemplate x:DataType="vmqe:TabItemViewModel">
+                                <TextBlock Text="{Binding Header}" />
+                            </DataTemplate>
+                        </TabStrip.ItemTemplate>
+                    </TabStrip>
+
+                    <ContentControl Grid.Row="1"
+                                    Content="{Binding SubtitleState}">
+                        <ContentControl.DataTemplates>
+
+                            <DataTemplate DataType="{x:Type vmqe:SubtitleLoadingState}">
+                                <StackPanel HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Spacing="10">
+                                    <ProgressBar IsIndeterminate="True"
+                                                 Width="200"/>
+
+                                    <Grid HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          ColumnSpacing="4"
+                                          ColumnDefinitions="Auto,*">
+                                        <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.CancelSubtitlesCommand}"
+                                                FontWeight="SemiBold"
+                                                Padding="0"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                            <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                             Symbol="Cancel"
+                                                             FontSize="18"/>
+                                        </Button>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="Loading subtitles..."
+                                                   TextWrapping="Wrap"/>
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="{x:Type vmqe:SubtitleLanguageSelectionRequiredState}">
+                                <Grid x:CompileBindings="False"
+                                      ColumnDefinitions="Auto,Auto,Auto"
+                                      ColumnSpacing="8"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center">
+
+                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
+                                            VerticalAlignment="Center"
+                                            FontWeight="SemiBold"
+                                            Padding="0"
+                                            Background="Transparent"
+                                            BorderThickness="0">
+                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                                         Symbol="Checkmark"
+                                                         FontSize="18"/>
+                                    </Button>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Message}"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SystemFillColorSuccessBrush}"/>
+
+                                    <ComboBox Grid.Column="2"
+                                              VerticalAlignment="Center"
+                                              ItemsSource="{x:Static common:Languages.All}"
+                                              SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="common:Language">
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </Grid>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="{x:Type vmqe:SubtitleLanguageRetryRequiredState}">
+                                <StackPanel HorizontalAlignment="Center"
+                                            Spacing="6">
+                                    <Grid x:CompileBindings="False"
+                                          HorizontalAlignment="Center"
+                                          ColumnDefinitions="Auto,Auto,Auto"
+                                          RowDefinitions="Auto,Auto"
+                                          ColumnSpacing="4"
+                                          RowSpacing="4"
+                                          VerticalAlignment="Center">
+
+                                        <!-- Refresh button -->
+                                        <Button Grid.Row="0"
+                                                Grid.Column="0"
+                                                Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
+                                                VerticalAlignment="Center"
+                                                FontWeight="SemiBold"
+                                                Padding="0"
+                                                Background="Transparent"
+                                                BorderThickness="0">
+                                            <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                             Symbol="Refresh"
+                                                             FontSize="18"/>
+                                        </Button>
+
+                                        <!-- User message -->
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="1"
+                                                   Text="{Binding Message}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
+
+                                        <!-- Language selector -->
+                                        <ComboBox Grid.Row="0"
+                                                  Grid.Column="2"
+                                                  VerticalAlignment="Center"
+                                                  ItemsSource="{x:Static common:Languages.All}"
+                                                  SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate x:DataType="common:Language">
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               VerticalAlignment="Center"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+
+                                        <!-- Details button -->
+                                        <ToggleButton Grid.Row="1"
+                                                      Grid.Column="1"
+                                                      x:Name="DetailsInRetryButton"
+                                                      HorizontalAlignment="Center"
+                                                      FontWeight="SemiBold"
+                                                      Padding="0"
+                                                      Background="{x:Null}"
+                                                      BorderThickness="0"
+                                                      IsVisible="{Binding Details, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+
+                                            <ToggleButton.Styles>
+                                                <Style Selector="ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                    <Setter Property="Background"
+                                                            Value="{Binding $parent[ToggleButton].Background}"/>
+                                                    <Setter Property="Foreground"
+                                                            Value="{Binding $parent[ToggleButton].Foreground}"/>
+                                                </Style>
+
+                                                <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                                    <Setter Property="Background"
+                                                            Value="{Binding $parent[ToggleButton].Background}"/>
+                                                    <Setter Property="Foreground"
+                                                            Value="{Binding $parent[ToggleButton].Foreground}"/>
+                                                </Style>
+                                            </ToggleButton.Styles>
+
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="2">
+
+                                                <ui:FASymbolIcon x:Name="ChevronIconInRetry"
+                                                                 FontSize="16">
+                                                    <ui:FASymbolIcon.Styles>
+                                                        <Style>
+                                                            <Setter Property="Symbol"
+                                                                    Value="ChevronDown"/>
+                                                        </Style>
+
+                                                        <Style Selector="ToggleButton:checked ui|FASymbolIcon#ChevronIconInRetry">
+                                                            <Setter Property="Symbol"
+                                                                    Value="ChevronUp"/>
+                                                        </Style>
+                                                    </ui:FASymbolIcon.Styles>
+                                                </ui:FASymbolIcon>
+
+                                                <TextBlock Text="Details"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+
+                                    </Grid>
+
+                                    <!-- Details message -->
+                                    <TextBlock Text="{Binding Details}"
+                                               TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"
+                                               Margin="-68,0,0,0"
+                                               IsVisible="{Binding #DetailsInRetryButton.IsChecked}"/>
+
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="{x:Type vmqe:SubtitleErrorState}">
+                                <StackPanel HorizontalAlignment="Center"
+                                            Spacing="6">
+                                    <Grid x:CompileBindings="False"
+                                          HorizontalAlignment="Center"
+                                          ColumnDefinitions="Auto,Auto,Auto"
+                                          RowDefinitions="Auto,Auto"
+                                          ColumnSpacing="4"
+                                          RowSpacing="4"
+                                          VerticalAlignment="Center">
+
+                                        <!-- Refresh button -->
+                                        <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
+                                                FontWeight="SemiBold"
+                                                Padding="0"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsVisible="{Binding AllowRetry}">
+                                            <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                             Symbol="Refresh"
+                                                             FontSize="18"/>
+                                        </Button>
+
+                                        <!-- User message -->
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="1"
+                                                   Text="{Binding Message}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
+
+                                        <!-- Details button -->
+                                        <ToggleButton Grid.Row="1"
+                                                      Grid.Column="1"
+                                                      x:Name="DetailsInErrorButton"
+                                                      HorizontalAlignment="Center"
+                                                      FontWeight="SemiBold"
+                                                      Padding="0"
+                                                      Background="{x:Null}"
+                                                      BorderThickness="0"
+                                                      IsVisible="{Binding Details, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+
+                                            <ToggleButton.Styles>
+                                                <Style Selector="ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                    <Setter Property="Background"
+                                                            Value="{Binding $parent[ToggleButton].Background}"/>
+                                                    <Setter Property="Foreground"
+                                                            Value="{Binding $parent[ToggleButton].Foreground}"/>
+                                                </Style>
+
+                                                <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                                    <Setter Property="Background"
+                                                            Value="{Binding $parent[ToggleButton].Background}"/>
+                                                    <Setter Property="Foreground"
+                                                            Value="{Binding $parent[ToggleButton].Foreground}"/>
+                                                </Style>
+                                            </ToggleButton.Styles>
+
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="2">
+
+                                                <ui:FASymbolIcon x:Name="ChevronIconInError"
+                                                                 FontSize="16">
+                                                    <ui:FASymbolIcon.Styles>
+                                                        <Style>
+                                                            <Setter Property="Symbol"
+                                                                    Value="ChevronDown"/>
+                                                        </Style>
+
+                                                        <Style Selector="ToggleButton:checked ui|FASymbolIcon#ChevronIconInError">
+                                                            <Setter Property="Symbol"
+                                                                    Value="ChevronUp"/>
+                                                        </Style>
+                                                    </ui:FASymbolIcon.Styles>
+                                                </ui:FASymbolIcon>
+
+                                                <TextBlock Text="Details"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+
+                                    </Grid>
+
+                                    <!-- Details message -->
+                                    <TextBlock Text="{Binding Details}"
+                                               TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"
+                                               Margin="-68,0,0,0"
+                                               IsVisible="{Binding #DetailsInErrorButton.IsChecked}"/>
+
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="{x:Type vmqe:SubtitleSuccessState}">
+                                <Border/>
+                            </DataTemplate>
+
+                            <DataTemplate DataType="{x:Type vmqe:SubtitleIdleState}">
+                                <Border/>
+                            </DataTemplate>
+
+                        </ContentControl.DataTemplates>
+                    </ContentControl>
+
                 </Grid>
-            </StackPanel>
+            </ScrollViewer>
 
-            <!-- Content -->
-            <Grid IsVisible="{Binding !AreSubtitlesLoading}">
+            <ContentControl Grid.Row="1"
+                            Content="{Binding SelectedTab}">
+                <ContentControl.ContentTemplate>
+                    <DataTemplate x:DataType="vmqe:TabItemViewModel">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto">
+                            <SelectableTextBlock Text="{Binding Content}"
+                                                 TextWrapping="NoWrap"
+                                                 Padding="0,16"/>
+                        </ScrollViewer>
+                    </DataTemplate>
+                </ContentControl.ContentTemplate>
+            </ContentControl>
 
-                <Grid ColumnDefinitions="*"
-                      ColumnSpacing="8"
-                      HorizontalAlignment="Stretch"
-                      VerticalAlignment="Center">
-
-                    <!-- Error -->
-                    <Grid ColumnDefinitions="Auto,*"
-                          ColumnSpacing="4"
-                          HorizontalAlignment="Center"
-                          IsVisible="{Binding SubtitlesErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                        <Button Command="{Binding FetchSubtitlesCommand}"
-                                FontWeight="SemiBold"
-                                Padding="0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                IsVisible="{Binding AllowSubtitlesLoading}">
-                            <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                             Symbol="Refresh"
-                                             FontSize="18"/>
-                        </Button>
-
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding SubtitlesErrorMessage}"
-                                   TextWrapping="Wrap"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
-                    </Grid>
-
-                    <!-- Information -->
-                    <Grid Grid.Column="0"
-                          ColumnDefinitions="*,Auto"
-                          ColumnSpacing="4"
-                          HorizontalAlignment="Center"
-                          IsVisible="{Binding AutoSubtitlesMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                        <Grid ColumnDefinitions="Auto,*"
-                              ColumnSpacing="4">
-                            <Button Command="{Binding FetchSubtitlesCommand}"
-                                    CommandParameter="{Binding #LanguagesComboBox.SelectedItem}"
-                                    VerticalAlignment="Center"
-                                    FontWeight="SemiBold"
-                                    Padding="0"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    IsVisible="{Binding AllowSubtitlesLoading}">
-                                <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorSuccessBrush}"
-                                                 Symbol="Checkmark"
-                                                 FontSize="18"/>
-                            </Button>
-
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding AutoSubtitlesMessage}"
-                                       TextWrapping="Wrap"
-                                       VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SystemFillColorSuccessBrush}"/>
-                        </Grid>
-
-                        <ComboBox x:Name="LanguagesComboBox"
-                                  Grid.Column="1"
-                                  VerticalAlignment="Center"
-                                  ItemsSource="{x:Static common:Languages.All}"
-                                  SelectedIndex="0">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="common:Language">
-                                    <TextBlock Text="{Binding DisplayName}"
-                                               VerticalAlignment="Center"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </Grid>
-
-                </Grid>
-
-                <TabControl ItemsSource="{Binding SubtitleTabs}"
-                            IsVisible="{Binding SubtitleTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TabControl.ItemTemplate>
-                        <DataTemplate x:DataType="vmqe:TabItemViewModel">
-                            <TextBlock Text="{Binding Header}" />
-                        </DataTemplate>
-                    </TabControl.ItemTemplate>
-
-                    <TabControl.ContentTemplate>
-                        <DataTemplate x:DataType="vmqe:TabItemViewModel">
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto">
-                                <SelectableTextBlock Text="{Binding Content}"
-                                                     TextWrapping="NoWrap"
-                                                     Padding="0,16"/>
-                            </ScrollViewer>
-                        </DataTemplate>
-                    </TabControl.ContentTemplate>
-                </TabControl>
-            </Grid>
         </Grid>
     </Border>
 

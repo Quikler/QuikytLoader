@@ -18,24 +18,25 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     private readonly Action<Guid> _proceedCallback;
     private readonly Action<Guid> _cancelCallback;
 
-    private readonly FetchSubtitlesUseCase _fetchSubtitlesUseCase;
+    private readonly FetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
+    private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
-#pragma warning disable IDE0290 // Use primary constructor
     public QueueItemViewModel(
         QueueItem model,
         Action<Guid> proceedCallback,
         Action<Guid> cancelCallback,
-        FetchSubtitlesUseCase fetchSubtitlesUseCase,
+        FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
+        FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
         CancelSubtitlesUseCase cancelSubtitlesUseCase)
-#pragma warning restore IDE0290 // Use primary constructor
     {
         Model = model;
 
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;
 
-        _fetchSubtitlesUseCase = fetchSubtitlesUseCase;
+        _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
+        _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
 
         RefreshInternal();
@@ -52,20 +53,12 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [ObservableProperty] private double _progress;
     [ObservableProperty] private string? _errorMessage;
 
+    [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Languages.All.First();
+    [ObservableProperty] private SubtitleUiState _subtitleState = new SubtitleIdleState();
     [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
-    [ObservableProperty] private string? _subtitlesErrorMessage;
-    [ObservableProperty] private string? _autoSubtitlesMessage;
+    [ObservableProperty] private TabItemViewModel? _selectedTab;
 
-    [NotifyCanExecuteChangedFor(nameof(FetchSubtitlesCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CancelSubtitlesCommand))]
     [ObservableProperty] private bool _areSubtitlesLoading;
-
-    [NotifyCanExecuteChangedFor(nameof(FetchSubtitlesCommand))]
-    [ObservableProperty] private bool _allowSubtitlesLoading;
-
-    private bool CanFetchSubtitles => AllowSubtitlesLoading && !AreSubtitlesLoading;
-    private bool CanCancelSubtitles => AreSubtitlesLoading;
-
     [ObservableProperty] private bool _areSubtitlesVisible;
     [ObservableProperty] private FASymbol _subtitlesIconSymbol = FASymbol.ClosedCaption;
     [ObservableProperty] private FASymbol _subtitlesChevronSymbol = FASymbol.ChevronDown;
@@ -74,12 +67,14 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     private void ToggleSubtitles()
     {
         AreSubtitlesVisible = !AreSubtitlesVisible;
+
         if (AreSubtitlesVisible)
         {
             SubtitlesIconSymbol = FASymbol.ClosedCaptionFilled;
             SubtitlesChevronSymbol = FASymbol.ChevronUp;
-            if (FetchSubtitlesCommand.CanExecute(null))
-                FetchSubtitlesCommand.Execute(null);
+
+            if (SubtitleState is SubtitleIdleState)
+                _ = FetchSubtitlesWorkflow();
         }
         else
         {
@@ -94,24 +89,109 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [RelayCommand]
     private void Cancel() => _cancelCallback(Model.Id);
 
-    [RelayCommand(CanExecute = nameof(CanFetchSubtitles))]
-    private async Task FetchSubtitles(Language? language)
-    {
-        AutoSubtitlesMessage = null;
+    [RelayCommand]
+    private Task FetchSubtitlesWorkflow() => FetchSubtitlesWorkflowInternal(null);
 
-        var result = await _fetchSubtitlesUseCase.ExecuteAsync(QueueItemId, language?.Iso6391Name);
-        switch (result)
+    [RelayCommand]
+    private Task FetchSubtitlesWithLanguageWorkflow() => FetchSubtitlesWorkflowInternal(SelectedAutoSubtitlesLanguage);
+
+    private async Task FetchSubtitlesWorkflowInternal(Language? language)
+    {
+        var manualResult = await FetchManualSubtitles();
+
+        switch (manualResult)
         {
-            case FetchSubtitlesResult.ManualLanguageSelectionRequired r:
-                AutoSubtitlesMessage = r.Message;
-                break;
-            case FetchSubtitlesResult.ManuallySelectedLanguageMightBeWrong r:
-                AutoSubtitlesMessage = r.Message;
+            case SubtitleFetchResult.Failed:
+            case SubtitleFetchResult.Canceled:
+                return;
+
+            case SubtitleFetchResult.Fetched:
+            case SubtitleFetchResult.NotFound:
+            case SubtitleFetchResult.NotAllowed:
                 break;
         }
+
+        await FetchAutoSubtitles(language);
     }
 
-    [RelayCommand(CanExecute = nameof(CanCancelSubtitles))]
+    private async Task<SubtitleFetchResult> FetchManualSubtitles()
+    {
+        SubtitleState = new SubtitleLoadingState();
+
+        var result = await _fetchManualSubtitlesUseCase.ExecuteAsync(Model.Id);
+
+        switch (result)
+        {
+            case SubtitleFetchResult.Fetched:
+                SubtitleTabs = [.. Model.Subtitles!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitleState = new SubtitleSuccessState();
+                break;
+
+            case SubtitleFetchResult.Failed r:
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                break;
+
+            case SubtitleFetchResult.NotFound r:
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                break;
+
+            case SubtitleFetchResult.Canceled r:
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                break;
+
+            case SubtitleFetchResult.NotAllowed r:
+                SubtitleState = SubtitleState;
+                break;
+        }
+
+        return result;
+    }
+
+    private async Task<SubtitleFetchResult> FetchAutoSubtitles(Language? language)
+    {
+        SubtitleState = new SubtitleLoadingState();
+
+        var result = await _fetchAutoSubtitlesUseCase.ExecuteAsync(
+            Model.Id,
+            language?.Iso6391Name);
+
+        switch (result)
+        {
+            case SubtitleFetchResult.Fetched:
+                SubtitleTabs = [.. Model.Subtitles!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitleState = new SubtitleSuccessState();
+                break;
+
+            case SubtitleFetchResult.RequiresLanguageSelection r:
+                SubtitleState = new SubtitleLanguageSelectionRequiredState(r.Message);
+                break;
+
+            case SubtitleFetchResult.LanguageMayBeWrong r:
+                SubtitleState = new SubtitleLanguageRetryRequiredState(r.Message, r.Details);
+                break;
+
+            case SubtitleFetchResult.Failed r:
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, r.Details);
+                break;
+
+            case SubtitleFetchResult.NotFound r:
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                break;
+
+            case SubtitleFetchResult.Canceled r:
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                break;
+
+            case SubtitleFetchResult.NotAllowed:
+                SubtitleState = SubtitleState;
+
+                break;
+        }
+
+        return result;
+    }
+
+    [RelayCommand]
     private void CancelSubtitles() => _cancelSubtitlesUseCase.Execute(Model.Id);
 
     public string StatusMessage => Status switch
@@ -193,14 +273,6 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         Progress = Model.Progress;
         ErrorMessage = Model.Error?.Message;
 
-        SubtitlesErrorMessage = Model.SubtitlesError?.Message;
-        AreSubtitlesLoading = Model.AreSubtitlesLoading;
-        AllowSubtitlesLoading = Model.AllowSubtitlesLoading;
-
-        // Assign only if tabs were not initialized and if subtitles are not null
-        if (SubtitleTabs is null && Model.Subtitles is not null)
-            SubtitleTabs = [.. Model.Subtitles.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
-
         // Setting `CustomTitle` as `Title` if user hasn't typed anything yet
         if (CanEdit && string.IsNullOrWhiteSpace(CustomTitle))
             CustomTitle = Model.Metadata?.Title;
@@ -208,3 +280,12 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 }
 
 public record TabItemViewModel(string Header, string Content);
+
+public abstract record SubtitleUiState;
+
+public sealed record SubtitleIdleState : SubtitleUiState;
+public sealed record SubtitleLoadingState : SubtitleUiState;
+public sealed record SubtitleLanguageSelectionRequiredState(string Message) : SubtitleUiState;
+public sealed record SubtitleLanguageRetryRequiredState(string Message, string Details) : SubtitleUiState;
+public sealed record SubtitleErrorState(string Message, bool AllowRetry, string? Details = null) : SubtitleUiState;
+public sealed record SubtitleSuccessState : SubtitleUiState;

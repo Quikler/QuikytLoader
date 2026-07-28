@@ -14,15 +14,22 @@ public class DownloadQueueManager
     private readonly IDownloadQueue _queue;
     private readonly IDownloadQueueProcessor _queueProcessor;
 
-    private readonly FetchSubtitlesUseCase _fetchSubtitlesUseCase;
+    private readonly FetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
+    private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
     private readonly Dictionary<Guid, QueueItemViewModel> _itemViewModels = [];
 
+    /// <summary>
+    /// All queue entries. Can be one queue item and a group item.
+    /// </summary>
+    public ObservableCollection<QueueEntryViewModel> QueueEntries { get; } = [];
+
     public DownloadQueueManager(
         IDownloadQueue queue,
         IDownloadQueueProcessor queueProcessor,
-        FetchSubtitlesUseCase fetchSubtitlesUseCase,
+        FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
+        FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
         CancelSubtitlesUseCase cancelSubtitlesUseCase)
     {
         _queue = queue;
@@ -30,7 +37,8 @@ public class DownloadQueueManager
 
         _queueProcessor = queueProcessor;
 
-        _fetchSubtitlesUseCase = fetchSubtitlesUseCase;
+        _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
+        _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
     }
 
@@ -88,18 +96,23 @@ public class DownloadQueueManager
             vm.Refresh();
     }
 
-    /// <summary>
-    /// All queue entries. Can be one queue item and a group item.
-    /// </summary>
-    public ObservableCollection<QueueEntryViewModel> QueueEntries { get; } = [];
-
     // Single items — no selection needed
-    private QueueItemViewModel CreateItemVm(QueueItem item) =>
-        new(item, ProceedItem, CancelItem, _fetchSubtitlesUseCase, _cancelSubtitlesUseCase);
+    private QueueItemViewModel CreateItemVm(QueueItem item)
+        => new(item,
+            ProceedItem,
+            CancelItem,
+            _fetchManualSubtitlesUseCase,
+            _fetchAutoSubtitlesUseCase,
+            _cancelSubtitlesUseCase);
 
     // Group items — selectable subtype
-    private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item) =>
-        new(item, ProceedItem, CancelItem, _fetchSubtitlesUseCase, _cancelSubtitlesUseCase);
+    private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item)
+        => new(item,
+            ProceedItem,
+            CancelItem,
+            _fetchManualSubtitlesUseCase,
+            _fetchAutoSubtitlesUseCase,
+            _cancelSubtitlesUseCase);
 
     private void RegisterItem(QueueItemViewModel vm)
         => _itemViewModels[vm.QueueItemId] = vm;

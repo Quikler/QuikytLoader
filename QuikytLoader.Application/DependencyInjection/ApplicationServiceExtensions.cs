@@ -16,7 +16,8 @@ public static class ApplicationServiceExtensions
         // Register Use Cases
         services.AddSingleton<AddToQueueUseCase>();
         services.AddSingleton<DownloadAndSendUseCase>();
-        services.AddSingleton<FetchSubtitlesUseCase>();
+        services.AddSingleton<FetchManualSubtitlesUseCase>();
+        services.AddSingleton<FetchAutoSubtitlesUseCase>();
         services.AddSingleton<CancelSubtitlesUseCase>();
         services.AddSingleton<FindExistingDownloadUseCase>();
 
