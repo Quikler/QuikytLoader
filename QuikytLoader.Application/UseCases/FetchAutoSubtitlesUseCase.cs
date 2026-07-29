@@ -20,7 +20,7 @@ public class FetchAutoSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitles
             return new SubtitleFetchResult.NotAllowed();
 
         var subtitlesDirectory =
-            tempDirectoryService.CreateSubdirectory(queueItem.Source.YoutubeVideoId, "subtitles");
+            tempDirectoryService.CreateSubdirectory(queueItem.Source.YoutubeVideoId, "auto-subtitles");
 
         SubtitleFetchResult? result = null;
 

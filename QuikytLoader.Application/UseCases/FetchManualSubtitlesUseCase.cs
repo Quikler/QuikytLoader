@@ -19,7 +19,7 @@ public class FetchManualSubtitlesUseCase(
             return new SubtitleFetchResult.NotAllowed();
 
         var subtitlesDirectory =
-            tempDirectoryService.CreateSubdirectory(queueItem.Source.YoutubeVideoId, "subtitles");
+            tempDirectoryService.CreateSubdirectory(queueItem.Source.YoutubeVideoId, "manual-subtitles");
 
         SubtitleFetchResult? result = null;
 
