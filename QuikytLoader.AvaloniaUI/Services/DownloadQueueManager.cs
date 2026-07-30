@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.UseCases;
+using QuikytLoader.AvaloniaUI.ViewModels;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 using QuikytLoader.Domain.Entities;
 
@@ -18,6 +19,8 @@ public class DownloadQueueManager
     private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
+    private readonly SettingsViewModel _settingsViewModel;
+
     private readonly Dictionary<Guid, QueueItemViewModel> _itemViewModels = [];
 
     /// <summary>
@@ -30,7 +33,8 @@ public class DownloadQueueManager
         IDownloadQueueProcessor queueProcessor,
         FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase)
+        CancelSubtitlesUseCase cancelSubtitlesUseCase,
+        SettingsViewModel settingsViewModel)
     {
         _queue = queue;
         _queue.Changed += OnQueueChanged;
@@ -40,6 +44,8 @@ public class DownloadQueueManager
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
         _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
+
+        _settingsViewModel = settingsViewModel;
     }
 
     private void OnQueueChanged(QueueEvent evt)
@@ -103,7 +109,8 @@ public class DownloadQueueManager
             CancelItem,
             _fetchManualSubtitlesUseCase,
             _fetchAutoSubtitlesUseCase,
-            _cancelSubtitlesUseCase);
+            _cancelSubtitlesUseCase,
+            _settingsViewModel);
 
     // Group items — selectable subtype
     private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item)
@@ -112,7 +119,8 @@ public class DownloadQueueManager
             CancelItem,
             _fetchManualSubtitlesUseCase,
             _fetchAutoSubtitlesUseCase,
-            _cancelSubtitlesUseCase);
+            _cancelSubtitlesUseCase,
+            _settingsViewModel);
 
     private void RegisterItem(QueueItemViewModel vm)
         => _itemViewModels[vm.QueueItemId] = vm;

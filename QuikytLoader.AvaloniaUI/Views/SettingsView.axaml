@@ -175,7 +175,6 @@
                         Background="{DynamicResource AccentFillColorDefaultBrush}"
                         Foreground="White"
                         IsEnabled="{Binding HasUnsavedChanges}"
-                        HorizontalAlignment="Left"
                         Height="40"
                         Padding="24,0"
                         FontSize="14"

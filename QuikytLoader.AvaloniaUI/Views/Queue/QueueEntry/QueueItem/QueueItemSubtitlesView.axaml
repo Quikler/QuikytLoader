@@ -2,6 +2,7 @@
              x:Name="QueueItemSubtitlesViewName"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
+             xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:vcommon="using:QuikytLoader.AvaloniaUI.Views.Common"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:common="using:QuikytLoader.Domain.Common"
@@ -61,16 +62,17 @@
                             </StackPanel>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleLanguageSelectionRequiredState}">
+                        <DataTemplate DataType="{x:Type vmqe:SubtitleLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
-                                                     MessageForeground="{DynamicResource SystemFillColorSuccessBrush}">
+                                                     MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
+                                                     DetailsMessage="{Binding DetailsMessage}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
                                             FontWeight="SemiBold"
                                             Padding="0"
                                             Background="Transparent"
                                             BorderThickness="0">
-                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorNeutralBrush}"
                                                          Symbol="Checkmark"
                                                          FontSize="18"/>
                                     </Button>
@@ -90,10 +92,10 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleLanguageRetryRequiredState}">
+                        <DataTemplate DataType="{x:Type vmqe:SubtitleRetryLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding Details}">
+                                                     DetailsMessage="{Binding DetailsMessage}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
                                             FontWeight="SemiBold"
@@ -120,10 +122,51 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
+                        <DataTemplate DataType="{x:Type vmqe:SubtitleChangeAutoSubtitlesOptionState}">
+                            <vcommon:TextWithDetails Message="{Binding Message}"
+                                                     MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                     DetailsMessage="{Binding DetailsMessage}">
+                                <vcommon:TextWithDetails.LeftSideActionContent>
+                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
+                                            FontWeight="SemiBold"
+                                            Padding="0"
+                                            Background="Transparent"
+                                            BorderThickness="0">
+                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                         Symbol="Refresh"
+                                                         FontSize="18"/>
+                                    </Button>
+                                </vcommon:TextWithDetails.LeftSideActionContent>
+
+                                <vcommon:TextWithDetails.RightSideContent>
+                                    <Grid ColumnDefinitions="Auto,Auto"
+                                          ColumnSpacing="4">
+                                        <ComboBox ItemsSource="{x:Static enums:DomainEnums.AutoSubtitlesOptions}"
+                                                  SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SettingsViewModel.AutoSubtitlesOption}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding, Converter={StaticResource EnumToSpacedStringConverter}}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        
+                                        <Button Grid.Column="1"
+                                                Content="Save"
+                                                Command="{Binding #QueueItemSubtitlesViewName.DataContext.SettingsViewModel.SaveSettingsCommand}"
+                                                IsEnabled="{Binding #QueueItemSubtitlesViewName.DataContext.SettingsViewModel.HasUnsavedChanges}"
+                                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                Foreground="White"
+                                                FontSize="14"
+                                                FontWeight="SemiBold"/>
+                                    </Grid>
+                                </vcommon:TextWithDetails.RightSideContent>
+                            </vcommon:TextWithDetails>
+                        </DataTemplate>
+
                         <DataTemplate DataType="{x:Type vmqe:SubtitleErrorState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding Details}">
+                                                     DetailsMessage="{Binding DetailsMessage}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
                                             FontWeight="SemiBold"

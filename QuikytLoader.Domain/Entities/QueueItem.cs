@@ -29,6 +29,8 @@ public sealed class QueueItem
 
     public IReadOnlyDictionary<string, string>? Subtitles { get; private set; }
 
+    public SubtitleFetchResult? LastSeenAutoSubtitleFetchResult { get; private set; }
+
     public bool CanStartDownload =>
         Status is DownloadStatus.Queued
             or DownloadStatus.Failed
@@ -73,17 +75,20 @@ public sealed class QueueItem
             _ => false
         };
 
-    public void FinishAutoSubtitlesLoading(SubtitleFetchResult result) =>
+    public void FinishAutoSubtitlesLoading(SubtitleFetchResult result)
+    {
         _allowAutoSubtitlesLoading = result switch
         {
             SubtitleFetchResult.Fetched => false,
             SubtitleFetchResult.NotFound => false,
             SubtitleFetchResult.Failed => true,
             SubtitleFetchResult.Canceled => true,
-            SubtitleFetchResult.RequiresLanguageSelection => true,
-            SubtitleFetchResult.LanguageMayBeWrong => true,
+            SubtitleFetchResult.ActionRequired => true,
             _ => false
         };
+
+        LastSeenAutoSubtitleFetchResult = result;
+    }
 
     public void SetManualSubtitles(IReadOnlyDictionary<string, string> subtitles)
     {
@@ -143,9 +148,9 @@ public abstract record SubtitleFetchResult
 {
     public sealed record Fetched : SubtitleFetchResult;
     public sealed record NotFound(string Message, bool AllowRetry) : SubtitleFetchResult;
-    public sealed record Failed(string Message, bool AllowRetry, string? Details = null) : SubtitleFetchResult;
+    public sealed record Failed(string Message, bool AllowRetry, string? DetailsMessage = null) : SubtitleFetchResult;
     public sealed record Canceled(string Message, bool AllowRetry) : SubtitleFetchResult;
     public sealed record NotAllowed : SubtitleFetchResult;
-    public sealed record RequiresLanguageSelection(string Message) : SubtitleFetchResult;
-    public sealed record LanguageMayBeWrong(string Message, string Details) : SubtitleFetchResult;
+
+    public sealed record ActionRequired(string Message, string? DetailsMessage, SubtitleActionRequired SubtitleActionRequired, bool IsError = false) : SubtitleFetchResult;
 }

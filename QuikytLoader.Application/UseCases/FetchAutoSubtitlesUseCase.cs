@@ -31,10 +31,13 @@ public class FetchAutoSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitles
             {
                 case AutoSubtitlesOption.ManualLanguageSelection
                     when manuallySelectedLanguageForAutoSubtitles is null:
-                    return result = new SubtitleFetchResult.RequiresLanguageSelection(
-                        "Please select video language");
+                    return result = new SubtitleFetchResult.ActionRequired(
+                        "Please select video language",
+                        null,
+                        SubtitleActionRequired.LanguageSelection);
 
                 case AutoSubtitlesOption.AutoLanguageDetection:
+                    manuallySelectedLanguageForAutoSubtitles = string.Empty;
                     break;
 
                 case AutoSubtitlesOption.FallbackToEnglishLanguage:
@@ -52,12 +55,18 @@ public class FetchAutoSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitles
             if (!subtitlesResult.IsSuccess)
             {
                 if (autoSubtitlesOption == AutoSubtitlesOption.ManualLanguageSelection)
-                    return result = new SubtitleFetchResult.LanguageMayBeWrong(
-                        $"Failed to fetch auto subtitles - please verify your language and try again", subtitlesResult.Error.Message);
+                    return result = new SubtitleFetchResult.ActionRequired(
+                        "Failed to fetch auto subtitles - please verify your language and try again",
+                        subtitlesResult.Error.Message,
+                        SubtitleActionRequired.LanguageSelection,
+                        true);
 
                 if (autoSubtitlesOption == AutoSubtitlesOption.AutoLanguageDetection)
-                    return result = new SubtitleFetchResult.Failed(
-                        $"Failed to fetch auto subtitles with auto language detection", true, subtitlesResult.Error.Message);
+                    return result = new SubtitleFetchResult.ActionRequired(
+                        "Failed to fetch auto subtitles with auto language detection, please try again or change Auto Subtitles option in settings",
+                        subtitlesResult.Error.Message,
+                        SubtitleActionRequired.ChangeAutoSubtitlesOption,
+                        true);
             }
 
             if (subtitlesResult.Value is not null)
@@ -72,9 +81,11 @@ public class FetchAutoSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitles
         }
         catch (OperationCanceledException)
         {
-            return result = new SubtitleFetchResult.Canceled(
-                Errors.Youtube.SubtitlesFetchCanceled().Message,
-                true);
+            return result = queueItem.LastSeenAutoSubtitleFetchResult switch
+            {
+                SubtitleFetchResult.ActionRequired r => r,
+                _ => new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message, true)
+            };
         }
         finally
         {

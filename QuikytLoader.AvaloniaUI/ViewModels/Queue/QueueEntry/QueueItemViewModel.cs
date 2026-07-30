@@ -22,13 +22,16 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
+    public SettingsViewModel SettingsViewModel { get; }
+
     public QueueItemViewModel(
         QueueItem model,
         Action<Guid> proceedCallback,
         Action<Guid> cancelCallback,
         FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase)
+        CancelSubtitlesUseCase cancelSubtitlesUseCase,
+        SettingsViewModel settingsViewModel)
     {
         Model = model;
 
@@ -38,6 +41,8 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
         _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
+
+        SettingsViewModel = settingsViewModel;
 
         RefreshInternal();
     }
@@ -128,15 +133,15 @@ public partial class QueueItemViewModel : QueueEntryViewModel
                 break;
 
             case SubtitleFetchResult.Failed r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, r.DetailsMessage);
                 break;
 
             case SubtitleFetchResult.NotFound r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
                 break;
 
             case SubtitleFetchResult.Canceled r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
                 break;
 
             case SubtitleFetchResult.NotAllowed r:
@@ -162,29 +167,32 @@ public partial class QueueItemViewModel : QueueEntryViewModel
                 SubtitleState = new SubtitleSuccessState();
                 break;
 
-            case SubtitleFetchResult.RequiresLanguageSelection r:
-                SubtitleState = new SubtitleLanguageSelectionRequiredState(r.Message);
-                break;
-
-            case SubtitleFetchResult.LanguageMayBeWrong r:
-                SubtitleState = new SubtitleLanguageRetryRequiredState(r.Message, r.Details);
+            case SubtitleFetchResult.ActionRequired r:
+                SubtitleState = r.SubtitleActionRequired switch
+                {
+                    SubtitleActionRequired.ChangeAutoSubtitlesOption =>
+                        new SubtitleChangeAutoSubtitlesOptionState(r.Message, r.DetailsMessage),
+                    SubtitleActionRequired.LanguageSelection => r.IsError
+                        ? new SubtitleRetryLanguageSelectionState(r.Message, r.DetailsMessage)
+                        : new SubtitleLanguageSelectionState(r.Message, r.DetailsMessage),
+                    _ => throw new InvalidOperationException()
+                };
                 break;
 
             case SubtitleFetchResult.Failed r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, r.Details);
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, r.DetailsMessage);
                 break;
 
             case SubtitleFetchResult.NotFound r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
                 break;
 
             case SubtitleFetchResult.Canceled r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry);
+                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
                 break;
 
             case SubtitleFetchResult.NotAllowed:
                 SubtitleState = SubtitleState;
-
                 break;
         }
 
@@ -285,7 +293,8 @@ public abstract record SubtitleUiState;
 
 public sealed record SubtitleIdleState : SubtitleUiState;
 public sealed record SubtitleLoadingState : SubtitleUiState;
-public sealed record SubtitleLanguageSelectionRequiredState(string Message) : SubtitleUiState;
-public sealed record SubtitleLanguageRetryRequiredState(string Message, string Details) : SubtitleUiState;
-public sealed record SubtitleErrorState(string Message, bool AllowRetry, string? Details = null) : SubtitleUiState;
+public sealed record SubtitleErrorState(string Message, bool AllowRetry, string? DetailsMessage) : SubtitleUiState;
 public sealed record SubtitleSuccessState : SubtitleUiState;
+public sealed record SubtitleLanguageSelectionState(string Message, string? DetailsMessage) : SubtitleUiState;
+public sealed record SubtitleRetryLanguageSelectionState(string Message, string? DetailsMessage) : SubtitleUiState;
+public sealed record SubtitleChangeAutoSubtitlesOptionState(string Message, string? DetailsMessage) : SubtitleUiState;
