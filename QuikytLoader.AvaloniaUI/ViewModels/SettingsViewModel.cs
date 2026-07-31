@@ -1,3 +1,4 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
@@ -35,6 +36,8 @@ public partial class SettingsViewModel : ViewModelBase
         BotToken != _savedBotToken ||
         ChatId != _savedChatId;
 
+    public event Action<bool>? AutoSubtitlesOptionWasSavedToSettings;
+
     public SettingsViewModel(IUserSettings userSettings)
     {
         _userSettings = userSettings;
@@ -64,6 +67,8 @@ public partial class SettingsViewModel : ViewModelBase
             ChatId = ChatId,
             BotToken = BotToken
         };
+
+        AutoSubtitlesOptionWasSavedToSettings?.Invoke(AutoSubtitlesOption != _savedAutoSubtitlesOption);
 
         MarkAsSaved();
         StatusMessage = "Settings saved successfully!";

@@ -4,6 +4,7 @@
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:vcommon="using:QuikytLoader.AvaloniaUI.Views.Common"
+             xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:common="using:QuikytLoader.Domain.Common"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemSubtitlesView"
@@ -153,13 +154,29 @@
                                         <Button Grid.Column="1"
                                                 Content="Save"
                                                 Command="{Binding #QueueItemSubtitlesViewName.DataContext.SettingsViewModel.SaveSettingsCommand}"
-                                                IsEnabled="{Binding #QueueItemSubtitlesViewName.DataContext.SettingsViewModel.HasUnsavedChanges}"
                                                 Background="{DynamicResource AccentFillColorDefaultBrush}"
                                                 Foreground="White"
                                                 FontSize="14"
                                                 FontWeight="SemiBold"/>
                                     </Grid>
                                 </vcommon:TextWithDetails.RightSideContent>
+                            </vcommon:TextWithDetails>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type vmqe:SubtitleAutoSubtitlesOptionSettingsChangedState}">
+                            <vcommon:TextWithDetails Message="{Binding Message}"
+                                                     MessageForeground="{DynamicResource SystemFillColorNeutralBrush}">
+                                <vcommon:TextWithDetails.LeftSideActionContent>
+                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
+                                            FontWeight="SemiBold"
+                                            Padding="0"
+                                            Background="Transparent"
+                                            BorderThickness="0">
+                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorNeutralBrush}"
+                                                         Symbol="Refresh"
+                                                         FontSize="18"/>
+                                    </Button>
+                                </vcommon:TextWithDetails.LeftSideActionContent>
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 

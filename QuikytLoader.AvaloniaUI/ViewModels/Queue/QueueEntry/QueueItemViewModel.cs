@@ -22,6 +22,8 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
+    private bool _autoSubtitlesOptionWasSavedToSettings;
+
     public SettingsViewModel SettingsViewModel { get; }
 
     public QueueItemViewModel(
@@ -43,6 +45,24 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
 
         SettingsViewModel = settingsViewModel;
+        SettingsViewModel.AutoSubtitlesOptionWasSavedToSettings += autoSubtitlesOptionWasSavedToSettings =>
+        {
+            if (!autoSubtitlesOptionWasSavedToSettings ||
+                SubtitleState is SubtitleIdleState
+                    or SubtitleSuccessState
+                    or SubtitleErrorState { AllowRetry: false }) return;
+
+            if (SubtitleState is SubtitleLoadingState)
+            {
+                CancelSubtitles();
+                _autoSubtitlesOptionWasSavedToSettings = true;
+            }
+            else
+            {
+                SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
+                    "Auto Subtitles Option settings were changed, please click refresh");
+            }
+        };
 
         RefreshInternal();
     }
@@ -141,6 +161,13 @@ public partial class QueueItemViewModel : QueueEntryViewModel
                 break;
 
             case SubtitleFetchResult.Canceled r:
+                if (_autoSubtitlesOptionWasSavedToSettings)
+                {
+                    SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
+                        "Auto Subtitles Option settings were changed, please click refresh");
+                    _autoSubtitlesOptionWasSavedToSettings = false;
+                    break;
+                }
                 SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
                 break;
 
@@ -168,6 +195,14 @@ public partial class QueueItemViewModel : QueueEntryViewModel
                 break;
 
             case SubtitleFetchResult.ActionRequired r:
+                if (_autoSubtitlesOptionWasSavedToSettings)
+                {
+                    SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
+                        "Auto Subtitles Option settings were changed, please click refresh");
+                    _autoSubtitlesOptionWasSavedToSettings = false;
+                    break;
+                }
+
                 SubtitleState = r.SubtitleActionRequired switch
                 {
                     SubtitleActionRequired.ChangeAutoSubtitlesOption =>
@@ -188,6 +223,13 @@ public partial class QueueItemViewModel : QueueEntryViewModel
                 break;
 
             case SubtitleFetchResult.Canceled r:
+                if (_autoSubtitlesOptionWasSavedToSettings)
+                {
+                    SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
+                        "Auto Subtitles Option settings were changed, please click refresh");
+                    _autoSubtitlesOptionWasSavedToSettings = false;
+                    break;
+                }
                 SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
                 break;
 
@@ -298,3 +340,4 @@ public sealed record SubtitleSuccessState : SubtitleUiState;
 public sealed record SubtitleLanguageSelectionState(string Message, string? DetailsMessage) : SubtitleUiState;
 public sealed record SubtitleRetryLanguageSelectionState(string Message, string? DetailsMessage) : SubtitleUiState;
 public sealed record SubtitleChangeAutoSubtitlesOptionState(string Message, string? DetailsMessage) : SubtitleUiState;
+public sealed record SubtitleAutoSubtitlesOptionSettingsChangedState(string Message) : SubtitleUiState;

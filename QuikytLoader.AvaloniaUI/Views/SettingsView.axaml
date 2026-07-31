@@ -174,7 +174,6 @@
                         Command="{Binding SaveSettingsCommand}"
                         Background="{DynamicResource AccentFillColorDefaultBrush}"
                         Foreground="White"
-                        IsEnabled="{Binding HasUnsavedChanges}"
                         Height="40"
                         Padding="24,0"
                         FontSize="14"
