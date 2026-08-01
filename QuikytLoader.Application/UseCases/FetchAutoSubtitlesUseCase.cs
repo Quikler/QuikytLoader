@@ -1,4 +1,6 @@
-﻿using QuikytLoader.Application.Interfaces.Queue;
+﻿using System.Diagnostics;
+using QuikytLoader.Application.Interfaces.LanguageIdentification;
+using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Application.Interfaces.Temp;
@@ -8,11 +10,17 @@ using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.Application.UseCases;
 
-public class FetchAutoSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitlesService, IDownloadQueue queue, IUserSettings userSettings, ITempDirectoryService tempDirectoryService)
+public class FetchAutoSubtitlesUseCase(
+    IYoutubeSubtitlesService youtubeSubtitlesService,
+    IYoutubeMetadataService youtubeMetadataService,
+    IDownloadQueue queue,
+    IUserSettings userSettings,
+    ILanguageIdentifier languageIdentifier,
+    ITempDirectoryService tempDirectoryService)
 {
     public async Task<SubtitleFetchResult> ExecuteAsync(
         Guid itemId,
-        string? manuallySelectedLanguageForAutoSubtitles = null)
+        string? manuallySelectedLanguage = null)
     {
         var queueItem = queue.GetItem(itemId);
 
@@ -30,27 +38,40 @@ public class FetchAutoSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitles
             switch (autoSubtitlesOption)
             {
                 case AutoSubtitlesOption.ManualLanguageSelection
-                    when manuallySelectedLanguageForAutoSubtitles is null:
+                    when manuallySelectedLanguage is null:
                     return result = new SubtitleFetchResult.ActionRequired(
                         "Please select video language",
                         null,
                         SubtitleActionRequired.LanguageSelection);
 
                 case AutoSubtitlesOption.AutoLanguageDetection:
-                    manuallySelectedLanguageForAutoSubtitles = string.Empty;
+                    var videoMetadata = queueItem.Metadata;
+                    if (videoMetadata is null)
+                    {
+                        var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(queueItem.Source);
+                        if (!videoMetadataResult.IsSuccess)
+                            return result = new SubtitleFetchResult.Failed(
+                                videoMetadataResult.Error.Message,
+                                true);
+                        videoMetadata = videoMetadataResult.Value;
+                    }
+                    manuallySelectedLanguage =
+                        languageIdentifier.Identify($"{videoMetadata.Title}\n{videoMetadata.Description}");
                     break;
 
                 case AutoSubtitlesOption.FallbackToEnglishLanguage:
-                    manuallySelectedLanguageForAutoSubtitles = "en";
+                    manuallySelectedLanguage = "en";
                     break;
             }
+
+            if (manuallySelectedLanguage is null)
+                throw new UnreachableException();
 
             var subtitlesResult = await youtubeSubtitlesService.FetchAutoSubtitlesAsync(
                 queueItem.Id,
                 queueItem.Source,
-                queueItem.Metadata,
                 subtitlesDirectory,
-                manuallySelectedLanguageForAutoSubtitles);
+                manuallySelectedLanguage);
 
             if (!subtitlesResult.IsSuccess)
             {

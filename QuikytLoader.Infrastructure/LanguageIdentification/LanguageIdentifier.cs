@@ -1,4 +1,5 @@
 ﻿using NTextCat;
+using QuikytLoader.Application.Interfaces.LanguageIdentification;
 using QuikytLoader.Domain.Common;
 
 namespace QuikytLoader.Infrastructure.LanguageIdentification;

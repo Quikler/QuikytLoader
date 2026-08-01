@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.Application.Interfaces.LanguageIdentification;
 using QuikytLoader.Application.Interfaces.Parsers;
 using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.Interfaces.Repositories;
