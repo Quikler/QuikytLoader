@@ -23,8 +23,7 @@ public class FetchAutoSubtitlesUseCase(
         Language? manuallySelectedLanguage = null)
     {
         var queueItem = queue.GetItem(itemId);
-
-        if (!queueItem.StartAutoSubtitlesLoading())
+        if (!queueItem.Subtitles.StartAutoSubtitlesLoading())
             return new SubtitleFetchResult.NotAllowed();
 
         var subtitlesDirectory =
@@ -92,7 +91,7 @@ public class FetchAutoSubtitlesUseCase(
 
             if (subtitlesResult.Value is not null)
             {
-                queueItem.SetAutoSubtitles(subtitlesResult.Value);
+                queueItem.Subtitles.SetAutoSubtitles(subtitlesResult.Value);
                 return result = new SubtitleFetchResult.Fetched();
             }
 
@@ -102,7 +101,7 @@ public class FetchAutoSubtitlesUseCase(
         }
         catch (OperationCanceledException)
         {
-            return result = queueItem.LastSeenAutoSubtitleFetchResult switch
+            return result = queueItem.Subtitles.LastSeenAutoSubtitleFetchResult switch
             {
                 SubtitleFetchResult.ActionRequired r => r,
                 _ => new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message, true)
@@ -110,7 +109,7 @@ public class FetchAutoSubtitlesUseCase(
         }
         finally
         {
-            queueItem.FinishAutoSubtitlesLoading(
+            queueItem.Subtitles.FinishAutoSubtitlesLoading(
                 result ?? new SubtitleFetchResult.Failed(
                     "Unexpected subtitle fetch error",
                     true));

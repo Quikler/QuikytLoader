@@ -14,8 +14,7 @@ public class FetchManualSubtitlesUseCase(
     public async Task<SubtitleFetchResult> ExecuteAsync(Guid itemId)
     {
         var queueItem = queue.GetItem(itemId);
-
-        if (!queueItem.StartManualSubtitlesLoading())
+        if (!queueItem.Subtitles.StartManualSubtitlesLoading())
             return new SubtitleFetchResult.NotAllowed();
 
         var subtitlesDirectory =
@@ -35,7 +34,7 @@ public class FetchManualSubtitlesUseCase(
 
             if (subtitlesResult.Value is not null)
             {
-                queueItem.SetManualSubtitles(subtitlesResult.Value);
+                queueItem.Subtitles.SetManualSubtitles(subtitlesResult.Value);
                 return result = new SubtitleFetchResult.Fetched();
             }
 
@@ -51,7 +50,7 @@ public class FetchManualSubtitlesUseCase(
         }
         finally
         {
-            queueItem.FinishManualSubtitlesLoading(
+            queueItem.Subtitles.FinishManualSubtitlesLoading(
                 result ?? new SubtitleFetchResult.Failed(
                     "Unexpected subtitle fetch error",
                     true));

@@ -148,7 +148,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         switch (result)
         {
             case SubtitleFetchResult.Fetched:
-                SubtitleTabs = [.. Model.Subtitles!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitleTabs = [.. Model.Subtitles.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
                 SubtitleState = new SubtitleSuccessState();
                 break;
 
@@ -190,7 +190,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         switch (result)
         {
             case SubtitleFetchResult.Fetched:
-                SubtitleTabs = [.. Model.Subtitles!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitleTabs = [.. Model.Subtitles.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
                 SubtitleState = new SubtitleSuccessState();
                 break;
 
