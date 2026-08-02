@@ -1,14 +1,13 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              x:Name="QueueItemSubtitlesViewName"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
-             xmlns:enums="using:QuikytLoader.Domain.Enums"
+             xmlns:vmqes="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry.Subtitles"
              xmlns:vcommon="using:QuikytLoader.AvaloniaUI.Views.Common"
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:common="using:QuikytLoader.Domain.Common"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemSubtitlesView"
-             x:DataType="vmqe:QueueItemViewModel"
+             x:DataType="vmqes:QueueItemSubtitlesViewModel"
              IsVisible="{Binding AreSubtitlesVisible}">
 
     <Border Classes="QueueItemBorderBottom">
@@ -23,7 +22,7 @@
                           SelectedItem="{Binding SelectedTab}"
                           IsVisible="{Binding SubtitleTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <TabStrip.ItemTemplate>
-                        <DataTemplate x:DataType="vmqe:TabItemViewModel">
+                        <DataTemplate x:DataType="vmqes:TabItemViewModel">
                             <TextBlock Text="{Binding Header}" />
                         </DataTemplate>
                     </TabStrip.ItemTemplate>
@@ -33,7 +32,7 @@
                                 Content="{Binding SubtitleState}">
                     <ContentControl.DataTemplates>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleLoadingState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleLoadingState}">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Spacing="10">
@@ -63,7 +62,7 @@
                             </StackPanel>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleLanguageSelectionState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
                                                      DetailsMessage="{Binding DetailsMessage}">
@@ -93,7 +92,7 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleRetryLanguageSelectionState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleRetryLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
                                                      DetailsMessage="{Binding DetailsMessage}">
@@ -123,7 +122,7 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleChangeAutoSubtitlesOptionState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleChangeAutoSubtitlesOptionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
                                                      DetailsMessage="{Binding DetailsMessage}">
@@ -163,7 +162,7 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleAutoSubtitlesOptionSettingsChangedState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleAutoSubtitlesOptionSettingsChangedState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorNeutralBrush}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
@@ -180,7 +179,7 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleErrorState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleErrorState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
                                                      DetailsMessage="{Binding DetailsMessage}">
@@ -199,10 +198,10 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleSuccessState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleSuccessState}">
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqe:SubtitleIdleState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitleIdleState}">
                         </DataTemplate>
 
                     </ContentControl.DataTemplates>
@@ -213,7 +212,7 @@
             <ContentControl Grid.Row="1"
                             Content="{Binding SelectedTab}">
                 <ContentControl.ContentTemplate>
-                    <DataTemplate x:DataType="vmqe:TabItemViewModel">
+                    <DataTemplate x:DataType="vmqes:TabItemViewModel">
                         <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                       VerticalScrollBarVisibility="Auto">
                             <SelectableTextBlock Text="{Binding Content}"

@@ -4,13 +4,15 @@ namespace QuikytLoader.Domain.Entities;
 
 public sealed class Subtitles
 {
+    public Guid QueueItemId { get; }
+
     private bool _allowManualLoading = true;
     private bool _allowAutoLoading = true;
 
     private IReadOnlyDictionary<string, string>? _manualSubtitles;
     private IReadOnlyDictionary<string, string>? _autoSubtitles;
 
-    internal Subtitles() { }
+    internal Subtitles(Guid queueItemId) => QueueItemId = queueItemId;
 
     public IReadOnlyDictionary<string, string>? Dictionary { get; private set; }
 

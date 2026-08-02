@@ -5,11 +5,11 @@ namespace QuikytLoader.Domain.Entities;
 
 public sealed class QueueItem
 {
-    public Guid Id { get; } = Guid.NewGuid();
+    public Guid Id { get; }
 
-    public string? GroupId { get; init; }
+    public Subtitles Subtitles { get; }
 
-    public required DownloadSource Source { get; init; }
+    public DownloadSource Source { get; }
 
     public required VideoMetadata? Metadata { get; set; }
 
@@ -19,9 +19,15 @@ public sealed class QueueItem
 
     public DownloadStatus Status { get; set; }
 
-    public Subtitles Subtitles { get; } = new();
-
     public Error? Error { get; set; }
+
+    public QueueItem(DownloadSource downloadSource)
+    {
+        Id = Guid.NewGuid();
+        Subtitles = new(Id);
+
+        Source = downloadSource;
+    }
 
     public bool CanStartDownload =>
         Status is DownloadStatus.Queued

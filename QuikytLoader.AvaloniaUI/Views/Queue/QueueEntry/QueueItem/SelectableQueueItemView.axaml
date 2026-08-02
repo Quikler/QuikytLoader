@@ -19,7 +19,7 @@
             </Grid>
         </Border>
 
-        <vqeqi:QueueItemSubtitlesView />
+        <vqeqi:QueueItemSubtitlesView DataContext="{Binding QueueItemSubtitlesViewModel}" />
 
     </StackPanel>
 
