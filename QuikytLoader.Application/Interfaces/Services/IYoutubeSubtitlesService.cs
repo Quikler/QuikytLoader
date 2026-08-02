@@ -14,7 +14,7 @@ public interface IYoutubeSubtitlesService
         Guid itemId,
         DownloadSource downloadSource,
         string tempDirectory,
-        string language);
+        string iso6391Code);
 
     void CancelSubtitlesFetching(Guid itemId);
 }

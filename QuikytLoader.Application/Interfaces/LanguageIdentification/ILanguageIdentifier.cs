@@ -1,6 +1,8 @@
-﻿namespace QuikytLoader.Application.Interfaces.LanguageIdentification;
+﻿using QuikytLoader.Domain.Common;
+
+namespace QuikytLoader.Application.Interfaces.LanguageIdentification;
 
 public interface ILanguageIdentifier
 {
-    public string Identify(string text);
+    public Language Identify(string text);
 }

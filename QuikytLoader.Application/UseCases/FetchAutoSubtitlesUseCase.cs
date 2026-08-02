@@ -20,7 +20,7 @@ public class FetchAutoSubtitlesUseCase(
 {
     public async Task<SubtitleFetchResult> ExecuteAsync(
         Guid itemId,
-        string? manuallySelectedLanguage = null)
+        Language? manuallySelectedLanguage = null)
     {
         var queueItem = queue.GetItem(itemId);
 
@@ -60,7 +60,7 @@ public class FetchAutoSubtitlesUseCase(
                     break;
 
                 case AutoSubtitlesOption.FallbackToEnglishLanguage:
-                    manuallySelectedLanguage = "en";
+                    manuallySelectedLanguage = Language.English;
                     break;
             }
 
@@ -71,7 +71,7 @@ public class FetchAutoSubtitlesUseCase(
                 queueItem.Id,
                 queueItem.Source,
                 subtitlesDirectory,
-                manuallySelectedLanguage);
+                manuallySelectedLanguage.Value.Iso6391Code);
 
             if (!subtitlesResult.IsSuccess)
             {
@@ -84,7 +84,7 @@ public class FetchAutoSubtitlesUseCase(
 
                 if (autoSubtitlesOption == AutoSubtitlesOption.AutoLanguageDetection)
                     return result = new SubtitleFetchResult.ActionRequired(
-                        "Failed to fetch auto subtitles with auto language detection, please try again or change Auto Subtitles option in settings",
+                        $"Failed to fetch auto subtitles (langue detected - '{manuallySelectedLanguage.Value.DisplayName}'), please change Auto Subtitles option in settings",
                         subtitlesResult.Error.Message,
                         SubtitleActionRequired.ChangeAutoSubtitlesOption,
                         true);

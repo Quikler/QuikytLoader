@@ -80,7 +80,7 @@
                                 </vcommon:TextWithDetails.LeftSideActionContent>
 
                                 <vcommon:TextWithDetails.RightSideContent>
-                                    <ComboBox ItemsSource="{x:Static common:Languages.All}"
+                                    <ComboBox ItemsSource="{x:Static common:Language.Options}"
                                               SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="common:Language">
@@ -110,7 +110,7 @@
                                 </vcommon:TextWithDetails.LeftSideActionContent>
 
                                 <vcommon:TextWithDetails.RightSideContent>
-                                    <ComboBox ItemsSource="{x:Static common:Languages.All}"
+                                    <ComboBox ItemsSource="{x:Static common:Language.Options}"
                                               SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="common:Language">

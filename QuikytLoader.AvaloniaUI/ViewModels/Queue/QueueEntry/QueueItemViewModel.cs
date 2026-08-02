@@ -78,7 +78,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
     [ObservableProperty] private double _progress;
     [ObservableProperty] private string? _errorMessage;
 
-    [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Languages.All.First();
+    [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Language.English;
     [ObservableProperty] private SubtitleUiState _subtitleState = new SubtitleIdleState();
     [ObservableProperty] private TabItemViewModel[]? _subtitleTabs;
     [ObservableProperty] private TabItemViewModel? _selectedTab;
@@ -185,7 +185,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
         var result = await _fetchAutoSubtitlesUseCase.ExecuteAsync(
             Model.Id,
-            language?.Iso6391Name);
+            language);
 
         switch (result)
         {

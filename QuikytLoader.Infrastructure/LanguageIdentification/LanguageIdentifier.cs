@@ -6,6 +6,26 @@ namespace QuikytLoader.Infrastructure.LanguageIdentification;
 
 internal class LanguageIdentifier : ILanguageIdentifier
 {
+    // Language keys are stored by Iso6393 code
+    private static readonly IReadOnlyDictionary<string, Language> ByIso6393 =
+        new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["eng"] = Language.English,
+            ["rus"] = Language.Russian,
+            ["deu"] = Language.German,
+            ["dan"] = Language.Danish,
+            ["fra"] = Language.French,
+            ["ita"] = Language.Italian,
+            ["jpn"] = Language.Japanese,
+            ["kor"] = Language.Korean,
+            ["nld"] = Language.Dutch,
+            ["nor"] = Language.Norwegian,
+            ["por"] = Language.Portuguese,
+            ["spa"] = Language.Spanish,
+            ["swe"] = Language.Swedish,
+            ["zho"] = Language.Chinese,
+        };
+
     private static readonly RankedLanguageIdentifier Identifier = GetIdentifier();
     private static RankedLanguageIdentifier GetIdentifier()
     {
@@ -15,11 +35,10 @@ internal class LanguageIdentifier : ILanguageIdentifier
         return new RankedLanguageIdentifierFactory().Load(stream);
     }
 
-    public string Identify(string text)
-        => Languages.FromIso6393(
+    public Language Identify(string text)
+        => ByIso6393[
             Identifier
                 .Identify(text)
                 .First()
-                .Item1.Iso639_3)
-            .Iso6391Name;
+                .Item1.Iso639_3];
 }
