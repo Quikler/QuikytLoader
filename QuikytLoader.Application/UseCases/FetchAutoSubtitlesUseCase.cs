@@ -50,8 +50,7 @@ public class FetchAutoSubtitlesUseCase(
                         var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(queueItem.Source);
                         if (!videoMetadataResult.IsSuccess)
                             return result = new SubtitleFetchResult.Failed(
-                                videoMetadataResult.Error.Message,
-                                true);
+                                videoMetadataResult.Error.Message);
                         videoMetadata = videoMetadataResult.Value;
                     }
                     manuallySelectedLanguage =
@@ -74,19 +73,25 @@ public class FetchAutoSubtitlesUseCase(
 
             if (!subtitlesResult.IsSuccess)
             {
-                if (autoSubtitlesOption == AutoSubtitlesOption.ManualLanguageSelection)
-                    return result = new SubtitleFetchResult.ActionRequired(
-                        "Failed to fetch auto subtitles - please verify your language and try again",
-                        subtitlesResult.Error.Message,
-                        SubtitleActionRequired.LanguageSelection,
-                        true);
+                var (message, action) = autoSubtitlesOption switch
+                {
+                    AutoSubtitlesOption.ManualLanguageSelection =>
+                        ("Failed to fetch auto subtitles - please verify your language and try again",
+                        SubtitleActionRequired.LanguageSelection),
+                    AutoSubtitlesOption.AutoLanguageDetection =>
+                        ($"Failed to fetch auto subtitles (language detected - '{manuallySelectedLanguage.Value.DisplayName}'), please change Auto Subtitles option in settings",
+                        SubtitleActionRequired.ChangeAutoSubtitlesOption),
+                    AutoSubtitlesOption.FallbackToEnglishLanguage =>
+                        ($"Failed to fetch auto subtitles with 'English' language, please change Auto Subtitles option in settings",
+                        SubtitleActionRequired.ChangeAutoSubtitlesOption),
+                    _ => throw new UnreachableException()
+                };
 
-                if (autoSubtitlesOption == AutoSubtitlesOption.AutoLanguageDetection)
-                    return result = new SubtitleFetchResult.ActionRequired(
-                        $"Failed to fetch auto subtitles (langue detected - '{manuallySelectedLanguage.Value.DisplayName}'), please change Auto Subtitles option in settings",
-                        subtitlesResult.Error.Message,
-                        SubtitleActionRequired.ChangeAutoSubtitlesOption,
-                        true);
+                return result = new SubtitleFetchResult.ActionRequired(
+                    message,
+                    subtitlesResult.Error.Message,
+                    action,
+                    true);
             }
 
             if (subtitlesResult.Value is not null)
@@ -96,23 +101,21 @@ public class FetchAutoSubtitlesUseCase(
             }
 
             return result = new SubtitleFetchResult.NotFound(
-                Errors.Youtube.SubtitlesNotFound().Message,
-                false);
+                Errors.Youtube.SubtitlesNotFound().Message);
         }
         catch (OperationCanceledException)
         {
             return result = queueItem.Subtitles.LastSeenAutoSubtitleFetchResult switch
             {
                 SubtitleFetchResult.ActionRequired r => r,
-                _ => new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message, true)
+                _ => new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message)
             };
         }
         finally
         {
             queueItem.Subtitles.FinishAutoSubtitlesLoading(
                 result ?? new SubtitleFetchResult.Failed(
-                    "Unexpected subtitle fetch error",
-                    true));
+                    "Unexpected subtitle fetch error"));
             tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
         }
     }

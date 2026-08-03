@@ -30,7 +30,7 @@ public class FetchManualSubtitlesUseCase(
                 subtitlesDirectory);
 
             if (!subtitlesResult.IsSuccess)
-                return result = new SubtitleFetchResult.Failed(subtitlesResult.Error.Message, true);
+                return result = new SubtitleFetchResult.Failed(subtitlesResult.Error.Message);
 
             if (subtitlesResult.Value is not null)
             {
@@ -39,21 +39,18 @@ public class FetchManualSubtitlesUseCase(
             }
 
             return result = new SubtitleFetchResult.NotFound(
-                Errors.Youtube.SubtitlesNotFound().Message,
-                false);
+                Errors.Youtube.SubtitlesNotFound().Message);
         }
         catch (OperationCanceledException)
         {
             return result = new SubtitleFetchResult.Canceled(
-                Errors.Youtube.SubtitlesFetchCanceled().Message,
-                true);
+                Errors.Youtube.SubtitlesFetchCanceled().Message);
         }
         finally
         {
             queueItem.Subtitles.FinishManualSubtitlesLoading(
                 result ?? new SubtitleFetchResult.Failed(
-                    "Unexpected subtitle fetch error",
-                    true));
+                    "Unexpected subtitle fetch error"));
             tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
         }
     }

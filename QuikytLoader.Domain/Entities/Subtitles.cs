@@ -6,8 +6,8 @@ public sealed class Subtitles
 {
     public Guid QueueItemId { get; }
 
-    private bool _allowManualLoading = true;
-    private bool _allowAutoLoading = true;
+    public bool AllowManualSubtitlesLoading { get; private set; } = true;
+    public bool AllowAutoSubtitlesLoading { get; private set; } = true;
 
     private IReadOnlyDictionary<string, string>? _manualSubtitles;
     private IReadOnlyDictionary<string, string>? _autoSubtitles;
@@ -20,25 +20,25 @@ public sealed class Subtitles
 
     public bool StartManualSubtitlesLoading()
     {
-        if (!_allowManualLoading)
+        if (!AllowManualSubtitlesLoading)
             return false;
 
-        _allowManualLoading = false;
+        AllowManualSubtitlesLoading = false;
         return true;
     }
 
     public bool StartAutoSubtitlesLoading()
     {
-        if (!_allowAutoLoading)
+        if (!AllowAutoSubtitlesLoading)
             return false;
 
-        _allowAutoLoading = false;
+        AllowAutoSubtitlesLoading = false;
         return true;
     }
 
     public void FinishManualSubtitlesLoading(SubtitleFetchResult result)
     {
-        _allowManualLoading = result switch
+        AllowManualSubtitlesLoading = result switch
         {
             SubtitleFetchResult.Failed => true,
             SubtitleFetchResult.Canceled => true,
@@ -48,7 +48,7 @@ public sealed class Subtitles
 
     public void FinishAutoSubtitlesLoading(SubtitleFetchResult result)
     {
-        _allowAutoLoading = result switch
+        AllowAutoSubtitlesLoading = result switch
         {
             SubtitleFetchResult.Failed => true,
             SubtitleFetchResult.Canceled => true,
@@ -106,9 +106,9 @@ public sealed class Subtitles
 public abstract record SubtitleFetchResult
 {
     public sealed record Fetched : SubtitleFetchResult;
-    public sealed record NotFound(string Message, bool AllowRetry) : SubtitleFetchResult;
-    public sealed record Failed(string Message, bool AllowRetry, string? DetailsMessage = null) : SubtitleFetchResult;
-    public sealed record Canceled(string Message, bool AllowRetry) : SubtitleFetchResult;
+    public sealed record NotFound(string Message) : SubtitleFetchResult;
+    public sealed record Failed(string Message, string? DetailsMessage = null) : SubtitleFetchResult;
+    public sealed record Canceled(string Message) : SubtitleFetchResult;
     public sealed record NotAllowed : SubtitleFetchResult;
 
     public sealed record ActionRequired(string Message, string? DetailsMessage, SubtitleActionRequired SubtitleActionRequired, bool IsError = false) : SubtitleFetchResult;

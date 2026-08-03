@@ -126,11 +126,11 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                 break;
 
             case SubtitleFetchResult.Failed r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, r.DetailsMessage);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowManualSubtitlesLoading, r.DetailsMessage);
                 break;
 
             case SubtitleFetchResult.NotFound r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowManualSubtitlesLoading, null);
                 break;
 
             case SubtitleFetchResult.Canceled r:
@@ -141,10 +141,10 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                     _autoSubtitlesOptionWasSavedToSettings = false;
                     break;
                 }
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowManualSubtitlesLoading, null);
                 break;
 
-            case SubtitleFetchResult.NotAllowed r:
+            case SubtitleFetchResult.NotAllowed:
                 SubtitleState = SubtitleState;
                 break;
         }
@@ -188,11 +188,11 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                 break;
 
             case SubtitleFetchResult.Failed r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, r.DetailsMessage);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, r.DetailsMessage);
                 break;
 
             case SubtitleFetchResult.NotFound r:
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, null);
                 break;
 
             case SubtitleFetchResult.Canceled r:
@@ -203,7 +203,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                     _autoSubtitlesOptionWasSavedToSettings = false;
                     break;
                 }
-                SubtitleState = new SubtitleErrorState(r.Message, r.AllowRetry, null);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, null);
                 break;
 
             case SubtitleFetchResult.NotAllowed:
