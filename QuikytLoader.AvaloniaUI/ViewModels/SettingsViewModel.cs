@@ -1,4 +1,3 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
@@ -16,27 +15,21 @@ public partial class SettingsViewModel : ViewModelBase
 
     [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
     [ObservableProperty] private AutoSubtitlesOption _autoSubtitlesOption;
-    private AutoSubtitlesOption _savedAutoSubtitlesOption;
 
     [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
     [ObservableProperty] private ThemePreference _themePreference;
-    private ThemePreference _savedThemePreference;
 
     [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
     [ObservableProperty] private string _botToken = string.Empty;
-    private string _savedBotToken = string.Empty;
 
     [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
     [ObservableProperty] private string _chatId = string.Empty;
-    private string _savedChatId = string.Empty;
 
     public bool HasUnsavedChanges() =>
-        AutoSubtitlesOption != _savedAutoSubtitlesOption ||
-        ThemePreference != _savedThemePreference ||
-        BotToken != _savedBotToken ||
-        ChatId != _savedChatId;
-
-    public event Action<bool>? AutoSubtitlesOptionWasSavedToSettings;
+        AutoSubtitlesOption != _userSettings.Current.AutoSubtitlesOption ||
+        ThemePreference != _userSettings.Current.ThemePreference ||
+        BotToken != _userSettings.Current.BotToken ||
+        ChatId != _userSettings.Current.ChatId;
 
     public SettingsViewModel(IUserSettings userSettings)
     {
@@ -54,7 +47,7 @@ public partial class SettingsViewModel : ViewModelBase
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
 
-        MarkAsSaved();
+        SaveSettingsCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand(CanExecute = nameof(HasUnsavedChanges))]
@@ -68,19 +61,7 @@ public partial class SettingsViewModel : ViewModelBase
             BotToken = BotToken
         };
 
-        AutoSubtitlesOptionWasSavedToSettings?.Invoke(AutoSubtitlesOption != _savedAutoSubtitlesOption);
-
-        MarkAsSaved();
-        StatusMessage = "Settings saved successfully!";
-    }
-
-    private void MarkAsSaved()
-    {
-        _savedAutoSubtitlesOption = AutoSubtitlesOption;
-        _savedThemePreference = ThemePreference;
-        _savedBotToken = BotToken;
-        _savedChatId = ChatId;
-
         SaveSettingsCommand.NotifyCanExecuteChanged();
+        StatusMessage = "Settings saved successfully!";
     }
 }
