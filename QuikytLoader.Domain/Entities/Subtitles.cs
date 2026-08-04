@@ -111,5 +111,10 @@ public abstract record SubtitleFetchResult
     public sealed record Canceled(string Message) : SubtitleFetchResult;
     public sealed record NotAllowed : SubtitleFetchResult;
 
-    public sealed record ActionRequired(string Message, string? DetailsMessage, SubtitleActionRequired SubtitleActionRequired, bool IsError = false) : SubtitleFetchResult;
+    public sealed record ActionRequired(
+        string Message,
+        string? DetailsMessage,
+        SubtitleActionRequired SubtitleActionRequired,
+        AutoSubtitlesOption CreatedWithOption,
+        bool IsError = false) : SubtitleFetchResult;
 }

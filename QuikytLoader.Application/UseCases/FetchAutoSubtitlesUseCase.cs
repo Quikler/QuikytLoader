@@ -41,7 +41,8 @@ public class FetchAutoSubtitlesUseCase(
                     return result = new SubtitleFetchResult.ActionRequired(
                         "Please select video language",
                         null,
-                        SubtitleActionRequired.LanguageSelection);
+                        SubtitleActionRequired.LanguageSelection,
+                        autoSubtitlesOption);
 
                 case AutoSubtitlesOption.AutoLanguageDetection:
                     var videoMetadata = queueItem.Metadata;
@@ -91,6 +92,7 @@ public class FetchAutoSubtitlesUseCase(
                     message,
                     subtitlesResult.Error.Message,
                     action,
+                    autoSubtitlesOption,
                     true);
             }
 
@@ -107,6 +109,9 @@ public class FetchAutoSubtitlesUseCase(
         {
             return result = queueItem.Subtitles.LastSeenAutoSubtitleFetchResult switch
             {
+                // Loading settings again because user could have already mutated them
+                SubtitleFetchResult.ActionRequired r when r.CreatedWithOption != userSettings.Current.AutoSubtitlesOption =>
+                    new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message),
                 SubtitleFetchResult.ActionRequired r => r,
                 _ => new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message)
             };
