@@ -115,6 +115,6 @@ public abstract record SubtitleFetchResult
         string Message,
         string? DetailsMessage,
         SubtitleActionRequired SubtitleActionRequired,
-        AutoSubtitlesOption CreatedWithOption,
+        AutoSubtitlesOption? CreatedWithOption,
         bool IsError = false) : SubtitleFetchResult;
 }

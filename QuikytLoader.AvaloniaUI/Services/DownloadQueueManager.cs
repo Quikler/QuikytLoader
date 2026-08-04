@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using QuikytLoader.Application.Interfaces.Queue;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.ViewModels;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
@@ -14,6 +15,7 @@ public class DownloadQueueManager
 {
     private readonly IDownloadQueue _queue;
     private readonly IDownloadQueueProcessor _queueProcessor;
+    private readonly IUserSettings _userSettings;
 
     private readonly FetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
     private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
@@ -31,6 +33,7 @@ public class DownloadQueueManager
     public DownloadQueueManager(
         IDownloadQueue queue,
         IDownloadQueueProcessor queueProcessor,
+        IUserSettings userSettings,
         FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
         CancelSubtitlesUseCase cancelSubtitlesUseCase,
@@ -40,6 +43,7 @@ public class DownloadQueueManager
         _queue.Changed += OnQueueChanged;
 
         _queueProcessor = queueProcessor;
+        _userSettings = userSettings;
 
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
         _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
@@ -105,6 +109,7 @@ public class DownloadQueueManager
     // Single items — no selection needed
     private QueueItemViewModel CreateItemVm(QueueItem item)
         => new(item,
+            _userSettings,
             ProceedItem,
             CancelItem,
             _fetchManualSubtitlesUseCase,
@@ -115,6 +120,7 @@ public class DownloadQueueManager
     // Group items — selectable subtype
     private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item)
         => new(item,
+            _userSettings,
             ProceedItem,
             CancelItem,
             _fetchManualSubtitlesUseCase,

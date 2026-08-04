@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
@@ -19,12 +20,11 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
-    private bool _autoSubtitlesOptionWasSavedToSettings;
-
     public SettingsViewModel SettingsViewModel { get; }
 
     public QueueItemSubtitlesViewModel(
         Domain.Entities.Subtitles model,
+        IUserSettings userSettings,
         FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
         CancelSubtitlesUseCase cancelSubtitlesUseCase,
@@ -32,29 +32,23 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     {
         Model = model;
 
+        userSettings.Changed += args =>
+        {
+            if (args.OldSettings.AutoSubtitlesOption == args.NewSettings.AutoSubtitlesOption
+                || SubtitleState is SubtitleIdleState
+                    or SubtitleSuccessState
+                    or SubtitleErrorState { AllowRetry: false })
+                return;
+
+            SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
+                "Auto Subtitles Option settings were changed, please click refresh");
+        };
+
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
         _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
 
         SettingsViewModel = settingsViewModel;
-        SettingsViewModel.AutoSubtitlesOptionWasSavedToSettings += autoSubtitlesOptionWasSavedToSettings =>
-        {
-            if (!autoSubtitlesOptionWasSavedToSettings ||
-                SubtitleState is SubtitleIdleState
-                    or SubtitleSuccessState
-                    or SubtitleErrorState { AllowRetry: false }) return;
-
-            if (SubtitleState is SubtitleLoadingState)
-            {
-                CancelSubtitles();
-                _autoSubtitlesOptionWasSavedToSettings = true;
-            }
-            else
-            {
-                SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
-                    "Auto Subtitles Option settings were changed, please click refresh");
-            }
-        };
     }
 
     [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Language.English;
@@ -134,13 +128,6 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                 break;
 
             case SubtitleFetchResult.Canceled r:
-                if (_autoSubtitlesOptionWasSavedToSettings)
-                {
-                    SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
-                        "Auto Subtitles Option settings were changed, please click refresh");
-                    _autoSubtitlesOptionWasSavedToSettings = false;
-                    break;
-                }
                 SubtitleState = new SubtitleErrorState(r.Message, Model.AllowManualSubtitlesLoading, null);
                 break;
 
@@ -168,14 +155,6 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                 break;
 
             case SubtitleFetchResult.ActionRequired r:
-                if (_autoSubtitlesOptionWasSavedToSettings)
-                {
-                    SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
-                        "Auto Subtitles Option settings were changed, please click refresh");
-                    _autoSubtitlesOptionWasSavedToSettings = false;
-                    break;
-                }
-
                 SubtitleState = r.SubtitleActionRequired switch
                 {
                     SubtitleActionRequired.ChangeAutoSubtitlesOption =>
@@ -183,6 +162,8 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                     SubtitleActionRequired.LanguageSelection => r.IsError
                         ? new SubtitleRetryLanguageSelectionState(r.Message, r.DetailsMessage)
                         : new SubtitleLanguageSelectionState(r.Message, r.DetailsMessage),
+                    SubtitleActionRequired.RefreshDueToSettingsChange =>
+                        new SubtitleAutoSubtitlesOptionSettingsChangedState(r.Message),
                     _ => throw new UnreachableException()
                 };
                 break;
@@ -196,13 +177,6 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                 break;
 
             case SubtitleFetchResult.Canceled r:
-                if (_autoSubtitlesOptionWasSavedToSettings)
-                {
-                    SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
-                        "Auto Subtitles Option settings were changed, please click refresh");
-                    _autoSubtitlesOptionWasSavedToSettings = false;
-                    break;
-                }
                 SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, null);
                 break;
 

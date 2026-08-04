@@ -31,8 +31,19 @@ public class FetchAutoSubtitlesUseCase(
 
         SubtitleFetchResult? result = null;
 
+        var didAutoSubtitlesOptionChange = false;
+        void onSettingsChanged(UserSettingsChangedEventArgs args)
+        {
+            if (args.OldSettings.AutoSubtitlesOption == args.NewSettings.AutoSubtitlesOption) return;
+
+            didAutoSubtitlesOptionChange = true;
+            youtubeSubtitlesService.CancelSubtitlesFetching(itemId);
+        }
+
         try
         {
+            userSettings.Changed += onSettingsChanged;
+
             var autoSubtitlesOption = userSettings.Current.AutoSubtitlesOption;
             switch (autoSubtitlesOption)
             {
@@ -107,10 +118,20 @@ public class FetchAutoSubtitlesUseCase(
         }
         catch (OperationCanceledException)
         {
+            if (didAutoSubtitlesOptionChange)
+            {
+                return result = new SubtitleFetchResult.ActionRequired(
+                    "Auto Subtitles Option settings were changed, please click refresh",
+                    null,
+                    SubtitleActionRequired.RefreshDueToSettingsChange,
+                    null);
+            }
+
             return result = queueItem.Subtitles.LastSeenAutoSubtitleFetchResult switch
             {
-                // Loading settings again because user could have already mutated them
-                SubtitleFetchResult.ActionRequired r when r.CreatedWithOption != userSettings.Current.AutoSubtitlesOption =>
+                SubtitleFetchResult.ActionRequired r
+                    when r.CreatedWithOption != userSettings.Current.AutoSubtitlesOption
+                        || r.CreatedWithOption is null =>
                     new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message),
                 SubtitleFetchResult.ActionRequired r => r,
                 _ => new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message)
@@ -122,6 +143,7 @@ public class FetchAutoSubtitlesUseCase(
                 result ?? new SubtitleFetchResult.Failed(
                     "Unexpected subtitle fetch error"));
             tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
+            userSettings.Changed -= onSettingsChanged;
         }
     }
 }
