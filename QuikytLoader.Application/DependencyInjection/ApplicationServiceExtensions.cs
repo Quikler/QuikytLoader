@@ -19,7 +19,6 @@ public static class ApplicationServiceExtensions
         services.AddSingleton<FetchSubtitlesUseCase>();
         services.AddSingleton<CancelSubtitlesUseCase>();
         services.AddSingleton<FindExistingDownloadUseCase>();
-        services.AddSingleton<ManageSettingsUseCase>();
 
         return services;
     }

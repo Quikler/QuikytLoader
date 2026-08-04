@@ -15,14 +15,6 @@ Application layer containing use cases and interface definitions. References Dom
 - Checks history via IDownloadHistoryRepository
 - Returns DownloadHistoryDto if found
 
-**GetVideoTitleUseCase** - Fetch video title
-- Extracts title from Youtube URL via IYtDlpService
-- Used for custom title editing workflow
-
-**ManageSettingsUseCase** - Settings management
-- Load/save operations via IUserSettings
-- Returns UserSettingsDto
-
 ## Interfaces
 
 ### Services (in `Interfaces/Services/`)
@@ -52,5 +44,3 @@ Application layer containing use cases and interface definitions. References Dom
 `ApplicationServiceExtensions.cs` registers use cases:
 - DownloadAndSendUseCase
 - FindExistingDownloadUseCase
-- GetVideoTitleUseCase
-- ManageSettingsUseCase

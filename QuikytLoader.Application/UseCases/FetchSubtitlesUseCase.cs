@@ -54,7 +54,7 @@ public class FetchSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitlesServ
                 }
             }
 
-            var autoSubtitlesOption = userSettings.Load().AutoSubtitlesOption;
+            var autoSubtitlesOption = userSettings.Current.AutoSubtitlesOption;
             switch (autoSubtitlesOption)
             {
                 case AutoSubtitlesOption.ManualLanguageSelection when manuallySelectedLanguageForAutoSubtitles is null:

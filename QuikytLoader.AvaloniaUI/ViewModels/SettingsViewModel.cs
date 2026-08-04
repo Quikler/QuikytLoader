@@ -1,52 +1,50 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
-using QuikytLoader.Application.UseCases;
-using QuikytLoader.AvaloniaUI.Services;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCase, IThemeApplier themeApplier) : ViewModelBase
+public partial class SettingsViewModel : ViewModelBase
 {
-    public IThemeApplier ThemeApplier => themeApplier;
-
-    public AutoSubtitlesOption[] AutoSubtitlesOptions { get; } = Enum.GetValues<AutoSubtitlesOption>();
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private AutoSubtitlesOption _autoSubtitlesOption;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private ThemePreference _themePreference;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private string _botToken = string.Empty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private string _chatId = string.Empty;
+    private readonly IUserSettings _userSettings;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private AutoSubtitlesOption _autoSubtitlesOption;
     private AutoSubtitlesOption _savedAutoSubtitlesOption;
+
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private ThemePreference _themePreference;
     private ThemePreference _savedThemePreference;
+
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private string _botToken = string.Empty;
     private string _savedBotToken = string.Empty;
+
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private string _chatId = string.Empty;
     private string _savedChatId = string.Empty;
 
-    public bool HasUnsavedChanges =>
+    public bool HasUnsavedChanges() =>
         AutoSubtitlesOption != _savedAutoSubtitlesOption ||
         ThemePreference != _savedThemePreference ||
         BotToken != _savedBotToken ||
         ChatId != _savedChatId;
 
-    public void Initialize()
+    public SettingsViewModel(IUserSettings userSettings)
     {
-        var settings = manageSettingsUseCase.LoadSettings();
+        _userSettings = userSettings;
+
+        LoadSettings();
+    }
+
+    public void LoadSettings()
+    {
+        var settings = _userSettings.Current;
 
         AutoSubtitlesOption = settings.AutoSubtitlesOption;
         ThemePreference = settings.ThemePreference;
@@ -56,21 +54,19 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
         MarkAsSaved();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasUnsavedChanges))]
     private void SaveSettings()
     {
-        manageSettingsUseCase.SaveSettings(
-            new UserSettingsDto
-            {
-                AutoSubtitlesOption = AutoSubtitlesOption,
-                ThemePreference = ThemePreference,
-                ChatId = ChatId,
-                BotToken = BotToken
-            });
+        _userSettings.Current = new UserSettingsDto
+        {
+            AutoSubtitlesOption = AutoSubtitlesOption,
+            ThemePreference = ThemePreference,
+            ChatId = ChatId,
+            BotToken = BotToken
+        };
 
         MarkAsSaved();
         StatusMessage = "Settings saved successfully!";
-        themeApplier.Apply(ThemePreference);
     }
 
     private void MarkAsSaved()
@@ -79,6 +75,7 @@ public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCa
         _savedThemePreference = ThemePreference;
         _savedBotToken = BotToken;
         _savedChatId = ChatId;
-        OnPropertyChanged(nameof(HasUnsavedChanges));
+
+        SaveSettingsCommand.NotifyCanExecuteChanged();
     }
 }

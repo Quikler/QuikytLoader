@@ -43,7 +43,7 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
     /// </summary>
     private async Task<Result> EnsureInitializedAsync()
     {
-        var settings = userSettings.Load();
+        var settings = userSettings.Current;
 
         if (string.IsNullOrWhiteSpace(settings.BotToken))
             return Errors.Telegram.BotTokenNotConfigured();

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:enums="using:QuikytLoader.Domain.Enums"
              x:Class="QuikytLoader.AvaloniaUI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
@@ -62,7 +63,7 @@
 
                             <StackPanel Spacing="8">
                                 <ListBox
-                                    ItemsSource="{Binding AutoSubtitlesOptions}"
+                                    ItemsSource="{x:Static enums:DomainEnums.AutoSubtitlesOptions}"
                                     SelectedItem="{Binding AutoSubtitlesOption}"
                                     Classes="RadioButtonListBox" />
                             </StackPanel>
@@ -95,7 +96,7 @@
                     <!-- Theme Preferences -->
                     <StackPanel Spacing="8">
                         <ListBox
-                            ItemsSource="{Binding ThemeApplier.AvailableThemes}"
+                            ItemsSource="{x:Static enums:DomainEnums.ThemePreferences}"
                             SelectedItem="{Binding ThemePreference}"
                             Classes="RadioButtonListBox" />
                     </StackPanel>
