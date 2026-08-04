@@ -95,7 +95,7 @@
                     <!-- Theme Preferences -->
                     <StackPanel Spacing="8">
                         <ListBox
-                            ItemsSource="{Binding ThemeApplier.AvailableThemes}"
+                            ItemsSource="{Binding ThemePreferences}"
                             SelectedItem="{Binding ThemePreference}"
                             Classes="RadioButtonListBox" />
                     </StackPanel>

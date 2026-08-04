@@ -1,16 +1,26 @@
-using System;
-using System.Collections.Generic;
 using Avalonia.Styling;
-using QuikytLoader.Application.UseCases;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.Services;
 
-public class ThemeApplier(ManageSettingsUseCase manageSettingsUseCase) : IThemeApplier
+public class ThemeApplier : IThemeApplier
 {
-    public IReadOnlyCollection<ThemePreference> AvailableThemes { get; } = Enum.GetValues<ThemePreference>();
+    private readonly IUserSettings _userSettings;
 
-    public void Apply(ThemePreference themePreference)
+    public ThemeApplier(IUserSettings userSettings)
+    {
+        _userSettings = userSettings;
+        _userSettings.Changed += args =>
+        {
+            if (args.OldSettings.ThemePreference != args.NewSettings.ThemePreference)
+                Apply(args.NewSettings.ThemePreference);
+        };
+    }
+
+    public void ApplyFromSettings() => Apply(_userSettings.Current.ThemePreference);
+
+    private void Apply(ThemePreference themePreference)
     {
         if (Avalonia.Application.Current is null) return;
 
@@ -21,6 +31,4 @@ public class ThemeApplier(ManageSettingsUseCase manageSettingsUseCase) : IThemeA
             _ => ThemeVariant.Default
         };
     }
-
-    public void ApplyFromSettings() => Apply(manageSettingsUseCase.LoadSettings().ThemePreference);
 }

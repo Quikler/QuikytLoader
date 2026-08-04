@@ -50,24 +50,6 @@ MainWindow contains:
 - Queue processing runs in background (_isQueueProcessing flag prevents duplicate processing)
 - Temp files (media + thumbnail) automatically cleaned up after each queue item completes
 
-### Custom Title Editing Workflow
-- Two-step process when UseCustomTitle checkbox is checked:
-  1. First click "Add to Queue": fetches video title via GetVideoTitleUseCase, populates CustomTitle field
-  2. User edits title, clicks "Proceed": adds to queue with custom title
-- Button text dynamically changes: "Add to Queue" -> "Proceed"
-- IsProceedButtonState flag tracks button state for UI styling
-- State resets when: URL changes, UseCustomTitle unchecked, or item added to queue
-
-### File Handling and Cleanup
-- YtDlpService uses sanitized video titles as filenames via `%(title)s` template
-- Custom titles sanitized via SanitizeFilename (replaces invalid chars with underscore)
-- All downloads stored in temp directory: `/tmp/QuikytLoader`
-- Files NOT saved to user's Downloads folder - only temporary for Telegram upload
-- Thumbnail processing: crops to square, resizes to 320x320 max for Telegram
-- HomeViewModel handles cleanup: deletes both media file and thumbnail after sending
-- Cleanup happens in finally block to ensure temp files removed even on errors
-- DownloadResultDto contains TempMediaFilePath and TempThumbnailPath properties
-
 ### yt-dlp Integration
 - All yt-dlp arguments constructed in YtDlpService.BuildAudioDownloadArguments method
 - Metadata mapping: Youtube fields -> MP3 ID3 tags
