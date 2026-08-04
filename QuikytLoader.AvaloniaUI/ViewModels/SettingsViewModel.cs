@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
@@ -30,9 +28,6 @@ public partial class SettingsViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
     [ObservableProperty] private string _chatId = string.Empty;
     private string _savedChatId = string.Empty;
-
-    public IReadOnlyCollection<AutoSubtitlesOption> AutoSubtitlesOptions { get; } = Enum.GetValues<AutoSubtitlesOption>();
-    public IReadOnlyCollection<ThemePreference> ThemePreferences { get; } = Enum.GetValues<ThemePreference>();
 
     public bool HasUnsavedChanges() =>
         AutoSubtitlesOption != _savedAutoSubtitlesOption ||

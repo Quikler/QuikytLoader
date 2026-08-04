@@ -1,6 +1,6 @@
 # QuikytLoader.AvaloniaUI
 
-UI layer (class library). References Application only - no Infrastructure reference for architectural purity.
+UI layer (class library). References Application and Domain only - no Infrastructure reference for architectural purity.
 
 ## MVVM Pattern with Navigation
 
