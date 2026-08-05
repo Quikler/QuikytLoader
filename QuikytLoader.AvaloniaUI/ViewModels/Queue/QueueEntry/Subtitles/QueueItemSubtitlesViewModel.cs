@@ -107,7 +107,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
 
     private async Task<SubtitleFetchResult> FetchManualSubtitles()
     {
-        SubtitleState = new SubtitleLoadingState();
+        SubtitleState = new SubtitleLoadingState("Loading manual subtitles...");
 
         var result = await _fetchManualSubtitlesUseCase.ExecuteAsync(
             Model.QueueItemId);
@@ -141,7 +141,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
 
     private async Task<SubtitleFetchResult> FetchAutoSubtitles(Language? language)
     {
-        SubtitleState = new SubtitleLoadingState();
+        SubtitleState = new SubtitleLoadingState("Loading auto subtitles...");
 
         var result = await _fetchAutoSubtitlesUseCase.ExecuteAsync(
             Model.QueueItemId,
@@ -196,7 +196,7 @@ public record TabItemViewModel(string Header, string Content);
 
 public abstract record SubtitleUiState;
 public sealed record SubtitleIdleState : SubtitleUiState;
-public sealed record SubtitleLoadingState : SubtitleUiState;
+public sealed record SubtitleLoadingState(string LoadingMessage) : SubtitleUiState;
 public sealed record SubtitleErrorState(string Message, bool AllowRetry, string? DetailsMessage) : SubtitleUiState;
 public sealed record SubtitleSuccessState : SubtitleUiState;
 public sealed record SubtitleLanguageSelectionState(string Message, string? DetailsMessage) : SubtitleUiState;

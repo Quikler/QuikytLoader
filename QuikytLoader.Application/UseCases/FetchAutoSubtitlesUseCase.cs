@@ -113,8 +113,14 @@ public class FetchAutoSubtitlesUseCase(
                 return result = new SubtitleFetchResult.Fetched();
             }
 
+            // Not found message when no subtitles were found
+            if (queueItem.Subtitles.Dictionary is null)
+                return result = new SubtitleFetchResult.NotFound(
+                    Errors.Youtube.SubtitlesNotFound().Message);
+
+            // Not found message when only no auto subtitles were found
             return result = new SubtitleFetchResult.NotFound(
-                Errors.Youtube.SubtitlesNotFound().Message);
+                Errors.Youtube.AutoSubtitlesNotFound().Message);
         }
         catch (OperationCanceledException)
         {
@@ -132,9 +138,9 @@ public class FetchAutoSubtitlesUseCase(
                 SubtitleFetchResult.ActionRequired r
                     when r.CreatedWithOption != userSettings.Current.AutoSubtitlesOption
                         || r.CreatedWithOption is null =>
-                    new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message),
+                    new SubtitleFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message),
                 SubtitleFetchResult.ActionRequired r => r,
-                _ => new SubtitleFetchResult.Canceled(Errors.Youtube.SubtitlesFetchCanceled().Message)
+                _ => new SubtitleFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message)
             };
         }
         finally

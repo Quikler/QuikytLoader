@@ -56,7 +56,7 @@
                                     </Button>
 
                                     <TextBlock Grid.Column="1"
-                                               Text="Loading subtitles..."
+                                               Text="{Binding LoadingMessage}"
                                                TextWrapping="Wrap"/>
                                 </Grid>
                             </StackPanel>
