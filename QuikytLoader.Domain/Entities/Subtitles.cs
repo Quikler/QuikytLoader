@@ -90,7 +90,9 @@ public sealed class Subtitles
     {
         if (_manualSubtitles is null)
         {
-            Dictionary = _autoSubtitles;
+            Dictionary = _autoSubtitles?.ToDictionary(
+                kvp => $"{kvp.Key} (auto-generated)",
+                kvp => kvp.Value);
             return;
         }
 
