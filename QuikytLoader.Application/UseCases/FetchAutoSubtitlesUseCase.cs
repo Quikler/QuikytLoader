@@ -110,7 +110,12 @@ public class FetchAutoSubtitlesUseCase(
             if (subtitlesResult.Value is not null)
             {
                 queueItem.Subtitles.SetAutoSubtitles(subtitlesResult.Value);
-                return result = new SubtitleFetchResult.Fetched();
+                return result = new SubtitleFetchResult.Fetched(
+                    new SubtitleFetchResult.ActionRequired(
+                        "Auto subtitles were fetched, you can try to load more",
+                        null,
+                        SubtitleActionRequired.LoadMoreAutoSubtitles,
+                        autoSubtitlesOption));
             }
 
             // Not found message when no subtitles were found
@@ -140,6 +145,8 @@ public class FetchAutoSubtitlesUseCase(
                         || r.CreatedWithOption is null =>
                     new SubtitleFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message),
                 SubtitleFetchResult.ActionRequired r => r,
+                SubtitleFetchResult.Fetched r
+                    when r.Action is not null => r.Action,
                 _ => new SubtitleFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message)
             };
         }

@@ -65,7 +65,8 @@
                         <DataTemplate DataType="{x:Type vmqes:SubtitleLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}">
+                                                     DetailsMessage="{Binding DetailsMessage}"
+                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
                                             FontWeight="SemiBold"
@@ -95,7 +96,8 @@
                         <DataTemplate DataType="{x:Type vmqes:SubtitleRetryLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}">
+                                                     DetailsMessage="{Binding DetailsMessage}"
+                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
                                             FontWeight="SemiBold"
@@ -125,7 +127,8 @@
                         <DataTemplate DataType="{x:Type vmqes:SubtitleChangeAutoSubtitlesOptionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}">
+                                                     DetailsMessage="{Binding DetailsMessage}"
+                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
                                             FontWeight="SemiBold"
@@ -164,7 +167,8 @@
 
                         <DataTemplate DataType="{x:Type vmqes:SubtitleAutoSubtitlesOptionSettingsChangedState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
-                                                     MessageForeground="{DynamicResource SystemFillColorNeutralBrush}">
+                                                     MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
+                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
                                             FontWeight="SemiBold"
@@ -182,7 +186,8 @@
                         <DataTemplate DataType="{x:Type vmqes:SubtitleErrorState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}">
+                                                     DetailsMessage="{Binding DetailsMessage}"
+                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
                                     <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
                                             FontWeight="SemiBold"

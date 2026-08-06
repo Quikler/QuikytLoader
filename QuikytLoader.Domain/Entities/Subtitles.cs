@@ -9,6 +9,8 @@ public sealed class Subtitles
     public bool AllowManualSubtitlesLoading { get; private set; } = true;
     public bool AllowAutoSubtitlesLoading { get; private set; } = true;
 
+    public bool AreAutoSubtitlesLoaded { get; private set; } = false;
+
     private IReadOnlyDictionary<string, string>? _manualSubtitles;
     private IReadOnlyDictionary<string, string>? _autoSubtitles;
 
@@ -53,6 +55,7 @@ public sealed class Subtitles
             SubtitleFetchResult.Failed => true,
             SubtitleFetchResult.Canceled => true,
             SubtitleFetchResult.ActionRequired => true,
+            SubtitleFetchResult.Fetched => true,
             _ => false
         };
 
@@ -67,18 +70,24 @@ public sealed class Subtitles
 
     public void SetAutoSubtitles(IReadOnlyDictionary<string, string> subtitles)
     {
-        _autoSubtitles = subtitles;
+        if (_autoSubtitles is null)
+            _autoSubtitles = subtitles;
+        else
+        {
+            var initialAutoSubtitles = new Dictionary<string, string>(_autoSubtitles);
+            foreach (var kvp in subtitles)
+            {
+                initialAutoSubtitles[kvp.Key] = kvp.Value;
+            }
+            _autoSubtitles = initialAutoSubtitles;
+        }
+
         RebuildSubtitles();
+        AreAutoSubtitlesLoaded = true;
     }
 
     private void RebuildSubtitles()
     {
-        if (_manualSubtitles is null && _autoSubtitles is null)
-        {
-            Dictionary = null;
-            return;
-        }
-
         if (_manualSubtitles is null)
         {
             Dictionary = _autoSubtitles;
@@ -105,7 +114,7 @@ public sealed class Subtitles
 
 public abstract record SubtitleFetchResult
 {
-    public sealed record Fetched : SubtitleFetchResult;
+    public sealed record Fetched(ActionRequired? Action = null) : SubtitleFetchResult;
     public sealed record NotFound(string Message) : SubtitleFetchResult;
     public sealed record Failed(string Message, string? DetailsMessage = null) : SubtitleFetchResult;
     public sealed record Canceled(string Message) : SubtitleFetchResult;

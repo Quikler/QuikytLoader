@@ -31,11 +31,28 @@
                        HorizontalAlignment="Center"
                        Foreground="{Binding MessageForeground, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"/>
 
-            <ContentPresenter x:Name="RightSideContentControl"
-                              Grid.Column="2"
-                              VerticalAlignment="Center"
-                              HorizontalAlignment="Center"
-                              Content="{Binding RightSideContent, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"/>
+            <Grid Grid.Column="2"
+                  ColumnDefinitions="Auto,Auto"
+                  ColumnSpacing="2"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Center"
+                  x:Name="RightSideContentControl">
+                <ContentPresenter Content="{Binding RightSideContent, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"/>
+
+                <Button Grid.Column="1"
+                        FontWeight="SemiBold"
+                        Padding="0"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Right"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="OnCloseButtonClick"
+                        IsVisible="{Binding IsCloseButtonVisible, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}">
+                    <ui:FASymbolIcon Foreground="{Binding MessageForeground, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"
+                                     Symbol="Cancel"
+                                     FontSize="12"/>
+                </Button>
+            </Grid>
 
             <!-- Details button -->
             <ToggleButton x:Name="DetailsToggleButton"

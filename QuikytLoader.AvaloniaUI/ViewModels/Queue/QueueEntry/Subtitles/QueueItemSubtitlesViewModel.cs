@@ -41,7 +41,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                 return;
 
             SubtitleState = new SubtitleAutoSubtitlesOptionSettingsChangedState(
-                "Auto Subtitles Option settings were changed, please click refresh");
+                "Auto Subtitles Option settings were changed, please click refresh", Model.AreAutoSubtitlesLoaded);
         };
 
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
@@ -149,35 +149,48 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
 
         switch (result)
         {
-            case SubtitleFetchResult.Fetched:
+            case SubtitleFetchResult.Fetched r:
                 SubtitleTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
-                SubtitleState = new SubtitleSuccessState();
+                if (r.Action is null)
+                {
+                    SubtitleState = new SubtitleSuccessState();
+                    break;
+                }
+
+                SubtitleState = r.Action.SubtitleActionRequired switch
+                {
+                    SubtitleActionRequired.LoadMoreAutoSubtitles =>
+                        new SubtitleLanguageSelectionState(r.Action.Message, null, Model.AreAutoSubtitlesLoaded),
+                    _ => throw new UnreachableException()
+                };
                 break;
 
             case SubtitleFetchResult.ActionRequired r:
                 SubtitleState = r.SubtitleActionRequired switch
                 {
                     SubtitleActionRequired.ChangeAutoSubtitlesOption =>
-                        new SubtitleChangeAutoSubtitlesOptionState(r.Message, r.DetailsMessage),
+                        new SubtitleChangeAutoSubtitlesOptionState(r.Message, r.DetailsMessage, Model.AreAutoSubtitlesLoaded),
                     SubtitleActionRequired.LanguageSelection => r.IsError
-                        ? new SubtitleRetryLanguageSelectionState(r.Message, r.DetailsMessage)
-                        : new SubtitleLanguageSelectionState(r.Message, r.DetailsMessage),
+                        ? new SubtitleRetryLanguageSelectionState(r.Message, r.DetailsMessage, Model.AreAutoSubtitlesLoaded)
+                        : new SubtitleLanguageSelectionState(r.Message, r.DetailsMessage, Model.AreAutoSubtitlesLoaded),
                     SubtitleActionRequired.RefreshDueToSettingsChange =>
-                        new SubtitleAutoSubtitlesOptionSettingsChangedState(r.Message),
+                        new SubtitleAutoSubtitlesOptionSettingsChangedState(r.Message, Model.AreAutoSubtitlesLoaded),
+                    SubtitleActionRequired.LoadMoreAutoSubtitles =>
+                        new SubtitleLanguageSelectionState(r.Message, null, Model.AreAutoSubtitlesLoaded),
                     _ => throw new UnreachableException()
                 };
                 break;
 
             case SubtitleFetchResult.Failed r:
-                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, r.DetailsMessage);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, r.DetailsMessage, Model.AreAutoSubtitlesLoaded);
                 break;
 
             case SubtitleFetchResult.NotFound r:
-                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, null);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, null, Model.AreAutoSubtitlesLoaded);
                 break;
 
             case SubtitleFetchResult.Canceled r:
-                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, null);
+                SubtitleState = new SubtitleErrorState(r.Message, Model.AllowAutoSubtitlesLoading, null, Model.AreAutoSubtitlesLoaded);
                 break;
 
             case SubtitleFetchResult.NotAllowed:
@@ -197,9 +210,9 @@ public record TabItemViewModel(string Header, string Content);
 public abstract record SubtitleUiState;
 public sealed record SubtitleIdleState : SubtitleUiState;
 public sealed record SubtitleLoadingState(string LoadingMessage) : SubtitleUiState;
-public sealed record SubtitleErrorState(string Message, bool AllowRetry, string? DetailsMessage) : SubtitleUiState;
+public sealed record SubtitleErrorState(string Message, bool AllowRetry, string? DetailsMessage, bool DisplayCloseButton = false) : SubtitleUiState;
 public sealed record SubtitleSuccessState : SubtitleUiState;
-public sealed record SubtitleLanguageSelectionState(string Message, string? DetailsMessage) : SubtitleUiState;
-public sealed record SubtitleRetryLanguageSelectionState(string Message, string? DetailsMessage) : SubtitleUiState;
-public sealed record SubtitleChangeAutoSubtitlesOptionState(string Message, string? DetailsMessage) : SubtitleUiState;
-public sealed record SubtitleAutoSubtitlesOptionSettingsChangedState(string Message) : SubtitleUiState;
+public sealed record SubtitleLanguageSelectionState(string Message, string? DetailsMessage, bool DisplayCloseButton) : SubtitleUiState;
+public sealed record SubtitleRetryLanguageSelectionState(string Message, string? DetailsMessage, bool DisplayCloseButton) : SubtitleUiState;
+public sealed record SubtitleChangeAutoSubtitlesOptionState(string Message, string? DetailsMessage, bool DisplayCloseButton) : SubtitleUiState;
+public sealed record SubtitleAutoSubtitlesOptionSettingsChangedState(string Message, bool DisplayCloseButton) : SubtitleUiState;

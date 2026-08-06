@@ -57,6 +57,16 @@ public partial class TextWithDetails : UserControl
         set => SetValue(RightSideContentProperty, value);
     }
 
+    public static readonly StyledProperty<bool> IsCloseButtonVisibleProperty =
+        AvaloniaProperty.Register<TextWithDetails, bool>(
+            nameof(IsCloseButtonVisible));
+
+    public bool IsCloseButtonVisible
+    {
+        get => GetValue(IsCloseButtonVisibleProperty);
+        set => SetValue(IsCloseButtonVisibleProperty, value);
+    }
+
     public TextWithDetails() => InitializeComponent();
 
     private void DetailsToggleButton_IsCheckedChanged(object? sender, RoutedEventArgs e)
@@ -72,4 +82,6 @@ public partial class TextWithDetails : UserControl
             DetailsMessageGrid.IsVisible = true;
         }
     }
+
+    private void OnCloseButtonClick(object? sender, RoutedEventArgs e) => IsVisible = false;
 }
