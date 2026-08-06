@@ -52,10 +52,11 @@ public sealed class Subtitles
     {
         AllowAutoSubtitlesLoading = result switch
         {
+            SubtitleFetchResult.Fetched => true,
+            SubtitleFetchResult.NotFound => true,
             SubtitleFetchResult.Failed => true,
             SubtitleFetchResult.Canceled => true,
             SubtitleFetchResult.ActionRequired => true,
-            SubtitleFetchResult.Fetched => true,
             _ => false
         };
 
