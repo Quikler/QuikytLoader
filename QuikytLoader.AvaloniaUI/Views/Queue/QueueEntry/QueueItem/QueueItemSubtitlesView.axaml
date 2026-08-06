@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             x:Name="QueueItemSubtitlesViewName"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vmqes="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry.Subtitles"
+             xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
              xmlns:vcommon="using:QuikytLoader.AvaloniaUI.Views.Common"
              xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -43,7 +43,7 @@
                                       VerticalAlignment="Center"
                                       ColumnSpacing="4"
                                       ColumnDefinitions="Auto,*">
-                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.CancelSubtitlesCommand}"
+                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.CancelSubtitlesCommand}"
                                             FontWeight="SemiBold"
                                             Padding="0"
                                             Background="Transparent"
@@ -68,7 +68,7 @@
                                                      DetailsMessage="{Binding DetailsMessage}"
                                                      IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
+                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
                                             FontWeight="SemiBold"
                                             Padding="0"
                                             Background="Transparent"
@@ -81,7 +81,7 @@
 
                                 <vcommon:TextWithDetails.RightSideContent>
                                     <ComboBox ItemsSource="{x:Static common:Language.Options}"
-                                              SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
+                                              SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="common:Language">
                                                 <TextBlock Text="{Binding DisplayName}"
@@ -99,7 +99,7 @@
                                                      DetailsMessage="{Binding DetailsMessage}"
                                                      IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
+                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
                                             FontWeight="SemiBold"
                                             Padding="0"
                                             Background="Transparent"
@@ -112,7 +112,7 @@
 
                                 <vcommon:TextWithDetails.RightSideContent>
                                     <ComboBox ItemsSource="{x:Static common:Language.Options}"
-                                              SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
+                                              SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="common:Language">
                                                 <TextBlock Text="{Binding DisplayName}"
@@ -130,7 +130,7 @@
                                                      DetailsMessage="{Binding DetailsMessage}"
                                                      IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
+                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
                                             FontWeight="SemiBold"
                                             Padding="0"
                                             Background="Transparent"
@@ -145,7 +145,7 @@
                                     <Grid ColumnDefinitions="Auto,Auto"
                                           ColumnSpacing="4">
                                         <ComboBox ItemsSource="{x:Static enums:DomainEnums.AutoSubtitlesOptions}"
-                                                  SelectedItem="{Binding #QueueItemSubtitlesViewName.DataContext.SettingsViewModel.AutoSubtitlesOption}">
+                                                  SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SettingsViewModel.AutoSubtitlesOption}">
                                             <ComboBox.ItemTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding, Converter={StaticResource EnumToSpacedStringConverter}}" />
@@ -155,7 +155,7 @@
                                         
                                         <Button Grid.Column="1"
                                                 Content="Save"
-                                                Command="{Binding #QueueItemSubtitlesViewName.DataContext.SettingsViewModel.SaveSettingsCommand}"
+                                                Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SettingsViewModel.SaveSettingsCommand}"
                                                 Background="{DynamicResource AccentFillColorDefaultBrush}"
                                                 Foreground="White"
                                                 FontSize="14"
@@ -170,7 +170,7 @@
                                                      MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
                                                      IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
+                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
                                             FontWeight="SemiBold"
                                             Padding="0"
                                             Background="Transparent"
@@ -189,7 +189,7 @@
                                                      DetailsMessage="{Binding DetailsMessage}"
                                                      IsCloseButtonVisible="{Binding DisplayCloseButton}">
                                 <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding #QueueItemSubtitlesViewName.DataContext.FetchSubtitlesWorkflowCommand}"
+                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
                                             FontWeight="SemiBold"
                                             Padding="0"
                                             Background="Transparent"
