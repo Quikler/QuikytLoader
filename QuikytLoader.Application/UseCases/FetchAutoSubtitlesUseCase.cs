@@ -77,6 +77,15 @@ public class FetchAutoSubtitlesUseCase(
             if (manuallySelectedLanguage is null)
                 throw new UnreachableException();
 
+            if (queueItem.Subtitles.ExistWithLanguage(manuallySelectedLanguage.Value.Iso6391Code))
+            {
+                return result = new SubtitleFetchResult.ActionRequired(
+                    $"Subtitles for '{manuallySelectedLanguage.Value.DisplayName}' language already fetched, try other languages",
+                    null,
+                    SubtitleActionRequired.LanguageSelection,
+                    autoSubtitlesOption);
+            }
+
             var subtitlesResult = await youtubeSubtitlesService.FetchAutoSubtitlesAsync(
                 queueItem.Id,
                 queueItem.Source,
@@ -112,7 +121,7 @@ public class FetchAutoSubtitlesUseCase(
                 queueItem.Subtitles.SetAutoSubtitles(subtitlesResult.Value);
                 return result = new SubtitleFetchResult.Fetched(
                     new SubtitleFetchResult.ActionRequired(
-                        "Auto subtitles were fetched, you can try to load more",
+                        $"Auto subtitles were fetched for '{manuallySelectedLanguage.Value.DisplayName}' language, you can try other languages",
                         null,
                         SubtitleActionRequired.LoadMoreAutoSubtitles,
                         autoSubtitlesOption));

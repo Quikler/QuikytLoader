@@ -20,6 +20,10 @@ public sealed class Subtitles
 
     public SubtitleFetchResult? LastSeenAutoSubtitleFetchResult { get; private set; }
 
+    public bool ExistWithLanguage(string language) =>
+        (_manualSubtitles is not null && _manualSubtitles.ContainsKey(language)) ||
+        (_autoSubtitles is not null && _autoSubtitles.ContainsKey(language));
+
     public bool StartManualSubtitlesLoading()
     {
         if (!AllowManualSubtitlesLoading)
