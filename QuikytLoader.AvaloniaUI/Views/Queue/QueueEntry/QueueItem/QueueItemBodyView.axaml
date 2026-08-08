@@ -121,7 +121,7 @@
                                    Foreground="White"/>
                     </Border>
 
-                    <Button Command="{Binding ToggleSubtitlesCommand}"
+                    <Button Command="{Binding QueueItemSubtitlesViewModel.ToggleSubtitlesCommand}"
                             FontWeight="SemiBold"
                             Padding="0"
                             DockPanel.Dock="Bottom"
@@ -130,8 +130,8 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom">
                         <StackPanel Orientation="Horizontal" Spacing="2">
-                            <ui:FASymbolIcon Symbol="{Binding SubtitlesChevronSymbol}" FontSize="16"/>
-                            <ui:FASymbolIcon Symbol="{Binding SubtitlesIconSymbol}" FontSize="32"/>
+                            <ui:FASymbolIcon Symbol="{Binding QueueItemSubtitlesViewModel.SubtitlesChevronSymbol}" FontSize="16"/>
+                            <ui:FASymbolIcon Symbol="{Binding QueueItemSubtitlesViewModel.SubtitlesIconSymbol}" FontSize="32"/>
                         </StackPanel>
                     </Button>
                 </DockPanel>

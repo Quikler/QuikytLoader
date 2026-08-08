@@ -5,11 +5,11 @@ namespace QuikytLoader.Domain.Entities;
 
 public sealed class QueueItem
 {
-    public Guid Id { get; } = Guid.NewGuid();
+    public Guid Id { get; }
 
-    public string? GroupId { get; init; }
+    public Subtitles Subtitles { get; }
 
-    public required DownloadSource Source { get; init; }
+    public DownloadSource Source { get; }
 
     public required VideoMetadata? Metadata { get; set; }
 
@@ -21,13 +21,13 @@ public sealed class QueueItem
 
     public Error? Error { get; set; }
 
-    public IReadOnlyDictionary<string, string>? Subtitles { get; set; }
+    public QueueItem(DownloadSource downloadSource)
+    {
+        Id = Guid.NewGuid();
+        Subtitles = new(Id);
 
-    public Error? SubtitlesError { get; set; }
-
-    public bool AreSubtitlesLoading { get; set; }
-
-    public bool AllowSubtitlesLoading { get; set; } = true;
+        Source = downloadSource;
+    }
 
     public bool CanStartDownload =>
         Status is DownloadStatus.Queued

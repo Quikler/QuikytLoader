@@ -1,5 +1,6 @@
 ﻿using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Application.UseCases;
 using QuikytLoader.Domain.Entities;
 
@@ -7,15 +8,19 @@ namespace QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 public sealed partial class SelectableQueueItemViewModel(
     QueueItem model,
+    IUserSettings userSettings,
     Action<Guid> proceedCallback,
     Action<Guid> cancelCallback,
-    FetchSubtitlesUseCase fetchSubtitlesUseCase,
+    FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
+    FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
     CancelSubtitlesUseCase cancelSubtitlesUseCase)
     : QueueItemViewModel(
         model,
+        userSettings,
         proceedCallback,
         cancelCallback,
-        fetchSubtitlesUseCase,
+        fetchManualSubtitlesUseCase,
+        fetchAutoSubtitlesUseCase,
         cancelSubtitlesUseCase)
 {
     [NotifyPropertyChangedFor(nameof(CanProceed))]

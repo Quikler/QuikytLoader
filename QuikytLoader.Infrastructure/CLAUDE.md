@@ -14,7 +14,7 @@ External service implementations. References Application and Domain layers.
 
 **YtDlpService** - yt-dlp process wrapper
 - Executes yt-dlp process for audio downloads and metadata extraction
-- Builds command arguments via `BuildAudioDownloadArguments` method
+- Builds command arguments via `YtDlpAcl` class
 - Embeds comprehensive metadata (Artist, Album, Composer, Performer, Publisher, etc.)
 - Embeds video thumbnail as album art with automatic format conversion to JPG
 - Parses progress from yt-dlp output via regex
