@@ -11,16 +11,16 @@ public class FetchManualSubtitlesUseCase(
     IDownloadQueue queue,
     ITempDirectoryService tempDirectoryService)
 {
-    public async Task<SubtitleFetchResult> ExecuteAsync(Guid itemId)
+    public async Task<SubtitlesFetchResult> ExecuteAsync(Guid itemId)
     {
         var queueItem = queue.GetItem(itemId);
         if (!queueItem.Subtitles.StartManualSubtitlesLoading())
-            return new SubtitleFetchResult.NotAllowed();
+            return new SubtitlesFetchResult.NotAllowed();
 
         var subtitlesDirectory =
             tempDirectoryService.CreateSubdirectory(queueItem.Source.YoutubeVideoId, "manual-subtitles");
 
-        SubtitleFetchResult? result = null;
+        SubtitlesFetchResult? result = null;
 
         try
         {
@@ -30,27 +30,27 @@ public class FetchManualSubtitlesUseCase(
                 subtitlesDirectory);
 
             if (!subtitlesResult.IsSuccess)
-                return result = new SubtitleFetchResult.Failed(subtitlesResult.Error.Message);
+                return result = new SubtitlesFetchResult.Failed(subtitlesResult.Error.Message);
 
             if (subtitlesResult.Value is not null)
             {
                 queueItem.Subtitles.SetManualSubtitles(subtitlesResult.Value);
-                return result = new SubtitleFetchResult.Fetched();
+                return result = new SubtitlesFetchResult.Fetched();
             }
 
-            return result = new SubtitleFetchResult.NotFound(
+            return result = new SubtitlesFetchResult.NotFound(
                 Errors.Youtube.SubtitlesNotFound().Message);
         }
         catch (OperationCanceledException)
         {
-            return result = new SubtitleFetchResult.Canceled(
+            return result = new SubtitlesFetchResult.Canceled(
                 Errors.Youtube.SubtitlesFetchCanceled().Message);
         }
         finally
         {
             queueItem.Subtitles.FinishManualSubtitlesLoading(
-                result ?? new SubtitleFetchResult.Failed(
-                    "Unexpected subtitle fetch error"));
+                result ?? new SubtitlesFetchResult.Failed(
+                    "Unexpected subtitles fetch error"));
             tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
         }
     }

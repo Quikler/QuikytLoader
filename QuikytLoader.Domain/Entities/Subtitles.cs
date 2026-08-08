@@ -18,7 +18,7 @@ public sealed class Subtitles
 
     public IReadOnlyDictionary<string, string>? Dictionary { get; private set; }
 
-    public SubtitleFetchResult? LastSeenAutoSubtitleFetchResult { get; private set; }
+    public SubtitlesFetchResult? LastSeenAutoSubtitlesFetchResult { get; private set; }
 
     public bool ExistWithLanguage(string language) =>
         (_manualSubtitles is not null && _manualSubtitles.ContainsKey(language)) ||
@@ -42,29 +42,29 @@ public sealed class Subtitles
         return true;
     }
 
-    public void FinishManualSubtitlesLoading(SubtitleFetchResult result)
+    public void FinishManualSubtitlesLoading(SubtitlesFetchResult result)
     {
         AllowManualSubtitlesLoading = result switch
         {
-            SubtitleFetchResult.Failed => true,
-            SubtitleFetchResult.Canceled => true,
+            SubtitlesFetchResult.Failed => true,
+            SubtitlesFetchResult.Canceled => true,
             _ => false
         };
     }
 
-    public void FinishAutoSubtitlesLoading(SubtitleFetchResult result)
+    public void FinishAutoSubtitlesLoading(SubtitlesFetchResult result)
     {
         AllowAutoSubtitlesLoading = result switch
         {
-            SubtitleFetchResult.Fetched => true,
-            SubtitleFetchResult.NotFound => true,
-            SubtitleFetchResult.Failed => true,
-            SubtitleFetchResult.Canceled => true,
-            SubtitleFetchResult.ActionRequired => true,
+            SubtitlesFetchResult.Fetched => true,
+            SubtitlesFetchResult.NotFound => true,
+            SubtitlesFetchResult.Failed => true,
+            SubtitlesFetchResult.Canceled => true,
+            SubtitlesFetchResult.ActionRequired => true,
             _ => false
         };
 
-        LastSeenAutoSubtitleFetchResult = result;
+        LastSeenAutoSubtitlesFetchResult = result;
     }
 
     public void SetManualSubtitles(IReadOnlyDictionary<string, string> subtitles)
@@ -133,18 +133,18 @@ public sealed class Subtitles
     }
 }
 
-public abstract record SubtitleFetchResult
+public abstract record SubtitlesFetchResult
 {
-    public sealed record Fetched(ActionRequired? Action = null) : SubtitleFetchResult;
-    public sealed record NotFound(string Message) : SubtitleFetchResult;
-    public sealed record Failed(string Message, string? DetailsMessage = null) : SubtitleFetchResult;
-    public sealed record Canceled(string Message) : SubtitleFetchResult;
-    public sealed record NotAllowed : SubtitleFetchResult;
+    public sealed record Fetched(ActionRequired? Action = null) : SubtitlesFetchResult;
+    public sealed record NotFound(string Message) : SubtitlesFetchResult;
+    public sealed record Failed(string Message, string? DetailsMessage = null) : SubtitlesFetchResult;
+    public sealed record Canceled(string Message) : SubtitlesFetchResult;
+    public sealed record NotAllowed : SubtitlesFetchResult;
 
     public sealed record ActionRequired(
         string Message,
         string? DetailsMessage,
-        SubtitleActionRequired SubtitleActionRequired,
+        SubtitlesActionRequired SubtitlesActionRequired,
         AutoSubtitlesOption? CreatedWithOption,
-        bool IsError = false) : SubtitleFetchResult;
+        bool IsError = false) : SubtitlesFetchResult;
 }

@@ -27,10 +27,10 @@ internal sealed class YoutubeSubtitlesService(IYtDlpAcl ytDlpAcl) : IYoutubeSubt
             if (!downloadSubtitlesResult.IsSuccess)
                 return downloadSubtitlesResult.Error;
 
-            var subtitleFiles = Directory.GetFiles(tempDirectory, "*.srt");
-            if (subtitleFiles.Length != 0)
+            var subtitlesFiles = Directory.GetFiles(tempDirectory, "*.srt");
+            if (subtitlesFiles.Length != 0)
                 return Result<IReadOnlyDictionary<string, string>?>.Success(
-                    await GetSubtitleFileContentsAsync(subtitleFiles, ct));
+                    await GetSubtitlesFileContentsAsync(subtitlesFiles, ct));
 
             // -- No Subtitles Found
             return Result<IReadOnlyDictionary<string, string>?>.Success(null);
@@ -62,10 +62,10 @@ internal sealed class YoutubeSubtitlesService(IYtDlpAcl ytDlpAcl) : IYoutubeSubt
             if (!downloadSubtitlesResult.IsSuccess)
                 return downloadSubtitlesResult.Error;
 
-            var subtitleFiles = Directory.GetFiles(tempDirectory, "*.srt");
-            if (subtitleFiles.Length != 0)
+            var subtitlesFiles = Directory.GetFiles(tempDirectory, "*.srt");
+            if (subtitlesFiles.Length != 0)
                 return Result<IReadOnlyDictionary<string, string>?>.Success(
-                    await GetSubtitleFileContentsAsync(subtitleFiles, ct));
+                    await GetSubtitlesFileContentsAsync(subtitlesFiles, ct));
 
             // -- No Subtitles Found
             return Result<IReadOnlyDictionary<string, string>?>.Success(null);
@@ -79,16 +79,16 @@ internal sealed class YoutubeSubtitlesService(IYtDlpAcl ytDlpAcl) : IYoutubeSubt
 
     public void CancelSubtitlesFetching(Guid itemId) => _cancellationTokens[itemId].Cancel();
 
-    private async Task<IReadOnlyDictionary<string, string>> GetSubtitleFileContentsAsync(
-        string[] subtitleFiles,
+    private async Task<IReadOnlyDictionary<string, string>> GetSubtitlesFileContentsAsync(
+        string[] subtitlesFiles,
         CancellationToken ct)
     {
         var subtitles = new Dictionary<string, string>(
             StringComparer.OrdinalIgnoreCase);
 
-        foreach (var file in subtitleFiles)
+        foreach (var file in subtitlesFiles)
         {
-            await CleanupSubtitleFileAsync(file, ct);
+            await CleanupSubtitlesFileAsync(file, ct);
 
             var language = Path.GetFileNameWithoutExtension(file)
                 .Split('.')
@@ -101,17 +101,17 @@ internal sealed class YoutubeSubtitlesService(IYtDlpAcl ytDlpAcl) : IYoutubeSubt
         return subtitles;
     }
 
-    private static readonly System.Text.RegularExpressions.Regex SubtitleNumberRegex =
+    private static readonly System.Text.RegularExpressions.Regex SubtitlesNumberRegex =
         new(@"^[0-9]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
 
     private static readonly System.Text.RegularExpressions.Regex HtmlTagRegex =
         new("<[^>]*>", System.Text.RegularExpressions.RegexOptions.Compiled);
 
-    private static async Task CleanupSubtitleFileAsync(string file, CancellationToken ct)
+    private static async Task CleanupSubtitlesFileAsync(string file, CancellationToken ct)
     {
         var lines = (await File.ReadAllLinesAsync(file, ct))
             .Where(line =>
-                !SubtitleNumberRegex.IsMatch(line) &&
+                !SubtitlesNumberRegex.IsMatch(line) &&
                 !line.Contains("-->"))
             .Select(line =>
                 HtmlTagRegex.Replace(line, ""))

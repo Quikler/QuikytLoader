@@ -17,9 +17,9 @@
 
                 <!-- Tabs -->
                 <TabStrip Grid.Row="0"
-                          ItemsSource="{Binding SubtitleTabs}"
+                          ItemsSource="{Binding SubtitlesTabs}"
                           SelectedItem="{Binding SelectedTab}"
-                          IsVisible="{Binding SubtitleTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
+                          IsVisible="{Binding SubtitlesTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <TabStrip.ItemTemplate>
                         <DataTemplate x:DataType="vmqes:TabItemViewModel">
                             <TextBlock Text="{Binding Header}" />
@@ -28,10 +28,10 @@
                 </TabStrip>
 
                 <ContentControl Grid.Row="1"
-                                Content="{Binding SubtitleState}">
+                                Content="{Binding SubtitlesState}">
                     <ContentControl.DataTemplates>
 
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleLoadingState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitlesLoadingState}">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Spacing="10">
@@ -61,7 +61,7 @@
                             </StackPanel>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleLanguageSelectionState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitlesLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
                                                      DetailsMessage="{Binding DetailsMessage}"
@@ -92,7 +92,7 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleRetryLanguageSelectionState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitlesRetryLanguageSelectionState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
                                                      DetailsMessage="{Binding DetailsMessage}"
@@ -123,7 +123,7 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleAutoSubtitlesOptionSettingsChangedState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitlesAutoSubtitlesOptionSettingsChangedState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
                                                      IsCloseButtonVisible="{Binding DisplayCloseButton}">
@@ -141,7 +141,7 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleErrorState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitlesErrorState}">
                             <vcommon:TextWithDetails Message="{Binding Message}"
                                                      MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
                                                      DetailsMessage="{Binding DetailsMessage}"
@@ -161,10 +161,10 @@
                             </vcommon:TextWithDetails>
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleSuccessState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitlesSuccessState}">
                         </DataTemplate>
 
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleIdleState}">
+                        <DataTemplate DataType="{x:Type vmqes:SubtitlesIdleState}">
                         </DataTemplate>
 
                     </ContentControl.DataTemplates>

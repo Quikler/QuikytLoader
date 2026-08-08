@@ -1,6 +1,6 @@
 namespace QuikytLoader.Domain.Enums;
 
-public enum SubtitleActionRequired
+public enum SubtitlesActionRequired
 {
     LanguageSelection,
     RefreshDueToSettingsChange

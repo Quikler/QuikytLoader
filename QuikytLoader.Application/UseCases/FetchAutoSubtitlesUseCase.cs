@@ -18,18 +18,18 @@ public class FetchAutoSubtitlesUseCase(
     ILanguageIdentifier languageIdentifier,
     ITempDirectoryService tempDirectoryService)
 {
-    public async Task<SubtitleFetchResult> ExecuteAsync(
+    public async Task<SubtitlesFetchResult> ExecuteAsync(
         Guid itemId,
         Language? language = null)
     {
         var queueItem = queue.GetItem(itemId);
         if (!queueItem.Subtitles.StartAutoSubtitlesLoading())
-            return new SubtitleFetchResult.NotAllowed();
+            return new SubtitlesFetchResult.NotAllowed();
 
         var subtitlesDirectory =
             tempDirectoryService.CreateSubdirectory(queueItem.Source.YoutubeVideoId, "auto-subtitles");
 
-        SubtitleFetchResult? result = null;
+        SubtitlesFetchResult? result = null;
 
         var didAutoSubtitlesOptionChange = false;
         void onSettingsChanged(UserSettingsChangedEventArgs args)
@@ -52,10 +52,10 @@ public class FetchAutoSubtitlesUseCase(
                 switch (autoSubtitlesOption)
                 {
                     case AutoSubtitlesOption.ManualLanguageSelection:
-                        return result = new SubtitleFetchResult.ActionRequired(
+                        return result = new SubtitlesFetchResult.ActionRequired(
                             "Please select video language",
                             null,
-                            SubtitleActionRequired.LanguageSelection,
+                            SubtitlesActionRequired.LanguageSelection,
                             userSettings.Current.AutoSubtitlesOption);
 
                     case AutoSubtitlesOption.AutoLanguageDetection:
@@ -64,7 +64,7 @@ public class FetchAutoSubtitlesUseCase(
                         {
                             var videoMetadataResult = await youtubeMetadataService.GetVideoMetadataAsync(queueItem.Source);
                             if (!videoMetadataResult.IsSuccess)
-                                return result = new SubtitleFetchResult.Failed(
+                                return result = new SubtitlesFetchResult.Failed(
                                     videoMetadataResult.Error.Message);
                             videoMetadata = videoMetadataResult.Value;
                         }
@@ -81,10 +81,10 @@ public class FetchAutoSubtitlesUseCase(
             }
 
             if (queueItem.Subtitles.ExistWithLanguage(language.Value.Iso6391Code))
-                return result = new SubtitleFetchResult.ActionRequired(
+                return result = new SubtitlesFetchResult.ActionRequired(
                     $"Subtitles for '{language.Value.DisplayName}' language already fetched, try other languages",
                     null,
-                    SubtitleActionRequired.LanguageSelection,
+                    SubtitlesActionRequired.LanguageSelection,
                     autoSubtitlesOption);
 
             var subtitlesResult = await youtubeSubtitlesService.FetchAutoSubtitlesAsync(
@@ -94,28 +94,28 @@ public class FetchAutoSubtitlesUseCase(
                 language.Value.Iso6391Code);
 
             if (!subtitlesResult.IsSuccess)
-                return result = new SubtitleFetchResult.ActionRequired(
+                return result = new SubtitlesFetchResult.ActionRequired(
                     $"Failed to fetch auto subtitles for '{language.Value.DisplayName}', please select another language and try again",
                     subtitlesResult.Error.Message,
-                    SubtitleActionRequired.LanguageSelection,
+                    SubtitlesActionRequired.LanguageSelection,
                     autoSubtitlesOption,
                     true);
 
             if (subtitlesResult.Value is not null)
             {
                 queueItem.Subtitles.SetAutoSubtitles(subtitlesResult.Value);
-                return result = new SubtitleFetchResult.Fetched(
-                    new SubtitleFetchResult.ActionRequired(
+                return result = new SubtitlesFetchResult.Fetched(
+                    new SubtitlesFetchResult.ActionRequired(
                         $"Auto subtitles were fetched for '{language.Value.DisplayName}', you can try other languages",
                         null,
-                        SubtitleActionRequired.LanguageSelection,
+                        SubtitlesActionRequired.LanguageSelection,
                         autoSubtitlesOption));
             }
 
-            return result = new SubtitleFetchResult.ActionRequired(
+            return result = new SubtitlesFetchResult.ActionRequired(
                 $"Auto subtitles for '{language.Value.DisplayName}' not found, please select another language and try again",
                 null,
-                SubtitleActionRequired.LanguageSelection,
+                SubtitlesActionRequired.LanguageSelection,
                 autoSubtitlesOption,
                 true);
         }
@@ -123,30 +123,30 @@ public class FetchAutoSubtitlesUseCase(
         {
             if (didAutoSubtitlesOptionChange)
             {
-                return result = new SubtitleFetchResult.ActionRequired(
+                return result = new SubtitlesFetchResult.ActionRequired(
                     "Auto Subtitles Option settings were changed, please click refresh",
                     null,
-                    SubtitleActionRequired.RefreshDueToSettingsChange,
+                    SubtitlesActionRequired.RefreshDueToSettingsChange,
                     null);
             }
 
-            return result = queueItem.Subtitles.LastSeenAutoSubtitleFetchResult switch
+            return result = queueItem.Subtitles.LastSeenAutoSubtitlesFetchResult switch
             {
-                SubtitleFetchResult.ActionRequired r
+                SubtitlesFetchResult.ActionRequired r
                     when r.CreatedWithOption != userSettings.Current.AutoSubtitlesOption
                         || r.CreatedWithOption is null =>
-                    new SubtitleFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message),
-                SubtitleFetchResult.ActionRequired r => r,
-                SubtitleFetchResult.Fetched r
+                    new SubtitlesFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message),
+                SubtitlesFetchResult.ActionRequired r => r,
+                SubtitlesFetchResult.Fetched r
                     when r.Action is not null => r.Action,
-                _ => new SubtitleFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message)
+                _ => new SubtitlesFetchResult.Canceled(Errors.Youtube.AutoSubtitlesFetchCanceled().Message)
             };
         }
         finally
         {
             queueItem.Subtitles.FinishAutoSubtitlesLoading(
-                result ?? new SubtitleFetchResult.Failed(
-                    "Unexpected subtitle fetch error"));
+                result ?? new SubtitlesFetchResult.Failed(
+                    "Unexpected subtitles fetch error"));
             tempDirectoryService.DeleteSubdirectory(subtitlesDirectory);
             userSettings.Changed -= onSettingsChanged;
         }
