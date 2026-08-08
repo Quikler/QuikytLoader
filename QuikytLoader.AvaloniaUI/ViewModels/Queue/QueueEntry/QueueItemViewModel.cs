@@ -23,8 +23,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         Action<Guid> cancelCallback,
         FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase,
-        SettingsViewModel settingsViewModel)
+        CancelSubtitlesUseCase cancelSubtitlesUseCase)
     {
         Model = model;
         QueueItemSubtitlesViewModel = new(
@@ -32,8 +31,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
             userSettings,
             fetchManualSubtitlesUseCase,
             fetchAutoSubtitlesUseCase,
-            cancelSubtitlesUseCase,
-            settingsViewModel);
+            cancelSubtitlesUseCase);
 
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;

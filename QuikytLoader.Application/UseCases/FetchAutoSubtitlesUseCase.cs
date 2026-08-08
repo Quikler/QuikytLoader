@@ -81,13 +81,11 @@ public class FetchAutoSubtitlesUseCase(
             }
 
             if (queueItem.Subtitles.ExistWithLanguage(language.Value.Iso6391Code))
-            {
                 return result = new SubtitleFetchResult.ActionRequired(
                     $"Subtitles for '{language.Value.DisplayName}' language already fetched, try other languages",
                     null,
                     SubtitleActionRequired.LanguageSelection,
                     autoSubtitlesOption);
-            }
 
             var subtitlesResult = await youtubeSubtitlesService.FetchAutoSubtitlesAsync(
                 queueItem.Id,
@@ -96,38 +94,12 @@ public class FetchAutoSubtitlesUseCase(
                 language.Value.Iso6391Code);
 
             if (!subtitlesResult.IsSuccess)
-            {
-                if (isExplicitLanguageSelection)
-                {
-                    return result = new SubtitleFetchResult.ActionRequired(
-                        $"Failed to fetch auto subtitles for '{language.Value.DisplayName}', please select another language and try again",
-                        subtitlesResult.Error.Message,
-                        SubtitleActionRequired.LanguageSelection,
-                        autoSubtitlesOption,
-                        true);
-                }
-
-                var (message, action) = autoSubtitlesOption switch
-                {
-                    AutoSubtitlesOption.ManualLanguageSelection =>
-                        ("Failed to fetch auto subtitles - please verify your language and try again",
-                        SubtitleActionRequired.LanguageSelection),
-                    AutoSubtitlesOption.AutoLanguageDetection =>
-                        ($"Failed to fetch auto subtitles (language detected - '{language.Value.DisplayName}'), please change Auto Subtitles option in settings",
-                        SubtitleActionRequired.ChangeAutoSubtitlesOption),
-                    AutoSubtitlesOption.FallbackToEnglishLanguage =>
-                        ("Failed to fetch auto subtitles for 'English', please change Auto Subtitles option in settings",
-                        SubtitleActionRequired.ChangeAutoSubtitlesOption),
-                    _ => throw new UnreachableException()
-                };
-
                 return result = new SubtitleFetchResult.ActionRequired(
-                    message,
+                    $"Failed to fetch auto subtitles for '{language.Value.DisplayName}', please select another language and try again",
                     subtitlesResult.Error.Message,
-                    action,
+                    SubtitleActionRequired.LanguageSelection,
                     autoSubtitlesOption,
                     true);
-            }
 
             if (subtitlesResult.Value is not null)
             {

@@ -3,7 +3,6 @@
              xmlns:vmqes="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry.Subtitles"
              xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
              xmlns:vcommon="using:QuikytLoader.AvaloniaUI.Views.Common"
-             xmlns:enums="using:QuikytLoader.Domain.Enums"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:common="using:QuikytLoader.Domain.Common"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemSubtitlesView"
@@ -120,47 +119,6 @@
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
-                                </vcommon:TextWithDetails.RightSideContent>
-                            </vcommon:TextWithDetails>
-                        </DataTemplate>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitleChangeAutoSubtitlesOptionState}">
-                            <vcommon:TextWithDetails Message="{Binding Message}"
-                                                     MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}"
-                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
-                                <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
-                                            FontWeight="SemiBold"
-                                            Padding="0"
-                                            Background="Transparent"
-                                            BorderThickness="0">
-                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                         Symbol="Refresh"
-                                                         FontSize="18"/>
-                                    </Button>
-                                </vcommon:TextWithDetails.LeftSideActionContent>
-
-                                <vcommon:TextWithDetails.RightSideContent>
-                                    <Grid ColumnDefinitions="Auto,Auto"
-                                          ColumnSpacing="4">
-                                        <ComboBox ItemsSource="{x:Static enums:DomainEnums.AutoSubtitlesOptions}"
-                                                  SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SettingsViewModel.AutoSubtitlesOption}">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding, Converter={StaticResource EnumToSpacedStringConverter}}" />
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                        </ComboBox>
-                                        
-                                        <Button Grid.Column="1"
-                                                Content="Save"
-                                                Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SettingsViewModel.SaveSettingsCommand}"
-                                                Background="{DynamicResource AccentFillColorDefaultBrush}"
-                                                Foreground="White"
-                                                FontSize="14"
-                                                FontWeight="SemiBold"/>
-                                    </Grid>
                                 </vcommon:TextWithDetails.RightSideContent>
                             </vcommon:TextWithDetails>
                         </DataTemplate>

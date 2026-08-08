@@ -20,15 +20,12 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
-    public SettingsViewModel SettingsViewModel { get; }
-
     public QueueItemSubtitlesViewModel(
         Domain.Entities.Subtitles model,
         IUserSettings userSettings,
         FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase,
-        SettingsViewModel settingsViewModel)
+        CancelSubtitlesUseCase cancelSubtitlesUseCase)
     {
         Model = model;
 
@@ -47,8 +44,6 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
         _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
-
-        SettingsViewModel = settingsViewModel;
     }
 
     [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Language.English;
@@ -168,8 +163,6 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
             case SubtitleFetchResult.ActionRequired r:
                 SubtitleState = r.SubtitleActionRequired switch
                 {
-                    SubtitleActionRequired.ChangeAutoSubtitlesOption =>
-                        new SubtitleChangeAutoSubtitlesOptionState(r.Message, r.DetailsMessage, Model.AreAutoSubtitlesLoaded),
                     SubtitleActionRequired.LanguageSelection => r.IsError
                         ? new SubtitleRetryLanguageSelectionState(r.Message, r.DetailsMessage, Model.AreAutoSubtitlesLoaded)
                         : new SubtitleLanguageSelectionState(r.Message, r.DetailsMessage, Model.AreAutoSubtitlesLoaded),
@@ -212,5 +205,4 @@ public sealed record SubtitleErrorState(string Message, bool AllowRetry, string?
 public sealed record SubtitleSuccessState : SubtitleUiState;
 public sealed record SubtitleLanguageSelectionState(string Message, string? DetailsMessage, bool DisplayCloseButton) : SubtitleUiState;
 public sealed record SubtitleRetryLanguageSelectionState(string Message, string? DetailsMessage, bool DisplayCloseButton) : SubtitleUiState;
-public sealed record SubtitleChangeAutoSubtitlesOptionState(string Message, string? DetailsMessage, bool DisplayCloseButton) : SubtitleUiState;
 public sealed record SubtitleAutoSubtitlesOptionSettingsChangedState(string Message, bool DisplayCloseButton) : SubtitleUiState;

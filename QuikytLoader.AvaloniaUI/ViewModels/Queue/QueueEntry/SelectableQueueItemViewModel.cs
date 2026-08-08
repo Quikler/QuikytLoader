@@ -13,8 +13,7 @@ public sealed partial class SelectableQueueItemViewModel(
     Action<Guid> cancelCallback,
     FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
     FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-    CancelSubtitlesUseCase cancelSubtitlesUseCase,
-    SettingsViewModel settingsViewModel)
+    CancelSubtitlesUseCase cancelSubtitlesUseCase)
     : QueueItemViewModel(
         model,
         userSettings,
@@ -22,8 +21,7 @@ public sealed partial class SelectableQueueItemViewModel(
         cancelCallback,
         fetchManualSubtitlesUseCase,
         fetchAutoSubtitlesUseCase,
-        cancelSubtitlesUseCase,
-        settingsViewModel)
+        cancelSubtitlesUseCase)
 {
     [NotifyPropertyChangedFor(nameof(CanProceed))]
     [NotifyPropertyChangedFor(nameof(CanCancel))]
