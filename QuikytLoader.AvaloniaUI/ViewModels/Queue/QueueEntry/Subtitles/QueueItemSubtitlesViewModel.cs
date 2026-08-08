@@ -159,7 +159,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
 
                 SubtitleState = r.Action.SubtitleActionRequired switch
                 {
-                    SubtitleActionRequired.LoadMoreAutoSubtitles =>
+                    SubtitleActionRequired.LanguageSelection =>
                         new SubtitleLanguageSelectionState(r.Action.Message, null, Model.AreAutoSubtitlesLoaded),
                     _ => throw new UnreachableException()
                 };
@@ -175,8 +175,6 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
                         : new SubtitleLanguageSelectionState(r.Message, r.DetailsMessage, Model.AreAutoSubtitlesLoaded),
                     SubtitleActionRequired.RefreshDueToSettingsChange =>
                         new SubtitleAutoSubtitlesOptionSettingsChangedState(r.Message, Model.AreAutoSubtitlesLoaded),
-                    SubtitleActionRequired.LoadMoreAutoSubtitles =>
-                        new SubtitleLanguageSelectionState(r.Message, null, Model.AreAutoSubtitlesLoaded),
                     _ => throw new UnreachableException()
                 };
                 break;

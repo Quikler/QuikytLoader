@@ -4,6 +4,5 @@ public enum SubtitleActionRequired
 {
     LanguageSelection,
     ChangeAutoSubtitlesOption,
-    RefreshDueToSettingsChange,
-    LoadMoreAutoSubtitles
+    RefreshDueToSettingsChange
 }
