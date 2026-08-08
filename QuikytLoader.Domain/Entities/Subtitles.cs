@@ -69,12 +69,16 @@ public sealed class Subtitles
 
     public void SetManualSubtitles(IReadOnlyDictionary<string, string> subtitles)
     {
+        subtitles = NormalizeLanguageKeys(subtitles);
+
         _manualSubtitles = subtitles;
         RebuildSubtitles();
     }
 
     public void SetAutoSubtitles(IReadOnlyDictionary<string, string> subtitles)
     {
+        subtitles = NormalizeLanguageKeys(subtitles);
+
         if (_autoSubtitles is null)
             _autoSubtitles = subtitles;
         else
@@ -90,6 +94,16 @@ public sealed class Subtitles
         RebuildSubtitles();
         AreAutoSubtitlesLoaded = true;
     }
+
+    // Normalizes language keys, so we treat "de-DE" as "de"
+    private IReadOnlyDictionary<string, string> NormalizeLanguageKeys(
+        IReadOnlyDictionary<string, string> rawContent)
+            => rawContent
+                .GroupBy(kvp => kvp.Key.Split('-')[0].ToLowerInvariant())
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.First().Value,
+                    StringComparer.OrdinalIgnoreCase);
 
     private void RebuildSubtitles()
     {
