@@ -140,14 +140,12 @@ public class FetchAutoSubtitlesUseCase(
                         autoSubtitlesOption));
             }
 
-            // Not found message when no subtitles were found
-            if (queueItem.Subtitles.Dictionary is null)
-                return result = new SubtitleFetchResult.NotFound(
-                    Errors.Youtube.SubtitlesNotFound().Message);
-
-            // Not found message when only no auto subtitles were found
-            return result = new SubtitleFetchResult.NotFound(
-                Errors.Youtube.AutoSubtitlesNotFound().Message);
+            return result = new SubtitleFetchResult.ActionRequired(
+                $"Auto subtitles for '{language.Value.DisplayName}' not found, please select another language and try again",
+                null,
+                SubtitleActionRequired.LanguageSelection,
+                autoSubtitlesOption,
+                true);
         }
         catch (OperationCanceledException)
         {
