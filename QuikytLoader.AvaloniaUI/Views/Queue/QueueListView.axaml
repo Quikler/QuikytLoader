@@ -29,6 +29,7 @@
                 <ScrollViewer x:Name="QueueScroll"
                               ScrollChanged="QueueScroll_ScrollChanged">
                     <ItemsControl x:Name="QueueItems"
+                                  Classes="QueueItemsControl"
                                   ItemsSource="{Binding QueueManager.QueueEntries}">
                         <ItemsControl.DataTemplates>
                             <DataTemplate DataType="vmqe:QueueGroupViewModel">

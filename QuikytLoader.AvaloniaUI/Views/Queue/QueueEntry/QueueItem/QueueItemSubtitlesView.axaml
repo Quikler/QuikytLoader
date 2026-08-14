@@ -6,187 +6,183 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:common="using:QuikytLoader.Domain.Common"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemSubtitlesView"
-             x:DataType="vmqes:QueueItemSubtitlesViewModel"
-             IsVisible="{Binding AreSubtitlesVisible}">
+             x:DataType="vmqes:QueueItemSubtitlesViewModel">
 
-    <Border Classes="QueueItemBorderBottom">
-        <Grid RowDefinitions="Auto,Auto">
+    <Grid RowDefinitions="Auto,Auto">
 
-            <Grid RowDefinitions="Auto,Auto"
-                  RowSpacing="4">
+        <Grid RowDefinitions="Auto,Auto"
+              RowSpacing="4">
 
-                <!-- Tabs -->
-                <TabStrip Grid.Row="0"
-                          ItemsSource="{Binding SubtitlesTabs}"
-                          SelectedItem="{Binding SelectedTab}"
-                          IsVisible="{Binding SubtitlesTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TabStrip.ItemTemplate>
-                        <DataTemplate x:DataType="vmqes:TabItemViewModel">
-                            <TextBlock Text="{Binding Header}" />
-                        </DataTemplate>
-                    </TabStrip.ItemTemplate>
-                </TabStrip>
-
-                <ContentControl Grid.Row="1"
-                                Content="{Binding SubtitlesState}">
-                    <ContentControl.DataTemplates>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitlesLoadingState}">
-                            <StackPanel HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Spacing="10">
-                                <ProgressBar IsIndeterminate="True"
-                                             Width="200"/>
-
-                                <Grid HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      ColumnSpacing="4"
-                                      ColumnDefinitions="Auto,*">
-                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.CancelSubtitlesCommand}"
-                                            FontWeight="SemiBold"
-                                            Padding="0"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center">
-                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                         Symbol="Cancel"
-                                                         FontSize="18"/>
-                                    </Button>
-
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding LoadingMessage}"
-                                               TextWrapping="Wrap"/>
-                                </Grid>
-                            </StackPanel>
-                        </DataTemplate>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitlesLanguageSelectionState}">
-                            <vcommon:TextWithDetails Message="{Binding Message}"
-                                                     MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}"
-                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
-                                <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
-                                            FontWeight="SemiBold"
-                                            Padding="0"
-                                            Background="Transparent"
-                                            BorderThickness="0">
-                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorNeutralBrush}"
-                                                         Symbol="Checkmark"
-                                                         FontSize="18"/>
-                                    </Button>
-                                </vcommon:TextWithDetails.LeftSideActionContent>
-
-                                <vcommon:TextWithDetails.RightSideContent>
-                                    <ComboBox ItemsSource="{x:Static common:Language.Options}"
-                                              SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="common:Language">
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           VerticalAlignment="Center"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </vcommon:TextWithDetails.RightSideContent>
-                            </vcommon:TextWithDetails>
-                        </DataTemplate>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitlesRetryLanguageSelectionState}">
-                            <vcommon:TextWithDetails Message="{Binding Message}"
-                                                     MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}"
-                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
-                                <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
-                                            FontWeight="SemiBold"
-                                            Padding="0"
-                                            Background="Transparent"
-                                            BorderThickness="0">
-                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                         Symbol="Refresh"
-                                                         FontSize="18"/>
-                                    </Button>
-                                </vcommon:TextWithDetails.LeftSideActionContent>
-
-                                <vcommon:TextWithDetails.RightSideContent>
-                                    <ComboBox ItemsSource="{x:Static common:Language.Options}"
-                                              SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="common:Language">
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           VerticalAlignment="Center"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </vcommon:TextWithDetails.RightSideContent>
-                            </vcommon:TextWithDetails>
-                        </DataTemplate>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitlesAutoSubtitlesOptionSettingsChangedState}">
-                            <vcommon:TextWithDetails Message="{Binding Message}"
-                                                     MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
-                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
-                                <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
-                                            FontWeight="SemiBold"
-                                            Padding="0"
-                                            Background="Transparent"
-                                            BorderThickness="0">
-                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorNeutralBrush}"
-                                                         Symbol="Refresh"
-                                                         FontSize="18"/>
-                                    </Button>
-                                </vcommon:TextWithDetails.LeftSideActionContent>
-                            </vcommon:TextWithDetails>
-                        </DataTemplate>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitlesErrorState}">
-                            <vcommon:TextWithDetails Message="{Binding Message}"
-                                                     MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                     DetailsMessage="{Binding DetailsMessage}"
-                                                     IsCloseButtonVisible="{Binding DisplayCloseButton}">
-                                <vcommon:TextWithDetails.LeftSideActionContent>
-                                    <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
-                                            FontWeight="SemiBold"
-                                            Padding="0"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            IsVisible="{Binding AllowRetry}">
-                                        <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                         Symbol="Refresh"
-                                                         FontSize="18"/>
-                                    </Button>
-                                </vcommon:TextWithDetails.LeftSideActionContent>
-                            </vcommon:TextWithDetails>
-                        </DataTemplate>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitlesSuccessState}">
-                        </DataTemplate>
-
-                        <DataTemplate DataType="{x:Type vmqes:SubtitlesIdleState}">
-                        </DataTemplate>
-
-                    </ContentControl.DataTemplates>
-                </ContentControl>
-
-            </Grid>
+            <!-- Tabs -->
+            <TabStrip Grid.Row="0"
+                      ItemsSource="{Binding SubtitlesTabs}"
+                      SelectedItem="{Binding SelectedTab}"
+                      IsVisible="{Binding SubtitlesTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <TabStrip.ItemTemplate>
+                    <DataTemplate x:DataType="vmqes:TabItemViewModel">
+                        <TextBlock Text="{Binding Header}" />
+                    </DataTemplate>
+                </TabStrip.ItemTemplate>
+            </TabStrip>
 
             <ContentControl Grid.Row="1"
-                            Content="{Binding SelectedTab}">
-                <ContentControl.ContentTemplate>
-                    <DataTemplate x:DataType="vmqes:TabItemViewModel">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Auto">
-                            <SelectableTextBlock Text="{Binding Content}"
-                                                 TextWrapping="NoWrap"
-                                                 Padding="0,16"/>
-                        </ScrollViewer>
+                            Content="{Binding SubtitlesState}">
+                <ContentControl.DataTemplates>
+
+                    <DataTemplate DataType="{x:Type vmqes:SubtitlesLoadingState}">
+                        <StackPanel HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="10">
+                            <ProgressBar IsIndeterminate="True"
+                                         Width="200"/>
+
+                            <Grid HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  ColumnSpacing="4"
+                                  ColumnDefinitions="Auto,*">
+                                <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.CancelSubtitlesCommand}"
+                                        FontWeight="SemiBold"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                    <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                     Symbol="Cancel"
+                                                     FontSize="18"/>
+                                </Button>
+
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding LoadingMessage}"
+                                           TextWrapping="Wrap"/>
+                            </Grid>
+                        </StackPanel>
                     </DataTemplate>
-                </ContentControl.ContentTemplate>
+
+                    <DataTemplate DataType="{x:Type vmqes:SubtitlesLanguageSelectionState}">
+                        <vcommon:TextWithDetails Message="{Binding Message}"
+                                                 MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
+                                                 DetailsMessage="{Binding DetailsMessage}"
+                                                 IsCloseButtonVisible="{Binding DisplayCloseButton}">
+                            <vcommon:TextWithDetails.LeftSideActionContent>
+                                <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
+                                        FontWeight="SemiBold"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0">
+                                    <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorNeutralBrush}"
+                                                     Symbol="Checkmark"
+                                                     FontSize="18"/>
+                                </Button>
+                            </vcommon:TextWithDetails.LeftSideActionContent>
+
+                            <vcommon:TextWithDetails.RightSideContent>
+                                <ComboBox ItemsSource="{x:Static common:Language.Options}"
+                                          SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="common:Language">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </vcommon:TextWithDetails.RightSideContent>
+                        </vcommon:TextWithDetails>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type vmqes:SubtitlesRetryLanguageSelectionState}">
+                        <vcommon:TextWithDetails Message="{Binding Message}"
+                                                 MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                 DetailsMessage="{Binding DetailsMessage}"
+                                                 IsCloseButtonVisible="{Binding DisplayCloseButton}">
+                            <vcommon:TextWithDetails.LeftSideActionContent>
+                                <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWithLanguageWorkflowCommand}"
+                                        FontWeight="SemiBold"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0">
+                                    <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                     Symbol="Refresh"
+                                                     FontSize="18"/>
+                                </Button>
+                            </vcommon:TextWithDetails.LeftSideActionContent>
+
+                            <vcommon:TextWithDetails.RightSideContent>
+                                <ComboBox ItemsSource="{x:Static common:Language.Options}"
+                                          SelectedItem="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.SelectedAutoSubtitlesLanguage, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="common:Language">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </vcommon:TextWithDetails.RightSideContent>
+                        </vcommon:TextWithDetails>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type vmqes:SubtitlesAutoSubtitlesOptionSettingsChangedState}">
+                        <vcommon:TextWithDetails Message="{Binding Message}"
+                                                 MessageForeground="{DynamicResource SystemFillColorNeutralBrush}"
+                                                 IsCloseButtonVisible="{Binding DisplayCloseButton}">
+                            <vcommon:TextWithDetails.LeftSideActionContent>
+                                <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
+                                        FontWeight="SemiBold"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0">
+                                    <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorNeutralBrush}"
+                                                     Symbol="Refresh"
+                                                     FontSize="18"/>
+                                </Button>
+                            </vcommon:TextWithDetails.LeftSideActionContent>
+                        </vcommon:TextWithDetails>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type vmqes:SubtitlesErrorState}">
+                        <vcommon:TextWithDetails Message="{Binding Message}"
+                                                 MessageForeground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                 DetailsMessage="{Binding DetailsMessage}"
+                                                 IsCloseButtonVisible="{Binding DisplayCloseButton}">
+                            <vcommon:TextWithDetails.LeftSideActionContent>
+                                <Button Command="{Binding $parent[vqeqi:QueueItemSubtitlesView].DataContext.FetchSubtitlesWorkflowCommand}"
+                                        FontWeight="SemiBold"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding AllowRetry}">
+                                    <ui:FASymbolIcon Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                     Symbol="Refresh"
+                                                     FontSize="18"/>
+                                </Button>
+                            </vcommon:TextWithDetails.LeftSideActionContent>
+                        </vcommon:TextWithDetails>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type vmqes:SubtitlesSuccessState}">
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type vmqes:SubtitlesIdleState}">
+                    </DataTemplate>
+
+                </ContentControl.DataTemplates>
             </ContentControl>
 
         </Grid>
-    </Border>
+
+        <ContentControl Grid.Row="1"
+                        Content="{Binding SelectedTab}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate x:DataType="vmqes:TabItemViewModel">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <SelectableTextBlock Text="{Binding Content}"
+                                             TextWrapping="Wrap"
+                                             Padding="0,16"/>
+                    </ScrollViewer>
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+
+    </Grid>
 
 </UserControl>
