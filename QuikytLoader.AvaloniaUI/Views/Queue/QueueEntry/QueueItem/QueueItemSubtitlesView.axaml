@@ -174,10 +174,9 @@
                         Content="{Binding SelectedTab}">
             <ContentControl.ContentTemplate>
                 <DataTemplate x:DataType="vmqes:TabItemViewModel">
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <SelectableTextBlock Text="{Binding Content}"
-                                             TextWrapping="NoWrap"
+                                             TextWrapping="Wrap"
                                              Padding="0,16"/>
                     </ScrollViewer>
                 </DataTemplate>
