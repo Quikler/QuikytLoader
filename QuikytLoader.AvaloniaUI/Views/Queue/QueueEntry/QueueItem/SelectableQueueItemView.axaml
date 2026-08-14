@@ -2,27 +2,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.SelectableQueueItemView"
              x:DataType="vmqe:SelectableQueueItemViewModel">
 
-    <StackPanel>
+    <Border Classes="QueueItemBorder">
+        <StackPanel Classes="QueueItemSpacing">
 
-        <Border Classes="QueueItemBorder">
-            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                <CheckBox Grid.Column="0"
-                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                          IsEnabled="{Binding IsSelectable}"
-                          VerticalAlignment="Center"/>
-        
-                <vqeqi:QueueItemBodyView Grid.Column="1" />
-            </Grid>
-        </Border>
+            <Border Classes="QueueItemPartHorizontalPadding">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <CheckBox Grid.Column="0"
+                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              IsEnabled="{Binding IsSelectable}"
+                              VerticalAlignment="Center"/>
+            
+                    <vqeqi:QueueItemBodyView Grid.Column="1" />
+                </Grid>
+            </Border>
 
-        <Border Classes="QueueItemBorderBottom" IsVisible="{Binding QueueItemSubtitlesViewModel.AreSubtitlesVisible}">
-            <vqeqi:QueueItemSubtitlesView DataContext="{Binding QueueItemSubtitlesViewModel}" />
-        </Border>
+            <Border Classes="QueueItemPartHorizontalPadding QueueItemSubtitlesBorderTop QueueItemSubtitlesTopPadding"
+                    IsVisible="{Binding QueueItemSubtitlesViewModel.AreSubtitlesVisible}">
+                <vqeqi:QueueItemSubtitlesView DataContext="{Binding QueueItemSubtitlesViewModel}" />
+            </Border>
 
-    </StackPanel>
+        </StackPanel>
+    </Border>
 
 </UserControl>

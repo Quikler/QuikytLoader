@@ -1,0 +1,36 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem">
+    <Style Selector="Border.QueueItemPartHorizontalPadding">
+        <Setter Property="Padding" Value="16,0"/>
+    </Style>
+
+    <Style Selector="Border.QueueItemPartHorizontalPadding.QueueItemSubtitlesTopPadding">
+        <Setter Property="Padding" Value="16,12,16,0"/>
+    </Style>
+    
+    <Style Selector="StackPanel.QueueItemSpacing">
+        <Setter Property="Spacing" Value="12"/>
+    </Style>
+
+    <!-- Divides QueueItemBodyView and QueueItemSubtitlesView -->
+    <Style Selector="Border.QueueItemSubtitlesBorderTop">
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    </Style>
+                        
+    <!-- Every item is created with top border only -->
+    <Style Selector="ItemsControl.QueueItemsControl > ContentPresenter > vqeqi|QueueItemView > Border.QueueItemBorder,
+                     ItemsControl.QueueItemsControl > ContentPresenter > vqeqi|SelectableQueueItemView > Border.QueueItemBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+        <!-- Vertical padding should be the same value as Spacing in QueueItemSpacing class -->
+        <Setter Property="Padding" Value="0,12"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <!-- Last generated item is created with top + bottom borders -->
+    <Style Selector="ItemsControl.QueueItemsControl > ContentPresenter:nth-last-child(1) > vqeqi|QueueItemView > Border.QueueItemBorder,
+                     ItemsControl.QueueItemsControl > ContentPresenter:nth-last-child(1) > vqeqi|SelectableQueueItemView > Border.QueueItemBorder">
+        <Setter Property="BorderThickness" Value="0,1,0,1"/>
+    </Style>
+</Styles>
