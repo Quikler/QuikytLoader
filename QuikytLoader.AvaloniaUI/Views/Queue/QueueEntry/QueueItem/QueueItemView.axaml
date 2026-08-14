@@ -13,7 +13,9 @@
             <vqeqi:QueueItemBodyView />
         </Border>
 
-        <vqeqi:QueueItemSubtitlesView DataContext="{Binding QueueItemSubtitlesViewModel}" />
+        <Border Classes="QueueItemBorderBottom" IsVisible="{Binding QueueItemSubtitlesViewModel.AreSubtitlesVisible}">
+            <vqeqi:QueueItemSubtitlesView DataContext="{Binding QueueItemSubtitlesViewModel}" />
+        </Border>
 
     </StackPanel>
 
