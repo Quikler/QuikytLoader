@@ -60,7 +60,10 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
 
         _currentBotToken = settings.BotToken;
         _currentChatId = settings.ChatId;
-        _botClient = new TelegramBotClient(_currentBotToken);
+        _botClient = new TelegramBotClient(_currentBotToken)
+        {
+            Timeout = TimeSpan.FromMinutes(5)
+        };
         _cts = new CancellationTokenSource();
 
         try
