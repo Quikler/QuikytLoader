@@ -66,9 +66,17 @@ internal sealed class YtDlpProcessClient : IYtDlpProcessClient
 
     private static ProcessStartInfo CreatePsi(IReadOnlyList<string> arguments)
     {
+        var fileName = "yt-dlp";
+        var s = Path.DirectorySeparatorChar;
+        // If yt-dlp is installed with pipx, pipx creates a symlink $HOME/.local/bin/yt-dlp
+        var ytDlpLocalBinFile = Path.Combine(Environment.GetEnvironmentVariable("HOME")!, $".local{s}bin{s}{fileName}");
+
+        if (File.Exists(ytDlpLocalBinFile))
+            fileName = ytDlpLocalBinFile;
+
         var psi = new ProcessStartInfo
         {
-            FileName = "yt-dlp",
+            FileName = fileName,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
