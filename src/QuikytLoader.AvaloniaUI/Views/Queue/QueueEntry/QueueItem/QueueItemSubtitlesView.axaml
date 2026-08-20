@@ -174,11 +174,49 @@
                         Content="{Binding SelectedTab}">
             <ContentControl.ContentTemplate>
                 <DataTemplate x:DataType="vmqes:TabItemViewModel">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
                         <SelectableTextBlock Text="{Binding Content}"
                                              TextWrapping="Wrap"
                                              Padding="0,16"/>
-                    </ScrollViewer>
+
+                        <Border VerticalAlignment="Top"
+                                HorizontalAlignment="Right"
+                                Margin="0,12,12,0">
+                            <Border BorderThickness="1"
+                                    BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                                    Background="Gray"
+                                    HorizontalAlignment="Center"
+                                    MaxWidth="200"
+                                    Padding="4,0">
+                                <Grid ColumnDefinitions="Auto,*"
+                                      ColumnSpacing="4">
+                                    <ui:FASymbolIcon Grid.Column="0"
+                                                     Symbol="Find"/>
+                                    <TextBox Grid.Column="1"
+                                             Padding="0"
+                                             Background="Transparent"
+                                             VerticalContentAlignment="Center"
+                                             BorderThickness="0"
+                                             PlaceholderText="Find text">
+                                        <TextBox.Styles>
+                                            <Style Selector="TextBox /template/ Border#PART_BorderElement">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                            <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                            <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                        </TextBox.Styles>
+                                    </TextBox>
+                                </Grid>
+                            </Border>
+                        </Border>
+                    </Grid>
                 </DataTemplate>
             </ContentControl.ContentTemplate>
         </ContentControl>
