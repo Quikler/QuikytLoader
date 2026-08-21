@@ -19,6 +19,7 @@
         </ResourceDictionary>
 
         <converters:EnumToSpacedStringConverter x:Key="EnumToSpacedStringConverter" />
+        <converters:IncrementConverter x:Key="IncrementConverter" />
 
     </Application.Resources>
 </Application>

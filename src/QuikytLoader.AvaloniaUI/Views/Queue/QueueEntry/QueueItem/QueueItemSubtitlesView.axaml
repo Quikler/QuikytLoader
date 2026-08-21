@@ -177,24 +177,44 @@
                     <Grid>
                         <SelectableTextBlock Text="{Binding Content}"
                                              TextWrapping="Wrap"
+                                             SelectionStart="{Binding SelectionStart}"
+                                             SelectionEnd="{Binding SelectionEnd}"
                                              Padding="0,16"/>
 
-                        <Border VerticalAlignment="Top"
-                                HorizontalAlignment="Right"
-                                Margin="0,12,12,0">
-                            <Border BorderThickness="1"
-                                    BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
-                                    Background="Gray"
-                                    HorizontalAlignment="Center"
+                        <Grid ColumnDefinitions="Auto,Auto"
+                              ColumnSpacing="4"
+                              VerticalAlignment="Top"
+                              HorizontalAlignment="Right"
+                              Margin="0,12,12,0">
+                            <TextBlock Grid.Column="0"
+                                       TextWrapping="Wrap"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                <Run Text="{Binding CurrentOccurrenceIndex, Converter={StaticResource IncrementConverter}}"/>
+                                <Run Text="of"/>
+                                <Run Text="{Binding OccurrencesCount}"/>
+                            </TextBlock>
+                            <Border Grid.Column="1"
+                                    BorderThickness="1"
+                                    BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                                    Background="{DynamicResource LayerFillColorDefaultBrush}"
+                                    CornerRadius="8"
+                                    VerticalAlignment="Center"
                                     MaxWidth="200"
                                     Padding="4,0">
                                 <Grid ColumnDefinitions="Auto,*"
                                       ColumnSpacing="4">
-                                    <ui:FASymbolIcon Grid.Column="0"
+                                    <ui:FASymbolIcon Grid.Column="0" 
                                                      Symbol="Find"/>
                                     <TextBox Grid.Column="1"
+                                             Text="{Binding FindText, Mode=TwoWay}"
                                              Padding="0"
+                                             FontWeight="SemiBold"
                                              Background="Transparent"
+                                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                             Opacity="0.8"
                                              VerticalContentAlignment="Center"
                                              BorderThickness="0"
                                              PlaceholderText="Find text">
@@ -215,7 +235,8 @@
                                     </TextBox>
                                 </Grid>
                             </Border>
-                        </Border>
+                        </Grid>
+                        
                     </Grid>
                 </DataTemplate>
             </ContentControl.ContentTemplate>

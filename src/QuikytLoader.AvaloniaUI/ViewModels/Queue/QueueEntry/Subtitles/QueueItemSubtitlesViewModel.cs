@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -196,7 +197,71 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private void CancelSubtitles() => _cancelSubtitlesUseCase.Execute(Model.QueueItemId);
 }
 
-public record TabItemViewModel(string Header, string Content);
+public partial class TabItemViewModel(string header, string content) : ObservableObject
+{
+    public string Header => header;
+    public string Content => content;
+
+    private string? _findText;
+    public string? FindText
+    {
+        get => _findText;
+        set
+        {
+            _findText = value;
+            Occurrences = string.IsNullOrEmpty(value)
+                ? []
+                : FindAllOccurrences(Content, value);
+
+            static List<(int Start, int End)> FindAllOccurrences(string text, string search)
+            {
+                var occurrences = new List<(int Start, int End)>();
+                var start = 0;
+
+                while ((start = text.IndexOf(search, start)) >= 0)
+                {
+                    var end = start + search.Length;
+                    occurrences.Add((start, end));
+                    start = end;
+                }
+
+                return occurrences;
+            }
+        }
+    }
+
+    private List<(int Start, int End)> _occurrences = [];
+    private List<(int Start, int End)> Occurrences
+    {
+        get => _occurrences;
+        set
+        {
+            _occurrences = value;
+            if (_occurrences.Count == 0)
+            {
+                CurrentOccurrenceIndex = -1;
+                (SelectionStart, SelectionEnd) = (0, 0);
+            }
+            else
+            {
+                CurrentOccurrenceIndex = 0;
+                (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
+            }
+            OnPropertyChanged(nameof(OccurrencesCount));
+        }
+    }
+
+    public int OccurrencesCount => Occurrences.Count;
+
+    [ObservableProperty]
+    private int _selectionStart;
+
+    [ObservableProperty]
+    private int _selectionEnd;
+
+    [ObservableProperty]
+    private int _currentOccurrenceIndex = -1;
+}
 
 public abstract record SubtitlesUiState;
 public sealed record SubtitlesIdleState : SubtitlesUiState;
