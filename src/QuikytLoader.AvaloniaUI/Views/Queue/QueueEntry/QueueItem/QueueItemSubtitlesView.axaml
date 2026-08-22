@@ -175,7 +175,8 @@
             <ContentControl.ContentTemplate>
                 <DataTemplate x:DataType="vmqes:TabItemViewModel">
                     <Grid>
-                        <SelectableTextBlock Text="{Binding Content}"
+                        <SelectableTextBlock x:Name="SubtitlesContent"
+                                             Text="{Binding Content}"
                                              TextWrapping="Wrap"
                                              SelectionStart="{Binding SelectionStart}"
                                              SelectionEnd="{Binding SelectionEnd}"
@@ -218,6 +219,10 @@
                                              VerticalContentAlignment="Center"
                                              BorderThickness="0"
                                              PlaceholderText="Find text">
+                                        <TextBox.KeyBindings>
+                                            <KeyBinding Gesture="Enter" Command="{Binding GoToTheNextOccurrenceCommand}" />
+                                            <KeyBinding Gesture="Shift+Enter" Command="{Binding GoToThePreviousOccurrenceCommand}" />
+                                        </TextBox.KeyBindings>
                                         <TextBox.Styles>
                                             <Style Selector="TextBox /template/ Border#PART_BorderElement">
                                                 <Setter Property="Background" Value="Transparent"/>

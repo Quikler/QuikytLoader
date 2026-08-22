@@ -22,6 +22,9 @@ public class DownloadQueueManager
     /// </summary>
     public ObservableCollection<QueueEntryViewModel> QueueEntries { get; } = [];
 
+    // QueueListView.axaml.cs subscribes to ScrollRequested event
+    public event Action<QueueItem, int> ScrollRequested = null!;
+
     public DownloadQueueManager(
         IDownloadQueue queue,
         IDownloadQueueProcessor queueProcessor,
@@ -54,7 +57,11 @@ public class DownloadQueueManager
 
     private void AddItem(QueueItem item)
     {
-        var itemVm = _queueEntryViewModelFactory.CreateQueueItemViewModel(item, ProceedItem, CancelItem);
+        var itemVm = _queueEntryViewModelFactory.CreateQueueItemViewModel(
+            item,
+            ProceedItem,
+            CancelItem,
+            ScrollRequested);
 
         RegisterItem(itemVm);
         AddToUi(itemVm);
@@ -66,7 +73,11 @@ public class DownloadQueueManager
     {
         var itemVms = group.ItemIds
             .Select(_queue.GetItem)
-            .Select(item => _queueEntryViewModelFactory.CreateSelectableQueueItemViewModel(item, ProceedItem, CancelItem))
+            .Select(item => _queueEntryViewModelFactory.CreateSelectableQueueItemViewModel(
+                item,
+                ProceedItem,
+                CancelItem,
+                ScrollRequested))
             .ToArray();
 
         foreach (var vm in itemVms)

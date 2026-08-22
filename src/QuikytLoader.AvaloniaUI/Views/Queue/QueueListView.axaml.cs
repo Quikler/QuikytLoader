@@ -1,11 +1,13 @@
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 using QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueGroup;
+using QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem;
 
 namespace QuikytLoader.AvaloniaUI.Views.Queue;
 
@@ -15,8 +17,63 @@ public partial class QueueListView : UserControl
     {
         InitializeComponent();
 
-        if (!Design.IsDesignMode && Avalonia.Application.Current is App app)
-            DataContext = app.Services.GetRequiredService<QueueListViewModel>();
+        if (Design.IsDesignMode || Avalonia.Application.Current is not App app)
+            return;
+
+        var dataContext = app.Services.GetRequiredService<QueueListViewModel>();
+        DataContext = dataContext;
+        dataContext.QueueManager.ScrollRequested += (item, scrollPosition) =>
+        {
+            var itemViewModel = dataContext.QueueManager.QueueEntries.First(qe => qe.ModelId == item.Id);
+            var itemToFindBy = itemViewModel switch
+            {
+                SelectableQueueItemViewModel => dataContext.QueueManager.QueueEntries
+                    .OfType<QueueGroupViewModel>()
+                    .First(qgvm => qgvm.Items.Contains(itemViewModel)),
+                _ => itemViewModel
+            };
+
+            if (QueueItems.ContainerFromItem(itemToFindBy) is not ContentPresenter groupOrItemPresenter)
+                return;
+
+            if (groupOrItemPresenter.Child is QueueItemView queueItemView)
+                Scroll(queueItemView, scrollPosition);
+            else if (groupOrItemPresenter.Child is QueueGroupView queueGroupView)
+            {
+                var itemsControl = queueGroupView
+                    .GetVisualDescendants()
+                    .OfType<ItemsControl>()
+                    .First(i => i.Name == "QueueGroupItems");
+
+                if (itemsControl.ContainerFromItem(itemViewModel) is not ContentPresenter selectableItemPresenter)
+                    return;
+
+                if (selectableItemPresenter.Child is SelectableQueueItemView selectableQueueItemView)
+                    Scroll(selectableQueueItemView, scrollPosition);
+            }
+        };
+    }
+
+    private void Scroll(UserControl queueItemView, int scrollPosition)
+    {
+        var subtitlesContentTextBlock =
+            queueItemView.FindDescendantOfType<QueueItemSubtitlesView>()!
+                .GetVisualDescendants()
+                .OfType<SelectableTextBlock>()
+                .First(c => c.Name == "SubtitlesContent");
+
+        var startRect = subtitlesContentTextBlock.TextLayout.HitTestTextPosition(scrollPosition);
+
+        var pointInScrollViewer =
+            subtitlesContentTextBlock.TranslatePoint(
+                startRect.TopLeft,
+                QueueScroll);
+
+        if (pointInScrollViewer is null) return;
+
+        QueueScroll.Offset = new Vector(
+            QueueScroll.Offset.X,
+            QueueScroll.Offset.Y + pointInScrollViewer.Value.Y);
     }
 
     private const double StickyOffset = 15;

@@ -11,20 +11,26 @@ public class QueueEntryViewModelFactory(
     public QueueItemViewModel CreateQueueItemViewModel(
         QueueItem item,
         Action<Guid> proceedCallback,
-        Action<Guid> cancelCallback)
+        Action<Guid> cancelCallback,
+        Action<QueueItem, int> scrollRequested)
             => new(item,
                 proceedCallback,
                 cancelCallback,
-                queueItemSubtitlesViewModelFactory.Create(item.Subtitles));
+                queueItemSubtitlesViewModelFactory.Create(
+                    item.Subtitles,
+                    scrollPosition => scrollRequested(item, scrollPosition)));
 
     public SelectableQueueItemViewModel CreateSelectableQueueItemViewModel(
         QueueItem item,
         Action<Guid> proceedCallback,
-        Action<Guid> cancelCallback)
+        Action<Guid> cancelCallback,
+        Action<QueueItem, int> scrollRequested)
             => new(item,
                 proceedCallback,
                 cancelCallback,
-                queueItemSubtitlesViewModelFactory.Create(item.Subtitles));
+                queueItemSubtitlesViewModelFactory.Create(
+                    item.Subtitles,
+                    scrollPosition => scrollRequested(item, scrollPosition)));
 
     public QueueGroupViewModel CreateQueueGroupViewModel(
         QueueGroup queueGroup,

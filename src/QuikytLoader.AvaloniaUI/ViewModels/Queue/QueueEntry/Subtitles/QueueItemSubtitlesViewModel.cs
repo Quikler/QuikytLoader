@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -21,12 +22,15 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private readonly IFetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly ICancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
+    private readonly Action<int> _scrollRequested;
+
     public QueueItemSubtitlesViewModel(
         Domain.Entities.Subtitles model,
         IUserSettings userSettings,
         IFetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         IFetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        ICancelSubtitlesUseCase cancelSubtitlesUseCase)
+        ICancelSubtitlesUseCase cancelSubtitlesUseCase,
+        Action<int> scrollRequested)
     {
         Model = model;
 
@@ -45,6 +49,8 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
         _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
+
+        _scrollRequested = scrollRequested;
     }
 
     [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Language.English;
@@ -111,7 +117,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         switch (result)
         {
             case SubtitlesFetchResult.Fetched:
-                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, _scrollRequested))];
                 SubtitlesState = new SubtitlesSuccessState();
                 break;
 
@@ -146,7 +152,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         switch (result)
         {
             case SubtitlesFetchResult.Fetched r:
-                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, _scrollRequested))];
                 if (r.Action is null)
                 {
                     SubtitlesState = new SubtitlesSuccessState();
@@ -197,7 +203,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private void CancelSubtitles() => _cancelSubtitlesUseCase.Execute(Model.QueueItemId);
 }
 
-public partial class TabItemViewModel(string header, string content) : ObservableObject
+public partial class TabItemViewModel(string header, string content, Action<int> scrollRequested) : ObservableObject
 {
     public string Header => header;
     public string Content => content;
@@ -261,6 +267,26 @@ public partial class TabItemViewModel(string header, string content) : Observabl
 
     [ObservableProperty]
     private int _currentOccurrenceIndex = -1;
+
+    [RelayCommand]
+    private void GoToTheNextOccurrence()
+    {
+        if (CurrentOccurrenceIndex + 1 >= OccurrencesCount) return;
+        CurrentOccurrenceIndex++;
+        OnPropertyChanged(nameof(CurrentOccurrenceIndex));
+        (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
+        scrollRequested.Invoke(SelectionStart);
+    }
+
+    [RelayCommand]
+    private void GoToThePreviousOccurrence()
+    {
+        if (CurrentOccurrenceIndex - 1 < 0) return;
+        CurrentOccurrenceIndex--;
+        OnPropertyChanged(nameof(CurrentOccurrenceIndex));
+        (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
+        scrollRequested.Invoke(SelectionStart);
+    }
 }
 
 public abstract record SubtitlesUiState;
