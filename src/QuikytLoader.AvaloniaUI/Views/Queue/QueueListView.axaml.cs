@@ -71,9 +71,23 @@ public partial class QueueListView : UserControl
 
         if (pointInScrollViewer is null) return;
 
-        QueueScroll.Offset = new Vector(
+        var textTop = pointInScrollViewer.Value.Y;
+        var textBottom = textTop + startRect.Height;
+
+        const double margin = 30;
+
+        // If the selected text is already completely inside the viewport, don't scroll
+        if (textTop >= margin && textBottom <= QueueScroll.Viewport.Height - margin)
+            return;
+
+        // Top/bottom margin
+        var offsetY = textTop < margin
+            ? textTop - margin
+            : textBottom - QueueScroll.Viewport.Height + margin;
+
+        QueueScroll.Offset = new(
             QueueScroll.Offset.X,
-            QueueScroll.Offset.Y + pointInScrollViewer.Value.Y);
+            QueueScroll.Offset.Y + offsetY);
     }
 
     private const double StickyOffset = 15;
