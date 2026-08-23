@@ -271,7 +271,13 @@ public partial class TabItemViewModel(string header, string content, Action<int>
     [RelayCommand]
     private void GoToTheNextOccurrence()
     {
-        if (CurrentOccurrenceIndex + 1 >= OccurrencesCount) return;
+        // Still perform a scroll when only one occurrence exists
+        if (CurrentOccurrenceIndex + 1 >= OccurrencesCount)
+        {
+            scrollRequested.Invoke(SelectionStart);
+            return;
+        }
+
         CurrentOccurrenceIndex++;
         OnPropertyChanged(nameof(CurrentOccurrenceIndex));
         (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
@@ -281,7 +287,13 @@ public partial class TabItemViewModel(string header, string content, Action<int>
     [RelayCommand]
     private void GoToThePreviousOccurrence()
     {
-        if (CurrentOccurrenceIndex - 1 < 0) return;
+        // Still perform a scroll when only one occurrence exists
+        if (CurrentOccurrenceIndex - 1 < 0)
+        {
+            scrollRequested.Invoke(SelectionStart);
+            return;
+        }
+
         CurrentOccurrenceIndex--;
         OnPropertyChanged(nameof(CurrentOccurrenceIndex));
         (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
