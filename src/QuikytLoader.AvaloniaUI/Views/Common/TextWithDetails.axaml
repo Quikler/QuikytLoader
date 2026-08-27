@@ -1,0 +1,120 @@
+<UserControl x:Class="QuikytLoader.AvaloniaUI.Views.Common.TextWithDetails"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:QuikytLoader.AvaloniaUI.Views.Common"
+             xmlns:ui="using:FluentAvalonia.UI.Controls">
+    <UserControl.Styles>
+        <Style Selector="Grid.gridLayout">
+            <Setter Property="ColumnSpacing" Value="4"/>
+            <Setter Property="RowSpacing" Value="4"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel HorizontalAlignment="Center"
+                Spacing="6">
+        <Grid Classes="gridLayout"
+              ColumnDefinitions="Auto,*,Auto"
+              RowDefinitions="Auto,Auto">
+
+            <ContentPresenter x:Name="LeftSideActionContentControl"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Content="{Binding LeftSideActionContent, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"/>
+
+            <TextBlock Grid.Row="0"
+                       Grid.Column="1"
+                       Text="{Binding Message, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       Foreground="{Binding MessageForeground, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"/>
+
+            <Grid Grid.Column="2"
+                  ColumnDefinitions="Auto,Auto"
+                  ColumnSpacing="2"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Center"
+                  x:Name="RightSideContentControl">
+                <ContentPresenter Content="{Binding RightSideContent, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"/>
+
+                <Button Grid.Column="1"
+                        FontWeight="SemiBold"
+                        Padding="0"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Right"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="OnCloseButtonClick"
+                        IsVisible="{Binding IsCloseButtonVisible, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}">
+                    <ui:FASymbolIcon Foreground="{Binding MessageForeground, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"
+                                     Symbol="Cancel"
+                                     FontSize="12"/>
+                </Button>
+            </Grid>
+
+            <!-- Details button -->
+            <ToggleButton x:Name="DetailsToggleButton"
+                          Grid.Row="1"
+                          Grid.Column="1"
+                          IsCheckedChanged="DetailsToggleButton_IsCheckedChanged"
+                          HorizontalAlignment="Center"
+                          FontWeight="SemiBold"
+                          Padding="0"
+                          Background="{x:Null}"
+                          BorderThickness="0"
+                          IsVisible="{Binding DetailsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}">
+                <ToggleButton.Styles>
+                    <Style Selector="ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background"
+                                Value="{Binding $parent[ToggleButton].Background}"/>
+                        <Setter Property="Foreground"
+                                Value="{Binding $parent[ToggleButton].Foreground}"/>
+                    </Style>
+
+                    <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background"
+                                Value="{Binding $parent[ToggleButton].Background}"/>
+                        <Setter Property="Foreground"
+                                Value="{Binding $parent[ToggleButton].Foreground}"/>
+                    </Style>
+                </ToggleButton.Styles>
+
+                <StackPanel Orientation="Horizontal"
+                            Spacing="2">
+                    <ui:FASymbolIcon x:Name="DetailsFASymbolIcon"
+                                     FontSize="16"
+                                     Symbol="ChevronRight"/>
+                    <TextBlock Text="Details"/>
+                </StackPanel>
+            </ToggleButton>
+
+        </Grid>
+
+        <!-- Copying layout above in order to align "DetailsMessage" TextBox with "Details" ToggleButton by center -->
+        <Grid x:Name="DetailsMessageGrid"
+              IsVisible="False"
+              Classes="gridLayout"
+              ColumnDefinitions="Auto,*,Auto"
+              RowDefinitions="Auto,Auto">
+
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Width="{Binding #LeftSideActionContentControl.Bounds.Width}"/>
+
+            <!-- Details message -->
+            <TextBlock Grid.Column="1"
+                       Text="{Binding DetailsMessage, RelativeSource={RelativeSource AncestorType=local:TextWithDetails}}"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"/>
+
+            <Border Grid.Column="2"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Width="{Binding #RightSideContentControl.Bounds.Width}"/>
+
+        </Grid>
+    </StackPanel>
+
+</UserControl>

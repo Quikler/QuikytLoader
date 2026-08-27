@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.Application.Interfaces.LanguageIdentification;
 using QuikytLoader.Application.Interfaces.Parsers;
 using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Application.Interfaces.Repositories;
@@ -68,6 +69,7 @@ public static class InfrastructureServiceExtensions
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         services.AddSingleton<IDownloadHistoryRepository, DownloadHistoryRepository>();
         services.AddSingleton<IUserSettings, UserSettings>();
+        services.AddSingleton<IUserSettingsStore, UserSettingsStore>();
         services.AddSingleton<ITempDirectoryService, TempDirectoryService>();
 
         return services;

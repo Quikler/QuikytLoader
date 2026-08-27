@@ -4,6 +4,7 @@ using QuikytLoader.AvaloniaUI.Demo;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.Validators;
 using QuikytLoader.AvaloniaUI.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue;
 
 namespace QuikytLoader.AvaloniaUI.DependencyInjection;
 

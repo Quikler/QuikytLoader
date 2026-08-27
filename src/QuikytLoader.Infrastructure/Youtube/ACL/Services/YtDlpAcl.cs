@@ -125,7 +125,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
         string outputDirectory,
         CancellationToken ct)
     {
-        var args = BuildSubtitleArguments(
+        var args = BuildSubtitlesArguments(
             videoId,
             outputDirectory,
             null);
@@ -141,7 +141,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
         string language,
         CancellationToken ct)
     {
-        var args = BuildSubtitleArguments(
+        var args = BuildSubtitlesArguments(
             videoId,
             outputDirectory,
             language);
@@ -151,7 +151,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
             ct: ct);
     }
 
-    private static List<string> BuildSubtitleArguments(
+    private static List<string> BuildSubtitlesArguments(
         string videoId,
         string outputDirectory,
         string? language)

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 namespace QuikytLoader.AvaloniaUI.Demo;
 

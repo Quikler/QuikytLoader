@@ -16,12 +16,14 @@ public static class ApplicationServiceExtensions
     {
         // Register Use Cases
         services.AddSingleton<AddToQueueUseCase>();
+
         services.AddSingleton<IDownloadAndSendUseCase, DownloadAndSendUseCase>();
-        services.AddSingleton<FetchSubtitlesUseCase>();
+
+        services.AddSingleton<FetchManualSubtitlesUseCase>();
+        services.AddSingleton<FetchAutoSubtitlesUseCase>();
         services.AddSingleton<CancelSubtitlesUseCase>();
 
         services.AddSingleton<FindExistingDownloadUseCase>();
-        services.AddSingleton<ManageSettingsUseCase>();
 
         return services;
     }

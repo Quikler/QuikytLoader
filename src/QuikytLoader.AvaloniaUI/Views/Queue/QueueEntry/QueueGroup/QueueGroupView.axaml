@@ -1,12 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
-             xmlns:local="using:QuikytLoader.AvaloniaUI.Views"
-             xmlns:enums="using:QuikytLoader.Domain.Enums"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
-             x:Class="QuikytLoader.AvaloniaUI.Views.QueueGroupView"
-             x:DataType="vm:QueueGroupViewModel">
+             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
+             xmlns:vqeqg="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueGroup"
+             xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
+             x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueGroup.QueueGroupView"
+             x:DataType="vmqe:QueueGroupViewModel">
 
     <!-- Playlist: Expander with header + batch button -->
     <Expander IsExpanded="{Binding IsExpanded}"
@@ -24,15 +22,14 @@
         </Expander.Styles>
 
         <Expander.Header>
-            <views:QueueGroupHeaderView />
+            <vqeqg:QueueGroupHeaderView />
         </Expander.Header>
 
-        <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl Classes="QueueItemsControl"
+                      ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="vm:SelectableQueueItemViewModel">
-                    <Border Classes="QueueItemBorder">
-                        <views:SelectableQueueItemView />
-                    </Border>
+                <DataTemplate DataType="vmqe:SelectableQueueItemViewModel">
+                    <vqeqi:SelectableQueueItemView />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

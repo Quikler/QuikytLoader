@@ -48,9 +48,8 @@ public class AddToQueueUseCase(
         if (queue.ContainsSourceId(downloadSource.YoutubeVideoId))
             return new AddToQueueResult.AlreadyQueued(downloadSource.YoutubeVideoId);
 
-        var queueItem = new QueueItem
+        var queueItem = new QueueItem(downloadSource)
         {
-            Source = downloadSource,
             // Assigning null explicitly since metadata will be loaded later
             Metadata = null,
             Status = editTitleBeforeDownload ? DownloadStatus.Editing : DownloadStatus.Pending,
@@ -96,9 +95,8 @@ public class AddToQueueUseCase(
         HashSet<string> seenSourceIds = [];
         foreach (var (playlistVideo, duplicateCheck) in duplicateChecks)
         {
-            var queueItem = new QueueItem
+            var queueItem = new QueueItem(playlistVideo.Source)
             {
-                Source = playlistVideo.Source,
                 Metadata = playlistVideo.Metadata,
                 Status = DownloadStatus.Queued,
             };

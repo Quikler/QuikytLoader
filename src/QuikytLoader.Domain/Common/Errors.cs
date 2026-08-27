@@ -38,8 +38,14 @@ public static class Errors
         public static Error SubtitlesNotFound() => new(
             "Subtitles not found");
 
+        public static Error AutoSubtitlesNotFound() => new(
+            "Auto subtitles not found");
+
         public static Error SubtitlesFetchCanceled() => new(
             "Subtitles fetch canceled");
+
+        public static Error AutoSubtitlesFetchCanceled() => new(
+            "Auto subtitles fetch canceled");
     }
 
     public static class Telegram

@@ -6,7 +6,7 @@
              RequestedThemeVariant="Default">
     <Application.Styles>
         <sty:FluentAvaloniaTheme />
-        <StyleInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Styles/BorderStyles.axaml" />
+        <StyleInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Styles/QueueStyles.axaml" />
         <StyleInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Styles/ButtonStyles.axaml" />
         <StyleInclude Source="avares://QuikytLoader.AvaloniaUI/Views/Styles/RadioButtonStyles.axaml" />
     </Application.Styles>

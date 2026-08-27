@@ -1,84 +1,67 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuikytLoader.Application.DTOs;
-using QuikytLoader.Application.UseCases;
-using QuikytLoader.AvaloniaUI.Services;
+using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels;
 
-public partial class SettingsViewModel(ManageSettingsUseCase manageSettingsUseCase, IThemeApplier themeApplier) : ViewModelBase
+public partial class SettingsViewModel : ViewModelBase
 {
-    public IThemeApplier ThemeApplier => themeApplier;
-
-    public AutoSubtitlesOption[] AutoSubtitlesOptions { get; } = Enum.GetValues<AutoSubtitlesOption>();
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private AutoSubtitlesOption _autoSubtitlesOption;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private ThemePreference _themePreference;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private string _botToken = string.Empty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
-    private string _chatId = string.Empty;
+    private readonly IUserSettings _userSettings;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    private AutoSubtitlesOption _savedAutoSubtitlesOption;
-    private ThemePreference _savedThemePreference;
-    private string _savedBotToken = string.Empty;
-    private string _savedChatId = string.Empty;
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private AutoSubtitlesOption _autoSubtitlesOption;
 
-    public bool HasUnsavedChanges =>
-        AutoSubtitlesOption != _savedAutoSubtitlesOption ||
-        ThemePreference != _savedThemePreference ||
-        BotToken != _savedBotToken ||
-        ChatId != _savedChatId;
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private ThemePreference _themePreference;
 
-    public void Initialize()
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private string _botToken = string.Empty;
+
+    [NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+    [ObservableProperty] private string _chatId = string.Empty;
+
+    public bool HasUnsavedChanges() =>
+        AutoSubtitlesOption != _userSettings.Current.AutoSubtitlesOption ||
+        ThemePreference != _userSettings.Current.ThemePreference ||
+        BotToken != _userSettings.Current.BotToken ||
+        ChatId != _userSettings.Current.ChatId;
+
+    public SettingsViewModel(IUserSettings userSettings)
     {
-        var settings = manageSettingsUseCase.LoadSettings();
+        _userSettings = userSettings;
+
+        LoadSettings();
+    }
+
+    public void LoadSettings()
+    {
+        var settings = _userSettings.Current;
 
         AutoSubtitlesOption = settings.AutoSubtitlesOption;
         ThemePreference = settings.ThemePreference;
         BotToken = settings.BotToken;
         ChatId = settings.ChatId;
 
-        MarkAsSaved();
+        SaveSettingsCommand.NotifyCanExecuteChanged();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasUnsavedChanges))]
     private void SaveSettings()
     {
-        manageSettingsUseCase.SaveSettings(
-            new UserSettingsDto
-            {
-                AutoSubtitlesOption = AutoSubtitlesOption,
-                ThemePreference = ThemePreference,
-                ChatId = ChatId,
-                BotToken = BotToken
-            });
+        _userSettings.Current = new UserSettingsDto
+        {
+            AutoSubtitlesOption = AutoSubtitlesOption,
+            ThemePreference = ThemePreference,
+            ChatId = ChatId,
+            BotToken = BotToken
+        };
 
-        MarkAsSaved();
+        SaveSettingsCommand.NotifyCanExecuteChanged();
         StatusMessage = "Settings saved successfully!";
-        themeApplier.Apply(ThemePreference);
-    }
-
-    private void MarkAsSaved()
-    {
-        _savedAutoSubtitlesOption = AutoSubtitlesOption;
-        _savedThemePreference = ThemePreference;
-        _savedBotToken = BotToken;
-        _savedChatId = ChatId;
-        OnPropertyChanged(nameof(HasUnsavedChanges));
     }
 }

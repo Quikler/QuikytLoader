@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
+             xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
+             xmlns:enums="using:QuikytLoader.Domain.Enums"
+             x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemView"
+             x:DataType="vmqe:QueueItemViewModel"
+             IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}">
+
+    <Border Classes="QueueItemBorder">
+        <StackPanel Classes="QueueItemSpacing">
+
+            <Border Classes="QueueItemPartHorizontalPadding">
+                <vqeqi:QueueItemBodyView />
+            </Border>
+
+            <Border Classes="QueueItemPartHorizontalPadding QueueItemSubtitlesBorderTop QueueItemSubtitlesTopPadding"
+                    IsVisible="{Binding QueueItemSubtitlesViewModel.AreSubtitlesVisible}">
+                <vqeqi:QueueItemSubtitlesView DataContext="{Binding QueueItemSubtitlesViewModel}" />
+            </Border>
+
+        </StackPanel>
+    </Border>
+
+</UserControl>

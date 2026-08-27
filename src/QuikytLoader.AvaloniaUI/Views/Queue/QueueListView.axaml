@@ -1,13 +1,11 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:QuikytLoader.AvaloniaUI.ViewModels"
-             xmlns:models="using:QuikytLoader.AvaloniaUI.Models"
-             xmlns:local="using:QuikytLoader.AvaloniaUI.Views"
-             xmlns:enums="using:QuikytLoader.Domain.Enums"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:views="using:QuikytLoader.AvaloniaUI.Views"
-             x:Class="QuikytLoader.AvaloniaUI.Views.QueueListView"
-             x:DataType="vm:QueueListViewModel">
+             xmlns:vmq="using:QuikytLoader.AvaloniaUI.ViewModels.Queue"
+             xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
+             xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
+             xmlns:vqeqg="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueGroup"
+             x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueListView"
+             x:DataType="vmq:QueueListViewModel">
 
     <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
@@ -31,15 +29,14 @@
                 <ScrollViewer x:Name="QueueScroll"
                               ScrollChanged="QueueScroll_ScrollChanged">
                     <ItemsControl x:Name="QueueItems"
+                                  Classes="QueueItemsControl"
                                   ItemsSource="{Binding QueueManager.QueueEntries}">
                         <ItemsControl.DataTemplates>
-                            <DataTemplate DataType="vm:QueueGroupViewModel">
-                                <views:QueueGroupView/>
+                            <DataTemplate DataType="vmqe:QueueGroupViewModel">
+                                <vqeqg:QueueGroupView/>
                             </DataTemplate>
-                            <DataTemplate DataType="vm:QueueItemViewModel">
-                                <Border Classes="QueueItemBorder">
-                                    <views:QueueItemView/>
-                                </Border>
+                            <DataTemplate DataType="vmqe:QueueItemViewModel">
+                                <vqeqi:QueueItemView/>
                             </DataTemplate>
                         </ItemsControl.DataTemplates>
                     </ItemsControl>
@@ -83,7 +80,7 @@
                     </Expander.Styles>
 
                     <Expander.Header>
-                        <views:QueueGroupHeaderView DataContext="{Binding StickyQueueGroup}" />
+                        <vqeqg:QueueGroupHeaderView DataContext="{Binding StickyQueueGroup}" />
                     </Expander.Header>
 
                 </Expander>

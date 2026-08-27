@@ -43,7 +43,7 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
     /// </summary>
     private async Task<Result> EnsureInitializedAsync()
     {
-        var settings = userSettings.Load();
+        var settings = userSettings.Current;
 
         if (string.IsNullOrWhiteSpace(settings.BotToken))
             return Errors.Telegram.BotTokenNotConfigured();
@@ -60,7 +60,10 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
 
         _currentBotToken = settings.BotToken;
         _currentChatId = settings.ChatId;
-        _botClient = new TelegramBotClient(_currentBotToken);
+        _botClient = new TelegramBotClient(_currentBotToken)
+        {
+            Timeout = TimeSpan.FromMinutes(5)
+        };
         _cts = new CancellationTokenSource();
 
         try
