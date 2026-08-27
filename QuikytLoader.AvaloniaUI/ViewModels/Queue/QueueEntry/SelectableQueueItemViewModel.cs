@@ -1,27 +1,20 @@
 ﻿using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using QuikytLoader.Application.Interfaces.Settings;
-using QuikytLoader.Application.UseCases;
+using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry.Subtitles;
 using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 
 public sealed partial class SelectableQueueItemViewModel(
     QueueItem model,
-    IUserSettings userSettings,
     Action<Guid> proceedCallback,
     Action<Guid> cancelCallback,
-    IFetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
-    IFetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-    ICancelSubtitlesUseCase cancelSubtitlesUseCase)
+    QueueItemSubtitlesViewModel queueItemSubtitlesViewModel)
     : QueueItemViewModel(
         model,
-        userSettings,
         proceedCallback,
         cancelCallback,
-        fetchManualSubtitlesUseCase,
-        fetchAutoSubtitlesUseCase,
-        cancelSubtitlesUseCase)
+        queueItemSubtitlesViewModel)
 {
     [NotifyPropertyChangedFor(nameof(CanProceed))]
     [NotifyPropertyChangedFor(nameof(CanCancel))]
