@@ -6,20 +6,27 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.UseCases;
 
-/// <summary>
-/// Use case: Download Youtube video, send to Telegram, save to history, cleanup temp files
-/// </summary>
+public interface IDownloadAndSendUseCase
+{
+    Task<Result> ExecuteAsync(
+        DownloadSource downloadSource,
+        string? customTitle,
+        IProgress<double> progress,
+        CancellationToken ct = default);
+}
+
 public class DownloadAndSendUseCase(
     IYoutubeDownloadService youtubeDownloadService,
     ITempDirectoryService tempDirectoryService,
     IDownloadHistoryRepository historyRepo,
     ITelegramBotService telegramService)
+        : IDownloadAndSendUseCase
 {
     public async Task<Result> ExecuteAsync(
         DownloadSource downloadSource,
         string? customTitle,
         IProgress<double> progress,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
         var mediaDirectory =
             tempDirectoryService.CreateSubdirectory(downloadSource.YoutubeVideoId, "media");
@@ -32,7 +39,7 @@ public class DownloadAndSendUseCase(
                 downloadSource,
                 customTitle,
                 progress,
-                cancellationToken);
+                ct);
             if (!downloadResult.IsSuccess)
                 return downloadResult.Error;
 

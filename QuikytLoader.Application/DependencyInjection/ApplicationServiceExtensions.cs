@@ -14,12 +14,12 @@ public static class ApplicationServiceExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Register Use Cases
-        services.AddSingleton<AddToQueueUseCase>();
-        services.AddSingleton<DownloadAndSendUseCase>();
-        services.AddSingleton<FetchManualSubtitlesUseCase>();
-        services.AddSingleton<FetchAutoSubtitlesUseCase>();
-        services.AddSingleton<CancelSubtitlesUseCase>();
-        services.AddSingleton<FindExistingDownloadUseCase>();
+        services.AddSingleton<IAddToQueueUseCase, AddToQueueUseCase>();
+        services.AddSingleton<IDownloadAndSendUseCase, DownloadAndSendUseCase>();
+        services.AddSingleton<IFetchManualSubtitlesUseCase, FetchManualSubtitlesUseCase>();
+        services.AddSingleton<IFetchAutoSubtitlesUseCase, FetchAutoSubtitlesUseCase>();
+        services.AddSingleton<ICancelSubtitlesUseCase, CancelSubtitlesUseCase>();
+        services.AddSingleton<IFindExistingDownloadUseCase, FindExistingDownloadUseCase>();
 
         return services;
     }

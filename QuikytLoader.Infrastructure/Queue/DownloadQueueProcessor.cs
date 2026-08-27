@@ -8,7 +8,7 @@ namespace QuikytLoader.Infrastructure.Queue;
 
 public sealed class DownloadQueueProcessor(
     IDownloadQueue queue,
-    DownloadAndSendUseCase downloadAndSendUseCase) : IDownloadQueueProcessor
+    IDownloadAndSendUseCase downloadAndSendUseCase) : IDownloadQueueProcessor
 {
     private readonly Queue<Guid> _pendingItems = [];
     private readonly Dictionary<Guid, CancellationTokenSource> _cancellationTokens = [];

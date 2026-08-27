@@ -5,15 +5,21 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.UseCases;
 
-/// <summary>
-/// Use case: Finds exising download
-/// </summary>
-public class FindExistingDownloadUseCase(IDownloadHistoryRepository historyRepo)
+public interface IFindExistingDownloadUseCase
 {
-    /// <summary>
-    /// Looks up a history record directly by Youtube id (skips the yt-dlp extraction call).
-    /// </summary>
-    public async Task<Result<DownloadHistoryDto?>> FindByIdAsync(string youtubeVideoId)
+    Task<Result<DownloadHistoryDto?>> FindByIdAsync(
+        string youtubeVideoId);
+
+    Task<(PlaylistVideo PlaylistVideo, Result<DownloadHistoryDto?> DuplicateCheck)[]>
+        FindMultipleAsync(IEnumerable<PlaylistVideo> playlistVideoDtos);
+}
+
+public class FindExistingDownloadUseCase(
+    IDownloadHistoryRepository historyRepo)
+        : IFindExistingDownloadUseCase
+{
+    public async Task<Result<DownloadHistoryDto?>> FindByIdAsync(
+        string youtubeVideoId)
     {
         var downloadEntity = await historyRepo.GetByYoutubeVideoIdAsync(youtubeVideoId);
         if (downloadEntity is null)
@@ -23,7 +29,8 @@ public class FindExistingDownloadUseCase(IDownloadHistoryRepository historyRepo)
         return Result<DownloadHistoryDto?>.Success(duplicateResult);
     }
 
-    public async Task<(PlaylistVideo PlaylistVideo, Result<DownloadHistoryDto?> DuplicateCheck)[]> FindMultipleAsync(IEnumerable<PlaylistVideo> playlistVideoDtos)
+    public async Task<(PlaylistVideo PlaylistVideo, Result<DownloadHistoryDto?> DuplicateCheck)[]>
+        FindMultipleAsync(IEnumerable<PlaylistVideo> playlistVideoDtos)
     {
         var duplicateCheckTasks = playlistVideoDtos
             .Select(async playlistVideo => (

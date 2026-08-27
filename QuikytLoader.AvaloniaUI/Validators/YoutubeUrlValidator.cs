@@ -6,7 +6,6 @@ namespace QuikytLoader.AvaloniaUI.Validators;
 public sealed class YoutubeUrlValidator(
     IYoutubeVideoIdParser videoParser,
     IYoutubePlaylistIdParser playlistParser)
-    : IYoutubeValidator
 {
     public Result Validate(string value)
     {
@@ -20,9 +19,4 @@ public sealed class YoutubeUrlValidator(
 
         return Result.Failure("Invalid Youtube URL.");
     }
-}
-
-internal interface IYoutubeValidator
-{
-    Result Validate(string value);
 }
