@@ -10,6 +10,13 @@ using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.Application.UseCases;
 
+public interface IFetchAutoSubtitlesUseCase
+{
+    Task<SubtitlesFetchResult> ExecuteAsync(
+        Guid itemId,
+        Language? language = null);
+}
+
 public class FetchAutoSubtitlesUseCase(
     IYoutubeSubtitlesService youtubeSubtitlesService,
     IYoutubeMetadataService youtubeMetadataService,
@@ -17,6 +24,7 @@ public class FetchAutoSubtitlesUseCase(
     IUserSettings userSettings,
     ILanguageIdentifier languageIdentifier,
     ITempDirectoryService tempDirectoryService)
+        : IFetchAutoSubtitlesUseCase
 {
     public async Task<SubtitlesFetchResult> ExecuteAsync(
         Guid itemId,

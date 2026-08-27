@@ -1,4 +1,5 @@
 ﻿using QuikytLoader.Application.Interfaces.Queue;
+using QuikytLoader.Application.UseCases;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.Enums;
@@ -7,7 +8,7 @@ namespace QuikytLoader.Infrastructure.Queue;
 
 public sealed class DownloadQueueProcessor(
     IDownloadQueue queue,
-    Func<QueueItem, IProgress<double>, CancellationToken, Task<Result>> processItemCallback) : IDownloadQueueProcessor
+    IDownloadAndSendUseCase downloadAndSendUseCase) : IDownloadQueueProcessor
 {
     private readonly Queue<Guid> _pendingItems = [];
     private readonly Dictionary<Guid, CancellationTokenSource> _cancellationTokens = [];
@@ -95,8 +96,9 @@ public sealed class DownloadQueueProcessor(
                 queue.UpdateItem(queueItem.Id);
             });
 
-            var result = await processItemCallback(
-                queueItem,
+            var result = await downloadAndSendUseCase.ExecuteAsync(
+                queueItem.Source,
+                queueItem.CustomTitle,
                 progress,
                 _cancellationTokens[queueItem.Id].Token);
 

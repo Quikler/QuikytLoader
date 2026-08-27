@@ -4,6 +4,7 @@ using QuikytLoader.AvaloniaUI.Demo;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.Validators;
 using QuikytLoader.AvaloniaUI.ViewModels;
+using QuikytLoader.AvaloniaUI.ViewModels.Factories;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue;
 
 namespace QuikytLoader.AvaloniaUI.DependencyInjection;
@@ -25,6 +26,9 @@ public static class AvaloniaUIServiceExtensions
         services.AddSingleton<IUiNotificationService, UiNotificationService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThemeApplier, ThemeApplier>();
+
+        services.AddSingleton<QueueEntryViewModelFactory>();
+        services.AddSingleton<QueueItemSubtitlesViewModelFactory>();
 
         services.AddSingleton<DownloadQueueManager>();
 

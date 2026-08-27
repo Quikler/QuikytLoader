@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using QuikytLoader.Application.Interfaces.Services;
-using QuikytLoader.Application.Interfaces.UseCases;
+using QuikytLoader.Application.UseCases;
 using QuikytLoader.Demo.Seed;
 using QuikytLoader.Demo.Services;
 using QuikytLoader.Demo.UseCases;

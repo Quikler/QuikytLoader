@@ -1,8 +1,6 @@
 ﻿using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QuikytLoader.Application.Interfaces.Settings;
-using QuikytLoader.Application.UseCases;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry.Subtitles;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.Enums;
@@ -18,23 +16,16 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     public QueueItemViewModel(
         QueueItem model,
-        IUserSettings userSettings,
         Action<Guid> proceedCallback,
         Action<Guid> cancelCallback,
-        FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
-        FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase)
+        QueueItemSubtitlesViewModel queueItemSubtitlesViewModel)
     {
         Model = model;
-        QueueItemSubtitlesViewModel = new(
-            model.Subtitles,
-            userSettings,
-            fetchManualSubtitlesUseCase,
-            fetchAutoSubtitlesUseCase,
-            cancelSubtitlesUseCase);
 
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;
+
+        QueueItemSubtitlesViewModel = queueItemSubtitlesViewModel;
 
         RefreshInternal();
     }

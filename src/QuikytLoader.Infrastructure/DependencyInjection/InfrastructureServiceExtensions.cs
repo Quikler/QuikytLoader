@@ -6,7 +6,6 @@ using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Application.Interfaces.Settings;
 using QuikytLoader.Application.Interfaces.Temp;
-using QuikytLoader.Application.Interfaces.UseCases;
 using QuikytLoader.Infrastructure.LanguageIdentification;
 using QuikytLoader.Infrastructure.Parsers;
 using QuikytLoader.Infrastructure.Persistence;
@@ -56,14 +55,7 @@ public static class InfrastructureServiceExtensions
 
         // Queue services
         services.AddSingleton<IDownloadQueue, DownloadQueue>();
-        services.AddSingleton<IDownloadQueueProcessor, DownloadQueueProcessor>(
-            s => new DownloadQueueProcessor(
-                s.GetRequiredService<IDownloadQueue>(),
-                (queueItem, progress, ct) =>
-                    s.GetRequiredService<IDownloadAndSendUseCase>()
-                        .ExecuteAsync(queueItem.Source, queueItem.CustomTitle, progress, ct)
-            )
-        );
+        services.AddSingleton<IDownloadQueueProcessor, DownloadQueueProcessor>();
 
         // Persistence
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();

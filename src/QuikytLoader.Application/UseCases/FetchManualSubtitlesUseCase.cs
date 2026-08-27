@@ -6,12 +6,20 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.UseCases;
 
+public interface IFetchManualSubtitlesUseCase
+{
+    Task<SubtitlesFetchResult> ExecuteAsync(
+        Guid itemId);
+}
+
 public class FetchManualSubtitlesUseCase(
     IYoutubeSubtitlesService youtubeSubtitlesService,
     IDownloadQueue queue,
     ITempDirectoryService tempDirectoryService)
+        : IFetchManualSubtitlesUseCase
 {
-    public async Task<SubtitlesFetchResult> ExecuteAsync(Guid itemId)
+    public async Task<SubtitlesFetchResult> ExecuteAsync(
+        Guid itemId)
     {
         var queueItem = queue.GetItem(itemId);
         if (!queueItem.Subtitles.StartManualSubtitlesLoading())

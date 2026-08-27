@@ -1,4 +1,4 @@
-﻿using QuikytLoader.Application.Interfaces.UseCases;
+﻿using QuikytLoader.Application.UseCases;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 

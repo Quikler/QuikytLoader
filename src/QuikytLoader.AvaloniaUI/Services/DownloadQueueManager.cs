@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using QuikytLoader.Application.Interfaces.Queue;
-using QuikytLoader.Application.Interfaces.Settings;
-using QuikytLoader.Application.UseCases;
+using QuikytLoader.AvaloniaUI.ViewModels.Factories;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
 using QuikytLoader.Domain.Entities;
 
@@ -14,11 +13,7 @@ public class DownloadQueueManager
 {
     private readonly IDownloadQueue _queue;
     private readonly IDownloadQueueProcessor _queueProcessor;
-    private readonly IUserSettings _userSettings;
-
-    private readonly FetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
-    private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
-    private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
+    private readonly QueueEntryViewModelFactory _queueEntryViewModelFactory;
 
     private readonly Dictionary<Guid, QueueItemViewModel> _itemViewModels = [];
 
@@ -30,20 +25,13 @@ public class DownloadQueueManager
     public DownloadQueueManager(
         IDownloadQueue queue,
         IDownloadQueueProcessor queueProcessor,
-        IUserSettings userSettings,
-        FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
-        FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase)
+        QueueEntryViewModelFactory queueEntryViewModelFactory)
     {
         _queue = queue;
         _queue.Changed += OnQueueChanged;
 
         _queueProcessor = queueProcessor;
-        _userSettings = userSettings;
-
-        _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
-        _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
-        _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
+        _queueEntryViewModelFactory = queueEntryViewModelFactory;
     }
 
     private void OnQueueChanged(QueueEvent evt)
@@ -66,10 +54,10 @@ public class DownloadQueueManager
 
     private void AddItem(QueueItem item)
     {
-        var vm = CreateItemVm(item);
+        var itemVm = _queueEntryViewModelFactory.CreateQueueItemViewModel(item, ProceedItem, CancelItem);
 
-        RegisterItem(vm);
-        AddToUi(vm);
+        RegisterItem(itemVm);
+        AddToUi(itemVm);
 
         _queueProcessor.Enqueue(item.Id);
     }
@@ -78,7 +66,7 @@ public class DownloadQueueManager
     {
         var itemVms = group.ItemIds
             .Select(_queue.GetItem)
-            .Select(CreateGroupItemVm)
+            .Select(item => _queueEntryViewModelFactory.CreateSelectableQueueItemViewModel(item, ProceedItem, CancelItem))
             .ToArray();
 
         foreach (var vm in itemVms)
@@ -86,7 +74,7 @@ public class DownloadQueueManager
             RegisterItem(vm);
         }
 
-        var groupVm = new QueueGroupViewModel(group, itemVms, ProceedGroup);
+        var groupVm = _queueEntryViewModelFactory.CreateQueueGroupViewModel(group, itemVms, ProceedGroup);
         AddToUi(groupVm);
 
         // should not queue here as in `AddItem` because it's a group
@@ -100,32 +88,16 @@ public class DownloadQueueManager
             vm.Refresh();
     }
 
-    // Single items — no selection needed
-    private QueueItemViewModel CreateItemVm(QueueItem item)
-        => new(item,
-            _userSettings,
-            ProceedItem,
-            CancelItem,
-            _fetchManualSubtitlesUseCase,
-            _fetchAutoSubtitlesUseCase,
-            _cancelSubtitlesUseCase);
-
-    // Group items — selectable subtype
-    private SelectableQueueItemViewModel CreateGroupItemVm(QueueItem item)
-        => new(item,
-            _userSettings,
-            ProceedItem,
-            CancelItem,
-            _fetchManualSubtitlesUseCase,
-            _fetchAutoSubtitlesUseCase,
-            _cancelSubtitlesUseCase);
-
     private void RegisterItem(QueueItemViewModel vm)
         => _itemViewModels[vm.QueueItemId] = vm;
 
     private void AddToUi(QueueEntryViewModel vm) => QueueEntries.Add(vm);
 
-    private void ProceedItem(Guid itemId) => _queueProcessor.Proceed(itemId);
+    private void ProceedItem(Guid itemId)
+        => _queueProcessor.Proceed(itemId);
+
+    private void CancelItem(Guid itemId)
+        => _queueProcessor.Cancel(itemId);
 
     private void ProceedGroup(IEnumerable<Guid> itemIds)
     {
@@ -134,6 +106,4 @@ public class DownloadQueueManager
             ProceedItem(itemId);
         }
     }
-
-    private void CancelItem(Guid itemId) => _queueProcessor.Cancel(itemId);
 }

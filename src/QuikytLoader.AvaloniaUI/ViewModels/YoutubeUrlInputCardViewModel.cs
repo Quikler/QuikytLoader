@@ -9,7 +9,7 @@ namespace QuikytLoader.AvaloniaUI.ViewModels;
 
 public partial class YoutubeUrlInputCardViewModel(
     YoutubeUrlValidator youtubeUrlValidator,
-    AddToQueueUseCase addToQueueUseCase,
+    IAddToQueueUseCase addToQueueUseCase,
     IDialogService dialogService,
     IUiNotificationService uiNotificationService) : ViewModelBase
 {

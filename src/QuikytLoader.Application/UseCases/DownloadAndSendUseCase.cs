@@ -1,20 +1,26 @@
 using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
 using QuikytLoader.Application.Interfaces.Temp;
-using QuikytLoader.Application.Interfaces.UseCases;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Application.UseCases;
 
-/// <summary>
-/// Use case: Download Youtube video, send to Telegram, save to history, cleanup temp files
-/// </summary>
+public interface IDownloadAndSendUseCase
+{
+    Task<Result> ExecuteAsync(
+        DownloadSource downloadSource,
+        string? customTitle,
+        IProgress<double> progress,
+        CancellationToken ct = default);
+}
+
 public class DownloadAndSendUseCase(
     IYoutubeDownloadService youtubeDownloadService,
     ITempDirectoryService tempDirectoryService,
     IDownloadHistoryRepository historyRepo,
-    ITelegramBotService telegramService) : IDownloadAndSendUseCase
+    ITelegramBotService telegramService)
+        : IDownloadAndSendUseCase
 {
     public async Task<Result> ExecuteAsync(
         DownloadSource downloadSource,
