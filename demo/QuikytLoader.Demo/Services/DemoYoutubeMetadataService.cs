@@ -6,16 +6,16 @@ using QuikytLoader.Domain.Entities;
 namespace QuikytLoader.Demo.Services;
 
 internal sealed class DemoYoutubeMetadataService(
-    DemoDataSeed dataSeed)
-    : IYoutubeMetadataService
+    DemoMetadataSeed metadataSeed)
+        : IYoutubeMetadataService
 {
     public Task<Result<VideoMetadata>> GetVideoMetadataAsync(DownloadSource downloadSource) =>
         Task.FromResult(Result<VideoMetadata>.Success(
-            dataSeed.CreateVideo(downloadSource.YoutubeVideoId)));
+            metadataSeed.CreateVideo()));
 
     public Task<Result<PlaylistMetadata>> GetPlaylistMetadataAsync(DownloadPlaylistSource source, int maxItems) =>
         Task.FromResult(Result<PlaylistMetadata>.Success(
-            dataSeed.CreatePlaylist(
+            metadataSeed.CreatePlaylist(
                 source.YoutubePlaylistId,
                 maxItems)));
 }

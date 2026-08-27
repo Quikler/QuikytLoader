@@ -12,9 +12,11 @@ public static class DemoServiceCollectionExtensions
     public static IServiceCollection AddDemoServices(
         this IServiceCollection services)
     {
-        services.AddSingleton<DemoDataSeed>();
+        services.AddSingleton<DemoMetadataSeed>();
+        services.AddSingleton<DemoSubtitlesSeed>();
 
         services.AddSingleton<IYoutubeMetadataService, DemoYoutubeMetadataService>();
+        services.AddSingleton<IYoutubeSubtitlesService, DemoYoutubeSubtitlesService>();
         services.AddSingleton<IDownloadAndSendUseCase, DemoDownloadAndSendUseCase>();
 
         return services;
