@@ -48,6 +48,8 @@ public partial class YoutubeUrlInputCardViewModel(
                         YoutubeUrl,
                         UseCustomTitle,
                         ignoreDuplicateCheck: true);
+
+                    YoutubeUrl = string.Empty;
                 }
                 break;
 
