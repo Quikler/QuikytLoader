@@ -8,12 +8,21 @@ using QuikytLoader.Domain.Enums;
 
 namespace QuikytLoader.Application.UseCases;
 
+public interface IAddToQueueUseCase
+{
+    Task<AddToQueueResult> ExecuteAsync(
+        string youtubeUrl,
+        bool editTitleBeforeDownload,
+        bool ignoreDuplicateCheck = false);
+}
+
 public class AddToQueueUseCase(
-    FindExistingDownloadUseCase findExistingDownloadUseCase,
+    IFindExistingDownloadUseCase findExistingDownloadUseCase,
     IDownloadQueue queue,
     IYoutubeMetadataService youtubeMetadataService,
     IYoutubeVideoIdParser youtubeVideoIdParser,
     IYoutubePlaylistIdParser youtubePlaylistIdParser)
+        : IAddToQueueUseCase
 {
     public async Task<AddToQueueResult> ExecuteAsync(
         string youtubeUrl,

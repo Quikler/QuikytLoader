@@ -2,7 +2,15 @@
 
 namespace QuikytLoader.Application.UseCases;
 
-public class CancelSubtitlesUseCase(IYoutubeSubtitlesService youtubeSubtitlesService)
+public interface ICancelSubtitlesUseCase
 {
-    public void Execute(Guid itemId) => youtubeSubtitlesService.CancelSubtitlesFetching(itemId);
+    void Execute(Guid itemId);
+}
+
+public class CancelSubtitlesUseCase(
+    IYoutubeSubtitlesService youtubeSubtitlesService)
+        : ICancelSubtitlesUseCase
+{
+    public void Execute(Guid itemId)
+        => youtubeSubtitlesService.CancelSubtitlesFetching(itemId);
 }

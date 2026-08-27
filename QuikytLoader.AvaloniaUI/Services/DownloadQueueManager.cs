@@ -16,9 +16,9 @@ public class DownloadQueueManager
     private readonly IDownloadQueueProcessor _queueProcessor;
     private readonly IUserSettings _userSettings;
 
-    private readonly FetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
-    private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
-    private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
+    private readonly IFetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
+    private readonly IFetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
+    private readonly ICancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
     private readonly Dictionary<Guid, QueueItemViewModel> _itemViewModels = [];
 
@@ -31,9 +31,9 @@ public class DownloadQueueManager
         IDownloadQueue queue,
         IDownloadQueueProcessor queueProcessor,
         IUserSettings userSettings,
-        FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
-        FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase)
+        IFetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
+        IFetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
+        ICancelSubtitlesUseCase cancelSubtitlesUseCase)
     {
         _queue = queue;
         _queue.Changed += OnQueueChanged;

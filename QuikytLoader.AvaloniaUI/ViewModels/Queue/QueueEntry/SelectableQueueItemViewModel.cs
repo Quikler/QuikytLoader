@@ -11,9 +11,9 @@ public sealed partial class SelectableQueueItemViewModel(
     IUserSettings userSettings,
     Action<Guid> proceedCallback,
     Action<Guid> cancelCallback,
-    FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
-    FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-    CancelSubtitlesUseCase cancelSubtitlesUseCase)
+    IFetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
+    IFetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
+    ICancelSubtitlesUseCase cancelSubtitlesUseCase)
     : QueueItemViewModel(
         model,
         userSettings,

@@ -16,16 +16,16 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
 {
     private readonly Domain.Entities.Subtitles Model;
 
-    private readonly FetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
-    private readonly FetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
-    private readonly CancelSubtitlesUseCase _cancelSubtitlesUseCase;
+    private readonly IFetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
+    private readonly IFetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
+    private readonly ICancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
     public QueueItemSubtitlesViewModel(
         Domain.Entities.Subtitles model,
         IUserSettings userSettings,
-        FetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
-        FetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        CancelSubtitlesUseCase cancelSubtitlesUseCase)
+        IFetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
+        IFetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
+        ICancelSubtitlesUseCase cancelSubtitlesUseCase)
     {
         Model = model;
 
