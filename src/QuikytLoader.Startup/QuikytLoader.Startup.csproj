@@ -61,5 +61,6 @@
     <ProjectReference Include="..\QuikytLoader.Application\QuikytLoader.Application.csproj" />
     <ProjectReference Include="..\QuikytLoader.Infrastructure\QuikytLoader.Infrastructure.csproj" />
     <ProjectReference Include="..\QuikytLoader.AvaloniaUI\QuikytLoader.AvaloniaUI.csproj" />
+    <ProjectReference Include="..\..\demo\QuikytLoader.Demo\QuikytLoader.Demo.csproj" />
   </ItemGroup>
 </Project>

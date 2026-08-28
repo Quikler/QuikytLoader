@@ -112,17 +112,18 @@
         </Border>
 
         <!-- Main Content Area -->
-        <ContentControl Grid.Column="1"
-                        Content="{Binding CurrentView}">
-            <ContentControl.DataTemplates>
-                <DataTemplate DataType="vm:HomeViewModel">
-                    <views:HomeView/>
-                </DataTemplate>
-                <DataTemplate DataType="vm:SettingsViewModel">
-                    <views:SettingsView/>
-                </DataTemplate>
-            </ContentControl.DataTemplates>
-        </ContentControl>
+        <Grid x:Name="Root" Grid.Column="1">
+            <ContentControl Content="{Binding CurrentView}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="vm:HomeViewModel">
+                        <views:HomeView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="vm:SettingsViewModel">
+                        <views:SettingsView/>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </Grid>
 
     </Grid>
 

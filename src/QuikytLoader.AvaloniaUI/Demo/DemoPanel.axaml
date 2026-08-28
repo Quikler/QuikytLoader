@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:local="using:QuikytLoader.AvaloniaUI.Demo"
+             x:Class="QuikytLoader.AvaloniaUI.Demo.DemoPanel"
+             HorizontalAlignment="Right"
+             VerticalAlignment="Top"
+             x:DataType="local:DemoPanelViewModel">
+
+    <Grid ColumnDefinitions="*,Auto"
+          Height="300"
+          HorizontalAlignment="Right">
+
+        <Border Background="{DynamicResource ExpanderHeaderBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                Grid.Column="0"
+                Padding="12"
+                IsVisible="{Binding #ToggleButton.IsChecked}">
+
+            <StackPanel Spacing="8">
+
+                <TextBlock Text="Demo"
+                           FontSize="18"
+                           FontWeight="Bold"/>
+
+                <Button Content="Download single video"
+                        Command="{Binding DownloadSingleVideoCommand}"/>
+
+                <Button Content="Download single video with custom title"
+                        Command="{Binding DownloadSingleVideoWithCustomTitleCommand}"/>
+
+                <Button Content="Download random items in playlist"
+                        Command="{Binding DownloadRandomItemsInPlaylistCommand}"/>
+
+                <Button Content="Download all items in playlist"
+                        Command="{Binding DownloadAllItemsInPlaylistCommand}"/>
+
+            </StackPanel>
+
+        </Border>
+
+        <ToggleButton x:Name="ToggleButton"
+                      VerticalAlignment="Stretch"
+                      Grid.Column="1"
+                      CornerRadius="0"
+                      IsChecked="True">
+
+            <ToggleButton.Styles>
+
+                <Style Selector="ToggleButton:checked">
+                    <Setter Property="ContentTemplate">
+                        <DataTemplate>
+                            <ui:FASymbolIcon Symbol="ChevronLeft"/>
+                        </DataTemplate>
+                    </Setter>
+                </Style>
+
+                <Style Selector="ToggleButton:not(:checked)">
+                    <Setter Property="ContentTemplate">
+                        <DataTemplate>
+                            <ui:FASymbolIcon Symbol="ChevronRight"/>
+                        </DataTemplate>
+                    </Setter>
+                </Style>
+
+            </ToggleButton.Styles>
+
+        </ToggleButton>
+
+    </Grid>
+
+</UserControl>

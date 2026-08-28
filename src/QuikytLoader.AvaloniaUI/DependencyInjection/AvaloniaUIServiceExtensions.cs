@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using QuikytLoader.Application;
+using QuikytLoader.AvaloniaUI.Demo;
 using QuikytLoader.AvaloniaUI.Services;
 using QuikytLoader.AvaloniaUI.Validators;
 using QuikytLoader.AvaloniaUI.ViewModels;
@@ -38,6 +39,10 @@ public static class AvaloniaUIServiceExtensions
         services.AddSingleton<YoutubeUrlInputCardViewModel>();
         services.AddSingleton<QueueListViewModel>();
         services.AddSingleton<MessageInfoViewModel>();
+
+#if DEBUG
+        services.AddSingleton<DemoPanelViewModel>();
+#endif
 
         return services;
     }

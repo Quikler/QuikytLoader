@@ -20,9 +20,6 @@ make trimmed
 
 # Build for release (NativeAOT)
 make aot
-
-# Go to output location after publish:
-. output.sh
 ```
 
 ## External Dependencies
