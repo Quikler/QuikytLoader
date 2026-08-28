@@ -1,13 +1,11 @@
 ﻿using QuikytLoader.Application.Interfaces.Services;
-using QuikytLoader.Demo.Seed;
 using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Demo.Services;
 
-internal sealed class DemoYoutubeSubtitlesService(
-    DemoSubtitlesSeed demoSubtitlesSeed)
-        : IYoutubeSubtitlesService
+internal sealed class DemoYoutubeSubtitlesService
+    : IYoutubeSubtitlesService
 {
     private readonly Dictionary<Guid, CancellationTokenSource> _cancellationTokens = [];
 
@@ -24,7 +22,7 @@ internal sealed class DemoYoutubeSubtitlesService(
             // Simulate subtitles fetching
             await Task.Delay(Random.Shared.Next(1000, 2000), ct);
 
-            var subtitles = demoSubtitlesSeed.Generate();
+            var subtitles = CreateSubtitles();
 
             return Result<IReadOnlyDictionary<string, string>?>.Success(
                 subtitles.Count == 0 ? null : subtitles);
@@ -50,7 +48,7 @@ internal sealed class DemoYoutubeSubtitlesService(
             // Simulate subtitles fetching
             await Task.Delay(Random.Shared.Next(1000, 2000), ct);
 
-            var subtitles = demoSubtitlesSeed.Generate();
+            var subtitles = CreateSubtitles();
 
             if (!string.IsNullOrWhiteSpace(language))
             {

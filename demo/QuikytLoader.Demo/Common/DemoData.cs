@@ -1,10 +1,10 @@
-﻿using QuikytLoader.Domain.Entities;
+﻿using QuikytLoader.Domain.Common;
 
-namespace QuikytLoader.Demo.Seed;
+namespace QuikytLoader.Demo.Common;
 
-internal sealed class DemoMetadataSeed
+public static class DemoData
 {
-    private static readonly string[] Titles =
+    public static readonly string[] DemoTitles =
     [
         "Short video",
         "A normal length video title for testing UI",
@@ -13,7 +13,9 @@ internal sealed class DemoMetadataSeed
         "Video with special characters: тест видео 日本語"
     ];
 
-    private static readonly string?[] Channels =
+    public static string RandomTitle => DemoTitles[Random.Shared.Next(DemoTitles.Length)];
+
+    public static readonly string?[] DemoChannels =
     [
         "Channel",
         "VeryLongChannelNameThatMayBreakTheLayout",
@@ -23,7 +25,9 @@ internal sealed class DemoMetadataSeed
         null
     ];
 
-    private static readonly string[] Descriptions =
+    public static string? RandomChannel => DemoChannels[Random.Shared.Next(DemoChannels.Length)];
+
+    public static readonly string[] DemoDescriptions =
     [
         "Death is not the opposite of life. Death is the opposite of birth. Life has no opposite. Eckhart Tolle describes his own experience of the world as light, insubstantial and dreamlike. Not because nothing matters, but because he has stopped confusing what is relatively important with what is absolutely important. The world loses its heaviness. Things still matter. They just do not have the crushing seriousness they once did. Your whole life, all the anxiety, all the suffering, all the drama — on a gravestone it is a dash. Two inches long.",
 
@@ -54,7 +58,9 @@ internal sealed class DemoMetadataSeed
         "死亡不是生命的反面。死亡是出生的反面。生命没有反面。埃克哈特·托利将他对这个世界的体验描述为轻盈、无实体、如梦一般。并不是因为没有什么重要，而是因为他已经不再把相对重要的事物与绝对重要的事物混为一谈。世界失去了它的沉重感。事物依然重要。只是它们不再具有曾经那种令人窒息的严肃性。你的一生，所有的焦虑、所有的痛苦、所有的戏剧——在墓碑上不过是一道横线。只有两英寸长。"
     ];
 
-    private static readonly TimeSpan[] Durations =
+    public static string RandomDescription => DemoDescriptions[Random.Shared.Next(DemoDescriptions.Length)];
+
+    public static readonly TimeSpan[] DemoDurations =
     [
         TimeSpan.FromSeconds(15),
         TimeSpan.FromMinutes(3),
@@ -63,32 +69,106 @@ internal sealed class DemoMetadataSeed
         TimeSpan.Zero
     ];
 
-    public VideoMetadata CreateVideo() => new(
-        Titles[Random.Shared.Next(Titles.Length)],
-        Channels[Random.Shared.Next(Channels.Length)],
-        Descriptions[Random.Shared.Next(Descriptions.Length)],
-        Durations[Random.Shared.Next(Durations.Length)]
-    );
+    public static TimeSpan RandomDuration => DemoDurations[Random.Shared.Next(DemoDurations.Length)];
 
-    public PlaylistMetadata CreatePlaylist(
-        string playlistId,
-        int count)
+    public static readonly Dictionary<string, string[]> SubtitleSamples = new()
     {
-        var videos = Enumerable.Range(1, count)
-            .Select(i =>
-            {
-                var id = RandomVideoId();
+        [Language.English.Iso6391Code] =
+        [
+            "Welcome back everyone. Today we're looking at a simple example.",
+            "The results may vary depending on your configuration.",
+            "Thanks for watching. Don't forget to subscribe."
+        ],
 
-                return new PlaylistVideo(
-                    new DownloadSource(
-                        $"https://youtube.com/watch?v={id}",
-                        id),
-                    CreateVideo());
-            })
-            .ToList();
+        [Language.Russian.Iso6391Code] =
+        [
+            "Всем привет. Сегодня мы рассмотрим простой пример.",
+            "Результаты могут отличаться в зависимости от настроек.",
+            "Спасибо за просмотр. До встречи в следующем видео."
+        ],
 
-        return new($"Playlist-{playlistId}", videos);
-    }
+        [Language.German.Iso6391Code] =
+        [
+            "Willkommen zurück. Heute schauen wir uns ein einfaches Beispiel an.",
+            "Die Ergebnisse können je nach Konfiguration variieren.",
+            "Vielen Dank fürs Zuschauen."
+        ],
 
-    private static string RandomVideoId() => Guid.NewGuid().ToString("N")[..11];
+        [Language.Danish.Iso6391Code] =
+        [
+            "Velkommen tilbage. I dag ser vi på et enkelt eksempel.",
+            "Resultatet kan variere afhængigt af din opsætning.",
+            "Tak fordi du så med."
+        ],
+
+        [Language.French.Iso6391Code] =
+        [
+            "Bienvenue à tous. Aujourd'hui nous allons voir un exemple simple.",
+            "Les résultats peuvent varier selon votre configuration.",
+            "Merci d'avoir regardé cette vidéo."
+        ],
+
+        [Language.Italian.Iso6391Code] =
+        [
+            "Benvenuti. Oggi vedremo un semplice esempio.",
+            "I risultati possono variare in base alla configurazione.",
+            "Grazie per aver guardato il video."
+        ],
+
+        [Language.Japanese.Iso6391Code] =
+        [
+            "皆さん、こんにちは。今日は簡単な例を紹介します。",
+            "設定によって結果が異なる場合があります。",
+            "ご視聴ありがとうございました。"
+        ],
+
+        [Language.Korean.Iso6391Code] =
+        [
+            "안녕하세요. 오늘은 간단한 예제를 살펴보겠습니다.",
+            "설정에 따라 결과가 달라질 수 있습니다.",
+            "시청해 주셔서 감사합니다."
+        ],
+
+        [Language.Dutch.Iso6391Code] =
+        [
+            "Welkom terug. Vandaag bekijken we een eenvoudig voorbeeld.",
+            "De resultaten kunnen verschillen afhankelijk van de instellingen.",
+            "Bedankt voor het kijken."
+        ],
+
+        [Language.Norwegian.Iso6391Code] =
+        [
+            "Velkommen tilbake. I dag ser vi på et enkelt eksempel.",
+            "Resultatet kan variere avhengig av oppsettet.",
+            "Takk for at du så på."
+        ],
+
+        [Language.Portuguese.Iso6391Code] =
+        [
+            "Bem-vindos. Hoje veremos um exemplo simples.",
+            "Os resultados podem variar dependendo da configuração.",
+            "Obrigado por assistir."
+        ],
+
+        [Language.Spanish.Iso6391Code] =
+        [
+            "Bienvenidos. Hoy veremos un ejemplo sencillo.",
+            "Los resultados pueden variar según la configuración.",
+            "Gracias por ver el vídeo."
+        ],
+
+        [Language.Swedish.Iso6391Code] =
+        [
+            "Välkommen tillbaka. Idag tittar vi på ett enkelt exempel.",
+            "Resultatet kan variera beroende på dina inställningar.",
+            "Tack för att du tittade."
+        ],
+
+        [Language.Chinese.Iso6391Code] =
+        [
+            "大家好，今天我们来看一个简单的示例。",
+            "结果可能会因配置不同而有所变化。",
+            "感谢观看，我们下次再见。"
+        ]
+    };
 }
