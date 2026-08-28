@@ -51,5 +51,24 @@ internal static class DemoFactories
         return result;
     }
 
+    public static DownloadResultEntity CreateDownloadResultEntity(
+        DownloadSource downloadSource,
+        string downloadDirectory,
+        string? customTitle = null)
+    {
+        var title = customTitle ?? RandomTitle;
+        return new(
+            downloadSource.YoutubeVideoId,
+            title,
+            Path.Combine(downloadDirectory, $"{title}.mp3"),
+            Path.Combine(downloadDirectory, $"{title}.jpeg"));
+    }
+
+    public static DownloadHistoryEntity CreateDownloadHistoryEntity(
+        string youtubeVideoId)
+            => new(youtubeVideoId,
+                RandomTitle,
+                DateTime.UtcNow.ToString("o"));
+
     private static string RandomVideoId() => Guid.NewGuid().ToString("N")[..11];
 }

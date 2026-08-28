@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.Application.Interfaces.Repositories;
 using QuikytLoader.Application.Interfaces.Services;
-using QuikytLoader.Application.UseCases;
+using QuikytLoader.Application.Interfaces.Temp;
 using QuikytLoader.Demo.Services;
-using QuikytLoader.Demo.UseCases;
 
 namespace QuikytLoader.Demo.DependencyInjection;
 
@@ -13,7 +13,11 @@ public static class DemoServiceCollectionExtensions
     {
         services.AddSingleton<IYoutubeMetadataService, DemoYoutubeMetadataService>();
         services.AddSingleton<IYoutubeSubtitlesService, DemoYoutubeSubtitlesService>();
-        services.AddSingleton<IDownloadAndSendUseCase, DemoDownloadAndSendUseCase>();
+
+        services.AddSingleton<IYoutubeDownloadService, DemoYoutubeDownloadService>();
+        services.AddSingleton<ITempDirectoryService, DemoTempDirectoryService>();
+        services.AddSingleton<IDownloadHistoryRepository, DemoDownloadHistoryRepository>();
+        services.AddSingleton<ITelegramBotService, DemoTelegramBotService>();
 
         return services;
     }
