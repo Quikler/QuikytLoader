@@ -46,7 +46,11 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
         CanProceedAll = canProceedAll;
     }
 
-    public QueueGroupViewModel(QueueGroup model, IReadOnlyList<SelectableQueueItemViewModel> items, Action<IEnumerable<Guid>> proceedGroupCallback)
+    public QueueGroupViewModel(
+        QueueGroup model,
+        IReadOnlyList<SelectableQueueItemViewModel> items,
+        Action<IEnumerable<Guid>> proceedGroupCallback)
+            : base(model.Id)
     {
         _model = model;
         Items = items;
@@ -71,6 +75,6 @@ public sealed partial class QueueGroupViewModel : QueueEntryViewModel
     [RelayCommand(CanExecute = nameof(CanProceedAll))]
     private void ProceedAll() =>
         _proceedGroupCallback(
-            Items.Where(i => i.CanProceed).Select(i => i.QueueItemId)
+            Items.Where(i => i.CanProceed).Select(i => i.ModelId)
         );
 }

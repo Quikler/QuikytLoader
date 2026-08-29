@@ -89,7 +89,7 @@ public class DownloadQueueManager
     }
 
     private void RegisterItem(QueueItemViewModel vm)
-        => _itemViewModels[vm.QueueItemId] = vm;
+        => _itemViewModels[vm.ModelId] = vm;
 
     private void AddToUi(QueueEntryViewModel vm) => QueueEntries.Add(vm);
 

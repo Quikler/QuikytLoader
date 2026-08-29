@@ -19,6 +19,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         Action<Guid> proceedCallback,
         Action<Guid> cancelCallback,
         QueueItemSubtitlesViewModel queueItemSubtitlesViewModel)
+            : base(model.Id)
     {
         Model = model;
 
@@ -62,7 +63,6 @@ public partial class QueueItemViewModel : QueueEntryViewModel
         _ => throw new ArgumentOutOfRangeException(nameof(Status), Status, "Unhandled download status")
     };
 
-    public Guid QueueItemId => Model.Id;
     public virtual bool CanProceed => Model.CanStartDownload;
     public virtual bool CanCancel => Model.CanCancel;
     public bool CanEdit => Model.CanEdit;
