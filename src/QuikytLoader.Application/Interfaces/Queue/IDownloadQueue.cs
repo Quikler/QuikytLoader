@@ -20,8 +20,8 @@ public interface IDownloadQueue
     QueueItem GetItem(Guid id);
     void UpdateItem(Guid itemId);
 
-    bool ContainsGroup(string groupId);
-    bool ContainsSourceId(string sourceId);
+    bool ContainsItemSource(DownloadSource source);
+    bool ContainsGroupSource(DownloadPlaylistSource source);
 
     event Action<QueueEvent> Changed;
 }
