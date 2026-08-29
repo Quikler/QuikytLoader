@@ -54,7 +54,7 @@ public class AddToQueueUseCase(
         }
 
         // Checking if same SourceId is already queued BEFORE calling queue.EnqueueItem
-        if (queue.ContainsSourceId(downloadSource.YoutubeVideoId))
+        if (queue.ContainsItemSource(downloadSource))
             return new AddToQueueResult.AlreadyQueued(downloadSource.YoutubeVideoId);
 
         var queueItem = new QueueItem(downloadSource)
@@ -90,7 +90,7 @@ public class AddToQueueUseCase(
 
     private async Task<AddToQueueResult> AddPlaylistAsync(DownloadPlaylistSource downloadPlaylistSource)
     {
-        if (queue.ContainsGroup(downloadPlaylistSource.YoutubePlaylistId))
+        if (queue.ContainsGroupSource(downloadPlaylistSource))
             return new AddToQueueResult.PlaylistAlreadyQueued(downloadPlaylistSource.YoutubePlaylistId);
 
         var playlistMetadataResult = await youtubeMetadataService.GetPlaylistMetadataAsync(downloadPlaylistSource, 15);
@@ -120,7 +120,7 @@ public class AddToQueueUseCase(
                 queueItem.Status = DownloadStatus.Disabled;
                 queueItem.Error = new Error("Already downloaded");
             }
-            else if (queue.ContainsSourceId(queueItem.Source.YoutubeVideoId))
+            else if (queue.ContainsItemSource(queueItem.Source))
             {
                 queueItem.Status = DownloadStatus.Disabled;
                 queueItem.Error = new Error("Already queued");
@@ -135,7 +135,7 @@ public class AddToQueueUseCase(
         }
 
         var queueGroup = new QueueGroup(
-            downloadPlaylistSource.YoutubePlaylistId,
+            downloadPlaylistSource,
             playlistMetadata.PlaylistTitle,
             [.. items.Select(i => i.Id)]);
 
