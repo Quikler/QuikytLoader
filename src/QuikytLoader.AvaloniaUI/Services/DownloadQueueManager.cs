@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.AvaloniaUI.ViewModels.Factories;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
@@ -9,7 +10,7 @@ using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.AvaloniaUI.Services;
 
-public class DownloadQueueManager
+public partial class DownloadQueueManager : ObservableObject
 {
     private readonly IDownloadQueue _queue;
     private readonly IDownloadQueueProcessor _queueProcessor;
@@ -21,6 +22,20 @@ public class DownloadQueueManager
     /// All queue entries. Can be one queue item and a group item.
     /// </summary>
     public ObservableCollection<QueueEntryViewModel> QueueEntries { get; } = [];
+
+    /// <summary>
+    /// Flattens QueueItemViewModels from items and groups in QueueEntries
+    /// </summary>
+    public IReadOnlyList<QueueItemViewModel> QueueItems =>
+        [.. QueueEntries
+            .SelectMany<QueueEntryViewModel, QueueItemViewModel>(e => e switch
+            {
+                QueueItemViewModel item => [item],
+                QueueGroupViewModel group => group.Items,
+                _ => []
+            })];
+
+    [ObservableProperty] private QueueItemViewModel? _selectedQueueItem;
 
     // QueueListView.axaml.cs subscribes to ScrollRequested event
     public event Action<QueueItem, int> ScrollRequested = null!;
@@ -35,6 +50,12 @@ public class DownloadQueueManager
 
         _queueProcessor = queueProcessor;
         _queueEntryViewModelFactory = queueEntryViewModelFactory;
+
+        QueueEntries.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(QueueItems));
+            SelectedQueueItem ??= QueueItems.First();
+        };
     }
 
     private void OnQueueChanged(QueueEvent evt)

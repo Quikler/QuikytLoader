@@ -56,11 +56,15 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Language.English;
     [ObservableProperty] private SubtitlesUiState _subtitlesState = new SubtitlesIdleState();
     [ObservableProperty] private TabItemViewModel[]? _subtitlesTabs;
+    [NotifyPropertyChangedFor(nameof(IsSearchable))]
     [ObservableProperty] private TabItemViewModel? _selectedTab;
 
+    [NotifyPropertyChangedFor(nameof(IsSearchable))]
     [ObservableProperty] private bool _areSubtitlesVisible;
     [ObservableProperty] private FASymbol _subtitlesIconSymbol = FASymbol.ClosedCaption;
     [ObservableProperty] private FASymbol _subtitlesChevronSymbol = FASymbol.ChevronDown;
+
+    public bool IsSearchable => AreSubtitlesVisible && SelectedTab is not null;
 
     [RelayCommand]
     private void ToggleSubtitles()

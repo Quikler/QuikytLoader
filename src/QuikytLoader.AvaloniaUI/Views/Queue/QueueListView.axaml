@@ -3,6 +3,7 @@
              xmlns:vmq="using:QuikytLoader.AvaloniaUI.ViewModels.Queue"
              xmlns:vmqe="using:QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry"
              xmlns:vqeqi="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem"
+             xmlns:vcommon="using:QuikytLoader.AvaloniaUI.Views.Common"
              xmlns:vqeqg="using:QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueGroup"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueListView"
              x:DataType="vmq:QueueListViewModel">
@@ -18,10 +19,41 @@
                     Grid.Row="0"
                     Padding="16,12"
                     CornerRadius="8,8,0,0">
-                <TextBlock Text="Download Queue"
-                           FontSize="16"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                <Grid ColumnDefinitions="Auto,*"
+                      ColumnSpacing="4">
+                    <TextBlock Grid.Column="0"
+                               Text="Download Queue"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+
+                    <Grid Grid.Column="1"
+                          ColumnDefinitions="Auto,Auto"
+                          ColumnSpacing="4"
+                          HorizontalAlignment="Right">
+                        <ComboBox Grid.Column="0"
+                                  MaxWidth="300"
+                                  SelectedItem="{Binding QueueManager.SelectedQueueItem, Mode=TwoWay}"
+                                  ItemsSource="{Binding QueueManager.QueueItems}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vmqe:QueueItemViewModel">
+                                    <TextBlock Text="{Binding Title}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <vcommon:SearchTextBox Grid.Column="1"
+                            IsEnabled="{Binding QueueManager.SelectedQueueItem.QueueItemSubtitlesViewModel.IsSearchable}"
+                            CurrentOccurrenceIndex="{Binding QueueManager.SelectedQueueItem.QueueItemSubtitlesViewModel.SelectedTab?.CurrentOccurrenceIndex}"
+                            OccurrencesCount="{Binding QueueManager.SelectedQueueItem.QueueItemSubtitlesViewModel.SelectedTab?.OccurrencesCount}"
+                            FindText="{Binding QueueManager.SelectedQueueItem.QueueItemSubtitlesViewModel.SelectedTab?.FindText, Mode=TwoWay}"
+                            GoToTheNextOccurrenceCommand="{Binding QueueManager.SelectedQueueItem.QueueItemSubtitlesViewModel?.SelectedTab.GoToTheNextOccurrenceCommand}"
+                            GoToThePreviousOccurrenceCommand="{Binding QueueManager.SelectedQueueItem.QueueItemSubtitlesViewModel.SelectedTab?.GoToThePreviousOccurrenceCommand}"/>
+                    </Grid>
+                </Grid>
             </Border>
 
             <!-- Queue Items -->
