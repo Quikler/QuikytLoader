@@ -22,15 +22,14 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private readonly IFetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly ICancelSubtitlesUseCase _cancelSubtitlesUseCase;
 
-    private readonly Action<int> _scrollRequested;
+    public event Action<int>? ScrollInSubtitles;
 
     public QueueItemSubtitlesViewModel(
         Domain.Entities.Subtitles model,
         IUserSettings userSettings,
         IFetchManualSubtitlesUseCase fetchManualSubtitlesUseCase,
         IFetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
-        ICancelSubtitlesUseCase cancelSubtitlesUseCase,
-        Action<int> scrollRequested)
+        ICancelSubtitlesUseCase cancelSubtitlesUseCase)
     {
         Model = model;
 
@@ -49,8 +48,6 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         _fetchManualSubtitlesUseCase = fetchManualSubtitlesUseCase;
         _fetchAutoSubtitlesUseCase = fetchAutoSubtitlesUseCase;
         _cancelSubtitlesUseCase = cancelSubtitlesUseCase;
-
-        _scrollRequested = scrollRequested;
     }
 
     [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Language.English;
@@ -121,7 +118,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         switch (result)
         {
             case SubtitlesFetchResult.Fetched:
-                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, _scrollRequested))];
+                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, ScrollInSubtitles))];
                 SubtitlesState = new SubtitlesSuccessState();
                 break;
 
@@ -156,7 +153,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         switch (result)
         {
             case SubtitlesFetchResult.Fetched r:
-                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, _scrollRequested))];
+                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, ScrollInSubtitles))];
                 if (r.Action is null)
                 {
                     SubtitlesState = new SubtitlesSuccessState();
@@ -207,7 +204,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private void CancelSubtitles() => _cancelSubtitlesUseCase.Execute(Model.QueueItemId);
 }
 
-public partial class TabItemViewModel(string header, string content, Action<int> scrollRequested) : ObservableObject
+public partial class TabItemViewModel(string header, string content, Action<int>? scrollInSubtitles) : ObservableObject
 {
     public string Header => header;
     public string Content => content;
@@ -278,14 +275,14 @@ public partial class TabItemViewModel(string header, string content, Action<int>
         // Still perform a scroll when only one occurrence exists
         if (CurrentOccurrenceIndex + 1 >= OccurrencesCount)
         {
-            scrollRequested.Invoke(SelectionStart);
+            scrollInSubtitles?.Invoke(SelectionStart);
             return;
         }
 
         CurrentOccurrenceIndex++;
         OnPropertyChanged(nameof(CurrentOccurrenceIndex));
         (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
-        scrollRequested.Invoke(SelectionStart);
+        scrollInSubtitles?.Invoke(SelectionStart);
     }
 
     [RelayCommand]
@@ -294,14 +291,14 @@ public partial class TabItemViewModel(string header, string content, Action<int>
         // Still perform a scroll when only one occurrence exists
         if (CurrentOccurrenceIndex - 1 < 0)
         {
-            scrollRequested.Invoke(SelectionStart);
+            scrollInSubtitles?.Invoke(SelectionStart);
             return;
         }
 
         CurrentOccurrenceIndex--;
         OnPropertyChanged(nameof(CurrentOccurrenceIndex));
         (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
-        scrollRequested.Invoke(SelectionStart);
+        scrollInSubtitles?.Invoke(SelectionStart);
     }
 }
 

@@ -35,10 +35,21 @@ public partial class DownloadQueueManager : ObservableObject
                 _ => []
             })];
 
-    [ObservableProperty] private QueueItemViewModel? _selectedQueueItem;
-
-    // QueueListView.axaml.cs subscribes to ScrollRequested event
-    public event Action<QueueItem, int> ScrollRequested = null!;
+    private QueueItemViewModel? _selectedQueueItem;
+    public QueueItemViewModel? SelectedQueueItem
+    {
+        get => _selectedQueueItem;
+        set
+        {
+            // Checking for null because when QueueItems change
+            // the ComboBox in QueueListView sets it's SelectedItem to null
+            // due to it's ItemsSource change which is not what we want
+            if (_selectedQueueItem == value || value is null) return;
+            _selectedQueueItem = value;
+            OnPropertyChanged();
+            _selectedQueueItem.RaiseScrollToTop();
+        }
+    }
 
     public DownloadQueueManager(
         IDownloadQueue queue,
@@ -81,8 +92,7 @@ public partial class DownloadQueueManager : ObservableObject
         var itemVm = _queueEntryViewModelFactory.CreateQueueItemViewModel(
             item,
             ProceedItem,
-            CancelItem,
-            ScrollRequested);
+            CancelItem);
 
         RegisterItem(itemVm);
         AddToUi(itemVm);
@@ -97,8 +107,7 @@ public partial class DownloadQueueManager : ObservableObject
             .Select(item => _queueEntryViewModelFactory.CreateSelectableQueueItemViewModel(
                 item,
                 ProceedItem,
-                CancelItem,
-                ScrollRequested))
+                CancelItem))
             .ToArray();
 
         foreach (var vm in itemVms)

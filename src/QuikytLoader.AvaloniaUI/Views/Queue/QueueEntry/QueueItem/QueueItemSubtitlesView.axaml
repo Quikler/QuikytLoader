@@ -170,21 +170,13 @@
 
         </Grid>
 
-        <ContentControl Grid.Row="1"
-                        Content="{Binding SelectedTab}">
-            <ContentControl.ContentTemplate>
-                <DataTemplate x:DataType="vmqes:TabItemViewModel">
-                    <Grid>
-                        <SelectableTextBlock x:Name="SubtitlesContent"
-                                             Text="{Binding Content}"
-                                             TextWrapping="Wrap"
-                                             SelectionStart="{Binding SelectionStart}"
-                                             SelectionEnd="{Binding SelectionEnd}"
-                                             Padding="0,16"/>
-                    </Grid>
-                </DataTemplate>
-            </ContentControl.ContentTemplate>
-        </ContentControl>
+        <SelectableTextBlock x:Name="SubtitlesContent"
+                             Grid.Row="1"
+                             Text="{Binding SelectedTab.Content}"
+                             TextWrapping="Wrap"
+                             SelectionStart="{Binding SelectedTab.SelectionStart}"
+                             SelectionEnd="{Binding SelectedTab.SelectionEnd}"
+                             Padding="0,16"/>
 
     </Grid>
 
