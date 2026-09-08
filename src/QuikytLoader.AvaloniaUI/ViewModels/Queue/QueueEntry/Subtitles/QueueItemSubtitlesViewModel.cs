@@ -220,6 +220,8 @@ public partial class TabItemViewModel(string header, string content, Action<int>
                 ? []
                 : FindAllOccurrences(Content, value);
 
+            GoToThePreviousOccurrence();
+
             static List<(int Start, int End)> FindAllOccurrences(string text, string search)
             {
                 var occurrences = new List<(int Start, int End)>();
