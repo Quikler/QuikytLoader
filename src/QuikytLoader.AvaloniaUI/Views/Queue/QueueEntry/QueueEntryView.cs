@@ -24,7 +24,7 @@ public class QueueEntryView : UserControl
         QueueScroll = QueueList.QueueScroll;
     }
 
-    protected void OnScrollToTop()
+    protected virtual void OnScrollToTop()
     {
         if (QueueScroll is null || QueueScroll.Content is not Control queueScrollContent)
             throw new UnreachableException();
