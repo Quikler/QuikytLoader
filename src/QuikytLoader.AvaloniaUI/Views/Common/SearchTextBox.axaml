@@ -28,7 +28,8 @@
                   ColumnSpacing="4">
                 <ui:FASymbolIcon Grid.Column="0" 
                                  Symbol="Find"/>
-                <TextBox Grid.Column="1"
+                <TextBox x:Name="TextBoxToFocus"
+                         Grid.Column="1"
                          Text="{Binding FindText, RelativeSource={RelativeSource AncestorType=local:SearchTextBox}}"
                          Padding="0"
                          FontWeight="SemiBold"

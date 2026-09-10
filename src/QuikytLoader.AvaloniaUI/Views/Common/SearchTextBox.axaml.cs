@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 
 namespace QuikytLoader.AvaloniaUI.Views.Common;
 
@@ -57,4 +58,9 @@ public partial class SearchTextBox : UserControl
     }
 
     public SearchTextBox() => InitializeComponent();
+
+    public new bool Focus(
+        NavigationMethod method = NavigationMethod.Unspecified,
+        KeyModifiers keyModifiers = KeyModifiers.None)
+            => TextBoxToFocus.Focus(method, keyModifiers);
 }
