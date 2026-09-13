@@ -18,6 +18,8 @@ public partial class DownloadQueueManager : ObservableObject
 
     private readonly Dictionary<Guid, QueueItemViewModel> _itemViewModels = [];
 
+    private int? _firstGroupIndex;
+
     /// <summary>
     /// All queue entries. Can be one queue item and a group item.
     /// </summary>
@@ -47,7 +49,13 @@ public partial class DownloadQueueManager : ObservableObject
             if (_selectedQueueItem == value || value is null) return;
             _selectedQueueItem = value;
             OnPropertyChanged();
-            _selectedQueueItem.RaiseScrollToTop();
+
+            // If selected item is in group (meaning it's type is SelectableQueueItemViewModel)
+            // or there is a group before this item in QueueEntries
+            // then the group header is/will be visible
+            var willStickyHeaderBeVisible = _selectedQueueItem is SelectableQueueItemViewModel
+                || QueueEntries.IndexOf(_selectedQueueItem) > _firstGroupIndex;
+            _selectedQueueItem.RaiseScrollToTop(willStickyHeaderBeVisible);
         }
     }
 
@@ -117,6 +125,7 @@ public partial class DownloadQueueManager : ObservableObject
 
         var groupVm = _queueEntryViewModelFactory.CreateQueueGroupViewModel(group, itemVms, ProceedGroup);
         AddToUi(groupVm);
+        _firstGroupIndex ??= QueueEntries.Count - 1;
 
         // should not queue here as in `AddItem` because it's a group
         // and it requires user to manually click 

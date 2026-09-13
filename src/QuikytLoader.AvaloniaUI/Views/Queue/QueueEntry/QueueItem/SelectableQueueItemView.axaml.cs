@@ -9,7 +9,7 @@ public partial class SelectableQueueItemView : QueueEntryView
 {
     public SelectableQueueItemView() => InitializeComponent();
 
-    protected override void OnScrollToTop()
+    protected override void OnScrollToTop(bool willStickyHeaderBeVisible)
     {
         var queueGroupView = this.FindAncestorOfType<QueueGroupView>();
         if (queueGroupView is null || queueGroupView.DataContext is not QueueGroupViewModel queueGroupViewModel)
@@ -17,6 +17,6 @@ public partial class SelectableQueueItemView : QueueEntryView
 
         queueGroupViewModel.IsExpanded = true;
 
-        base.OnScrollToTop();
+        base.OnScrollToTop(willStickyHeaderBeVisible);
     }
 }

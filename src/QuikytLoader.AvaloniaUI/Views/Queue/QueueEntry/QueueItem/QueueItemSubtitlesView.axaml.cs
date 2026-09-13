@@ -28,32 +28,22 @@ public sealed partial class QueueItemSubtitlesView : UserControl
 
     private void OnScrollInSubtitles(int scrollPosition)
     {
-        if (_queueScroll is null)
+        if (_queueList is null
+            || _queueScroll is null
+            || _queueScroll.Content is not Control queueScrollContent)
             throw new UnreachableException();
 
         var startRect = SubtitlesContent.TextLayout.HitTestTextPosition(scrollPosition);
 
-        var pointInScrollViewer =
+        var pointInContent =
             SubtitlesContent.TranslatePoint(
                 startRect.TopLeft,
-                _queueScroll) ?? throw new UnreachableException();
+                queueScrollContent) ?? throw new UnreachableException();
 
-        var textTop = pointInScrollViewer.Y;
-        var textBottom = textTop + startRect.Height;
+        double topMargin = _queueList.StickyHeader.IsVisible
+            ? _queueList.StickyHeader.Bounds.Height
+            : 0d;
 
-        const double margin = 30;
-
-        // If the selected text is already completely inside the viewport, don't scroll
-        if (textTop >= margin && textBottom <= _queueScroll.Viewport.Height - margin)
-            return;
-
-        // Top/bottom margin
-        var offsetY = textTop < margin
-            ? textTop - margin
-            : textBottom - _queueScroll.Viewport.Height + margin;
-
-        _queueScroll.Offset = new(
-            _queueScroll.Offset.X,
-            _queueScroll.Offset.Y + offsetY);
+        _queueScroll.Offset = new(_queueScroll.Offset.X, pointInContent.Y - topMargin);
     }
 }

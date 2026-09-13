@@ -75,7 +75,8 @@
                 </ScrollViewer>
 
                 <!-- Sticky header -->
-                <Expander IsExpanded="{Binding StickyQueueGroup.IsExpanded}"
+                <Expander x:Name="StickyHeader"
+                          IsExpanded="{Binding StickyQueueGroup.IsExpanded}"
                           Background="Transparent"
                           VerticalAlignment="Top"
                           HorizontalAlignment="Stretch"

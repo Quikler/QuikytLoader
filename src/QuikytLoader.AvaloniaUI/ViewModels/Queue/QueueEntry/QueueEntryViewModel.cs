@@ -7,7 +7,7 @@ public abstract class QueueEntryViewModel(Guid modelId) : ObservableObject
 {
     public Guid ModelId { get; } = modelId;
 
-    public event Action? ScrollToTop;
-    public void RaiseScrollToTop()
-        => ScrollToTop?.Invoke();
+    public event Action<bool>? ScrollToTop;
+    public void RaiseScrollToTop(bool willStickyHeaderBeVisible)
+        => ScrollToTop?.Invoke(willStickyHeaderBeVisible);
 }

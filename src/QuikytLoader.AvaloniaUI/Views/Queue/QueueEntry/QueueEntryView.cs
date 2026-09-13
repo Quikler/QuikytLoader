@@ -24,9 +24,11 @@ public class QueueEntryView : UserControl
         QueueScroll = QueueList.QueueScroll;
     }
 
-    protected virtual void OnScrollToTop()
+    protected virtual void OnScrollToTop(bool willStickyHeaderBeVisible)
     {
-        if (QueueScroll is null || QueueScroll.Content is not Control queueScrollContent)
+        if (QueueList is null
+            || QueueScroll is null
+            || QueueScroll.Content is not Control queueScrollContent)
             throw new UnreachableException();
 
         // Translation should happend to ScrollViewer.Content and not ScrollViewer itself
@@ -36,6 +38,14 @@ public class QueueEntryView : UserControl
             Bounds.TopLeft,
             queueScrollContent) ?? throw new UnreachableException();
 
-        QueueScroll.Offset = new(QueueScroll.Offset.X, pointInContent.Y);
+        var topMargin = willStickyHeaderBeVisible
+            // When QueueList.StickyHeader.Bounds.Height is not initialized assign 48 by default.
+            // This only happens ONE time because QueueList.StickyHeader.IsVisible is false.
+            // P.S. 48 is a measured height of QueueList.StickyHeader.Bounds.Height after initialization.
+            // I'm also lazy and don't want to listen for layout measure or anything lol.
+            ? QueueList.StickyHeader.Bounds.Height == 0d ? 48 : QueueList.StickyHeader.Bounds.Height
+            : 0d;
+
+        QueueScroll.Offset = new(QueueScroll.Offset.X, pointInContent.Y - topMargin);
     }
 }
