@@ -47,8 +47,14 @@ public partial class DownloadQueueManager : ObservableObject
             // the ComboBox in QueueListView sets it's SelectedItem to null
             // due to it's ItemsSource change which is not what we want
             if (_selectedQueueItem == value || value is null) return;
+
+            // Remove border for previously selected item
+            _selectedQueueItem?.RaiseRemoveBorder();
             _selectedQueueItem = value;
             OnPropertyChanged();
+
+            // Add border for currently selected item
+            _selectedQueueItem.RaiseAddBorder();
 
             // If selected item is in group (meaning it's type is SelectableQueueItemViewModel)
             // or there is a group before this item in QueueEntries
