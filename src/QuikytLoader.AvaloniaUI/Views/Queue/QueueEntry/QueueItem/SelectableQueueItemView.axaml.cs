@@ -7,7 +7,18 @@ namespace QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem;
 
 public partial class SelectableQueueItemView : QueueEntryView
 {
-    public SelectableQueueItemView() => InitializeComponent();
+    public SelectableQueueItemView()
+    {
+        InitializeComponent();
+
+        AddHandler(PointerPressedEvent, (_, _) =>
+        {
+            if (ViewModel is not SelectableQueueItemViewModel vm)
+                throw new UnreachableException();
+
+            vm.SelectInComboBoxCommand.Execute(null);
+        }, handledEventsToo: true);
+    }
 
     protected override void OnScrollToTop(bool willStickyHeaderBeVisible)
     {

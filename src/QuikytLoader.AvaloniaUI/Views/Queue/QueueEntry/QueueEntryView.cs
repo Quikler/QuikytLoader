@@ -11,6 +11,8 @@ namespace QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry;
 
 public class QueueEntryView : UserControl
 {
+    protected QueueEntryViewModel? ViewModel { get; private set; }
+
     protected QueueListView? QueueList { get; private set; }
     protected ScrollViewer? QueueScroll { get; private set; }
 
@@ -21,15 +23,16 @@ public class QueueEntryView : UserControl
         if (DataContext is not QueueEntryViewModel queueEntryViewModel)
             throw new UnreachableException();
 
-        queueEntryViewModel.AddBorder += OnAddBorder;
-        queueEntryViewModel.RemoveBorder += OnRemoveBorder;
-        queueEntryViewModel.ScrollToTop += OnScrollToTop;
+        ViewModel = queueEntryViewModel;
+        ViewModel.AddBorder += OnAddBorder;
+        ViewModel.RemoveBorder += OnRemoveBorder;
+        ViewModel.ScrollToTop += OnScrollToTop;
 
         QueueList = this.FindAncestorOfType<QueueListView>()
             ?? throw new UnreachableException();
         QueueScroll = QueueList.QueueScroll;
 
-        queueEntryViewModel.RaisePendingActions();
+        ViewModel.RaisePendingActions();
     }
 
     protected void OnRemoveBorder()

@@ -106,7 +106,8 @@ public partial class DownloadQueueManager : ObservableObject
         var itemVm = _queueEntryViewModelFactory.CreateQueueItemViewModel(
             item,
             ProceedItem,
-            CancelItem);
+            CancelItem,
+            SelectInComboBox);
 
         RegisterItem(itemVm);
         AddToUi(itemVm);
@@ -121,7 +122,8 @@ public partial class DownloadQueueManager : ObservableObject
             .Select(item => _queueEntryViewModelFactory.CreateSelectableQueueItemViewModel(
                 item,
                 ProceedItem,
-                CancelItem))
+                CancelItem,
+                SelectInComboBox))
             .ToArray();
 
         foreach (var vm in itemVms)
@@ -162,4 +164,7 @@ public partial class DownloadQueueManager : ObservableObject
             ProceedItem(itemId);
         }
     }
+
+    private void SelectInComboBox(Guid itemId)
+        => SelectedQueueItem = _itemViewModels[itemId];
 }

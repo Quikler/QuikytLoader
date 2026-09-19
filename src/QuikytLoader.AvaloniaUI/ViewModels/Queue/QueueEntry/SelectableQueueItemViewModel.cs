@@ -9,11 +9,13 @@ public sealed partial class SelectableQueueItemViewModel(
     QueueItem model,
     Action<Guid> proceedCallback,
     Action<Guid> cancelCallback,
+    Action<Guid> selectInComboBoxCallback,
     QueueItemSubtitlesViewModel queueItemSubtitlesViewModel)
     : QueueItemViewModel(
         model,
         proceedCallback,
         cancelCallback,
+        selectInComboBoxCallback,
         queueItemSubtitlesViewModel)
 {
     [NotifyPropertyChangedFor(nameof(CanProceed))]
