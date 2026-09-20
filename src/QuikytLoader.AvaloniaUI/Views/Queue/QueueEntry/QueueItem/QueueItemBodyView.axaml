@@ -6,7 +6,8 @@
              xmlns:asyncImageLoader="using:AsyncImageLoader"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemBodyView"
              x:DataType="vmqe:QueueItemViewModel"
-             ToolTip.Tip="{Binding Url}">
+             ToolTip.Tip="{Binding Url}"
+             Padding="12">
 
     <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
 

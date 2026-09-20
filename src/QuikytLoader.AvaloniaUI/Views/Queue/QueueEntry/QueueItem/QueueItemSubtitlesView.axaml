@@ -6,17 +6,20 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:common="using:QuikytLoader.Domain.Common"
              x:Class="QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem.QueueItemSubtitlesView"
-             x:DataType="vmqes:QueueItemSubtitlesViewModel">
+             x:DataType="vmqes:QueueItemSubtitlesViewModel"
+             Padding="12">
 
     <Grid RowDefinitions="Auto,Auto">
 
-        <Grid RowDefinitions="Auto,Auto"
-              RowSpacing="4">
+        <Grid RowDefinitions="Auto,Auto">
 
             <!-- Tabs -->
+            <!-- Note: Prefer Margin over Grid.Row/ColumnSpacing 
+                 because they apply spacing even if control is invisible -->
             <TabStrip Grid.Row="0"
                       ItemsSource="{Binding SubtitlesTabs}"
                       SelectedItem="{Binding SelectedTab}"
+                      Margin="0,0,0,4"
                       IsVisible="{Binding SubtitlesTabs, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <TabStrip.ItemTemplate>
                     <DataTemplate x:DataType="vmqes:TabItemViewModel">
@@ -176,7 +179,8 @@
                              TextWrapping="Wrap"
                              SelectionStart="{Binding SelectedTab.SelectionStart}"
                              SelectionEnd="{Binding SelectedTab.SelectionEnd}"
-                             Padding="0,16"/>
+                             Padding="4,16,4,4"
+                             IsVisible="{Binding SelectedTab?.Content?.Length, Converter={x:Static ObjectConverters.IsNotNull}}"/>
 
     </Grid>
 

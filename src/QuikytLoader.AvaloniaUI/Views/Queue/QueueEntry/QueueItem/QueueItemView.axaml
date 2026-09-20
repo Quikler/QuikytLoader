@@ -8,13 +8,11 @@
              IsEnabled="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static enums:DownloadStatus.Disabled}}">
 
     <Border Classes="QueueItemBorder">
-        <StackPanel Classes="QueueItemSpacing">
+        <StackPanel>
 
-            <Border Classes="QueueItemPartHorizontalPadding">
-                <vqeqi:QueueItemBodyView />
-            </Border>
+            <vqeqi:QueueItemBodyView />
 
-            <Border Classes="QueueItemPartHorizontalPadding QueueItemSubtitlesBorderTop QueueItemSubtitlesTopPadding"
+            <Border Classes="QueueItemSubtitlesBorderTop"
                     IsVisible="{Binding QueueItemSubtitlesViewModel.AreSubtitlesVisible}">
                 <vqeqi:QueueItemSubtitlesView DataContext="{Binding QueueItemSubtitlesViewModel}" />
             </Border>
