@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry.Subtitles;
@@ -61,4 +62,11 @@ public sealed partial class QueueItemSubtitlesView : UserControl
         var viewportBottom = _queueScroll.Offset.Y + _queueScroll.Bounds.Height;
         return targetTop >= viewportTop && targetBottom <= viewportBottom;
     }
+
+    // When SubtitlesContent is not focused
+    // focusing it causes ScrollViewer to scroll
+    // which is not comfortable for user
+    // when he wants to double tap on text
+    // in order to select and copy it
+    private void SubtitlesContent_GotFocus(object? _, FocusChangedEventArgs e) => e.Handled = true;
 }
