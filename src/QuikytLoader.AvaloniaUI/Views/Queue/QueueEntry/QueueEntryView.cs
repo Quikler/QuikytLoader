@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using QuikytLoader.AvaloniaUI.Constants;
 using QuikytLoader.AvaloniaUI.ViewModels.Queue.QueueEntry;
+using QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry.QueueItem;
 
 namespace QuikytLoader.AvaloniaUI.Views.Queue.QueueEntry;
 
@@ -67,15 +68,34 @@ public class QueueEntryView : UserControl
                 Bounds.TopLeft,
                 queueScrollContent) ?? throw new UnreachableException();
 
-            var topMargin = willStickyHeaderBeVisible
-                // When QueueList.StickyHeader.Bounds.Height is not initialized assign 48 by default.
-                // This only happens ONE time because QueueList.StickyHeader.IsVisible is false.
-                // P.S. 48 is a measured height of QueueList.StickyHeader.Bounds.Height after initialization.
-                // I'm also lazy and don't want to listen for layout measure or anything lol.
-                ? QueueList.StickyHeader.Bounds.Height == 0d ? 48 : QueueList.StickyHeader.Bounds.Height
-                : 0d;
+            // Only for QueueItemView and SelectableQueueItemView
+            var queueItemBodyHeight = this.FindDescendantOfType<QueueItemBodyView>()?.Bounds.Height
+                ?? throw new UnreachableException();
 
-            QueueScroll.Offset = new(QueueScroll.Offset.X, pointInContent.Y - topMargin);
+            if (!IsFullyVisible(pointInContent, queueItemBodyHeight))
+            {
+                var topMargin = willStickyHeaderBeVisible
+                    // When QueueList.StickyHeader.Bounds.Height is not initialized assign 48 by default.
+                    // This only happens ONE time because QueueList.StickyHeader.IsVisible is false.
+                    // P.S. 48 is a measured height of QueueList.StickyHeader.Bounds.Height after initialization.
+                    // I'm also lazy and don't want to listen for layout measure or anything lol.
+                    ? QueueList.StickyHeader.Bounds.Height == 0d ? 48 : QueueList.StickyHeader.Bounds.Height
+                    : 0d;
+
+                QueueScroll.Offset = new(QueueScroll.Offset.X, pointInContent.Y - topMargin);
+            }
         }
+    }
+
+    private bool IsFullyVisible(Point pointInContent, double bodyHeight)
+    {
+        var targetY = pointInContent.Y;
+        var targetTop = targetY;
+        var targetBottom = targetY + bodyHeight;
+
+        // Check if target position is already visible in the viewport
+        var viewportTop = QueueScroll!.Offset.Y;
+        var viewportBottom = QueueScroll.Offset.Y + QueueScroll.Bounds.Height;
+        return targetTop >= viewportTop && targetBottom <= viewportBottom;
     }
 }
