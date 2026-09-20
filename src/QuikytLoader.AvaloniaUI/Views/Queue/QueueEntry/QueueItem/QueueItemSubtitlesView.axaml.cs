@@ -40,10 +40,25 @@ public sealed partial class QueueItemSubtitlesView : UserControl
                 startRect.TopLeft,
                 queueScrollContent) ?? throw new UnreachableException();
 
-        double topMargin = _queueList.StickyHeader.IsVisible
-            ? _queueList.StickyHeader.Bounds.Height
-            : 0d;
+        if (!IsFullyVisible(pointInContent, startRect.Height))
+        {
+            double topMargin = _queueList.StickyHeader.IsVisible
+                ? _queueList.StickyHeader.Bounds.Height
+                : 0d;
 
-        _queueScroll.Offset = new(_queueScroll.Offset.X, pointInContent.Y - topMargin);
+            _queueScroll.Offset = new(_queueScroll.Offset.X, pointInContent.Y - topMargin);
+        }
+    }
+
+    private bool IsFullyVisible(Point pointInContent, double selectionHeight)
+    {
+        var targetY = pointInContent.Y;
+        var targetTop = targetY;
+        var targetBottom = targetY + selectionHeight;
+
+        // Check if target position is already visible in the viewport
+        var viewportTop = _queueScroll!.Offset.Y;
+        var viewportBottom = _queueScroll.Offset.Y + _queueScroll.Bounds.Height;
+        return targetTop >= viewportTop && targetBottom <= viewportBottom;
     }
 }
