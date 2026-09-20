@@ -25,7 +25,8 @@
             <vqeqg:QueueGroupHeaderView />
         </Expander.Header>
 
-        <ItemsControl Classes="QueueItemsControl"
+        <ItemsControl x:Name="QueueGroupItems"
+                      Classes="QueueItemsControl"
                       ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="vmqe:SelectableQueueItemViewModel">

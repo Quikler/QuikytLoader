@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -19,6 +21,8 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private readonly IFetchManualSubtitlesUseCase _fetchManualSubtitlesUseCase;
     private readonly IFetchAutoSubtitlesUseCase _fetchAutoSubtitlesUseCase;
     private readonly ICancelSubtitlesUseCase _cancelSubtitlesUseCase;
+
+    public event Action<int>? ScrollInSubtitles;
 
     public QueueItemSubtitlesViewModel(
         Domain.Entities.Subtitles model,
@@ -49,11 +53,15 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     [ObservableProperty] private Language _selectedAutoSubtitlesLanguage = Language.English;
     [ObservableProperty] private SubtitlesUiState _subtitlesState = new SubtitlesIdleState();
     [ObservableProperty] private TabItemViewModel[]? _subtitlesTabs;
+    [NotifyPropertyChangedFor(nameof(IsSearchable))]
     [ObservableProperty] private TabItemViewModel? _selectedTab;
 
+    [NotifyPropertyChangedFor(nameof(IsSearchable))]
     [ObservableProperty] private bool _areSubtitlesVisible;
     [ObservableProperty] private FASymbol _subtitlesIconSymbol = FASymbol.ClosedCaption;
     [ObservableProperty] private FASymbol _subtitlesChevronSymbol = FASymbol.ChevronDown;
+
+    public bool IsSearchable => AreSubtitlesVisible && SelectedTab is not null;
 
     [RelayCommand]
     private void ToggleSubtitles()
@@ -110,7 +118,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         switch (result)
         {
             case SubtitlesFetchResult.Fetched:
-                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, ScrollInSubtitles))];
                 SubtitlesState = new SubtitlesSuccessState();
                 break;
 
@@ -145,7 +153,7 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
         switch (result)
         {
             case SubtitlesFetchResult.Fetched r:
-                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value))];
+                SubtitlesTabs = [.. Model.Dictionary!.Select(kvp => new TabItemViewModel(kvp.Key, kvp.Value, ScrollInSubtitles))];
                 if (r.Action is null)
                 {
                     SubtitlesState = new SubtitlesSuccessState();
@@ -196,7 +204,105 @@ public partial class QueueItemSubtitlesViewModel : ObservableObject
     private void CancelSubtitles() => _cancelSubtitlesUseCase.Execute(Model.QueueItemId);
 }
 
-public record TabItemViewModel(string Header, string Content);
+public partial class TabItemViewModel(string header, string content, Action<int>? scrollInSubtitles) : ObservableObject
+{
+    public string Header => header;
+    public string Content => content;
+
+    private string? _findText;
+    public string? FindText
+    {
+        get => _findText;
+        set
+        {
+            _findText = value;
+            Occurrences = string.IsNullOrEmpty(value)
+                ? []
+                : FindAllOccurrences(Content, value);
+
+            GoToThePreviousOccurrence();
+
+            static List<(int Start, int End)> FindAllOccurrences(string text, string search)
+            {
+                var occurrences = new List<(int Start, int End)>();
+                var start = 0;
+
+                while ((start = text.IndexOf(search, start)) >= 0)
+                {
+                    var end = start + search.Length;
+                    occurrences.Add((start, end));
+                    start = end;
+                }
+
+                return occurrences;
+            }
+        }
+    }
+
+    private List<(int Start, int End)> _occurrences = [];
+    private List<(int Start, int End)> Occurrences
+    {
+        get => _occurrences;
+        set
+        {
+            _occurrences = value;
+            if (_occurrences.Count == 0)
+            {
+                CurrentOccurrenceIndex = -1;
+                (SelectionStart, SelectionEnd) = (0, 0);
+            }
+            else
+            {
+                CurrentOccurrenceIndex = 0;
+                (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
+            }
+            OnPropertyChanged(nameof(OccurrencesCount));
+        }
+    }
+
+    public int OccurrencesCount => Occurrences.Count;
+
+    [ObservableProperty]
+    private int _selectionStart;
+
+    [ObservableProperty]
+    private int _selectionEnd;
+
+    [ObservableProperty]
+    private int _currentOccurrenceIndex = -1;
+
+    [RelayCommand]
+    private void GoToTheNextOccurrence()
+    {
+        // Still perform a scroll when only one occurrence exists
+        if (CurrentOccurrenceIndex + 1 >= OccurrencesCount)
+        {
+            scrollInSubtitles?.Invoke(SelectionStart);
+            return;
+        }
+
+        CurrentOccurrenceIndex++;
+        OnPropertyChanged(nameof(CurrentOccurrenceIndex));
+        (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
+        scrollInSubtitles?.Invoke(SelectionStart);
+    }
+
+    [RelayCommand]
+    private void GoToThePreviousOccurrence()
+    {
+        // Still perform a scroll when only one occurrence exists
+        if (CurrentOccurrenceIndex - 1 < 0)
+        {
+            scrollInSubtitles?.Invoke(SelectionStart);
+            return;
+        }
+
+        CurrentOccurrenceIndex--;
+        OnPropertyChanged(nameof(CurrentOccurrenceIndex));
+        (SelectionStart, SelectionEnd) = (Occurrences[CurrentOccurrenceIndex].Start, Occurrences[CurrentOccurrenceIndex].End);
+        scrollInSubtitles?.Invoke(SelectionStart);
+    }
+}
 
 public abstract record SubtitlesUiState;
 public sealed record SubtitlesIdleState : SubtitlesUiState;

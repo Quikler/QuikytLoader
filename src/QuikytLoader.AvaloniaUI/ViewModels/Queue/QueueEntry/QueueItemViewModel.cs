@@ -13,11 +13,13 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     private readonly Action<Guid> _proceedCallback;
     private readonly Action<Guid> _cancelCallback;
+    private readonly Action<Guid> _selectInComboBoxCallback;
 
     public QueueItemViewModel(
         QueueItem model,
         Action<Guid> proceedCallback,
         Action<Guid> cancelCallback,
+        Action<Guid> selectInComboBoxCallback,
         QueueItemSubtitlesViewModel queueItemSubtitlesViewModel)
             : base(model.Id)
     {
@@ -25,6 +27,7 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
         _proceedCallback = proceedCallback;
         _cancelCallback = cancelCallback;
+        _selectInComboBoxCallback = selectInComboBoxCallback;
 
         QueueItemSubtitlesViewModel = queueItemSubtitlesViewModel;
 
@@ -49,6 +52,9 @@ public partial class QueueItemViewModel : QueueEntryViewModel
 
     [RelayCommand]
     private void Cancel() => _cancelCallback(Model.Id);
+
+    [RelayCommand]
+    private void SelectInComboBox() => _selectInComboBoxCallback(Model.Id);
 
     public string StatusMessage => Status switch
     {

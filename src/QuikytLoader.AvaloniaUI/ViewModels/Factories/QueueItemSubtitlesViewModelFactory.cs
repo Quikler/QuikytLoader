@@ -11,10 +11,11 @@ public class QueueItemSubtitlesViewModelFactory(
     IFetchAutoSubtitlesUseCase fetchAutoSubtitlesUseCase,
     ICancelSubtitlesUseCase cancelSubtitlesUseCase)
 {
-    public QueueItemSubtitlesViewModel Create(Subtitles subtitles)
-        => new(subtitles,
-            userSettings,
-            fetchManualSubtitlesUseCase,
-            fetchAutoSubtitlesUseCase,
-            cancelSubtitlesUseCase);
+    public QueueItemSubtitlesViewModel Create(
+        Subtitles subtitles)
+            => new(subtitles,
+                userSettings,
+                fetchManualSubtitlesUseCase,
+                fetchAutoSubtitlesUseCase,
+                cancelSubtitlesUseCase);
 }

@@ -1,0 +1,64 @@
+<UserControl x:Class="QuikytLoader.AvaloniaUI.Views.Common.SearchTextBox"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:QuikytLoader.AvaloniaUI.Views.Common"
+             xmlns:ui="using:FluentAvalonia.UI.Controls">
+    <Grid ColumnDefinitions="Auto,Auto"
+          ColumnSpacing="4">
+        <TextBlock Grid.Column="0"
+                   TextWrapping="Wrap"
+                   FontSize="12"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding OccurrencesCount, RelativeSource={RelativeSource AncestorType=local:SearchTextBox}}"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+            <Run Text="{Binding CurrentOccurrenceIndex, Converter={StaticResource IncrementConverter}, RelativeSource={RelativeSource AncestorType=local:SearchTextBox}}"/>
+            <Run Text="of"/>
+            <Run Text="{Binding OccurrencesCount, RelativeSource={RelativeSource AncestorType=local:SearchTextBox}}"/>
+        </TextBlock>
+        <Border Grid.Column="1"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                Background="{DynamicResource LayerFillColorDefaultBrush}"
+                CornerRadius="8"
+                VerticalAlignment="Center"
+                MaxWidth="200"
+                Padding="4,0">
+            <Grid ColumnDefinitions="Auto,*"
+                  ColumnSpacing="4">
+                <ui:FASymbolIcon Grid.Column="0" 
+                                 Symbol="Find"/>
+                <TextBox x:Name="TextBoxToFocus"
+                         Grid.Column="1"
+                         Text="{Binding FindText, RelativeSource={RelativeSource AncestorType=local:SearchTextBox}}"
+                         Padding="0"
+                         FontWeight="SemiBold"
+                         Background="Transparent"
+                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                         Opacity="0.8"
+                         VerticalContentAlignment="Center"
+                         BorderThickness="0"
+                         PlaceholderText="Find text">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding GoToTheNextOccurrenceCommand, RelativeSource={RelativeSource AncestorType=local:SearchTextBox}}" />
+                        <KeyBinding Gesture="Shift+Enter" Command="{Binding GoToThePreviousOccurrenceCommand, RelativeSource={RelativeSource AncestorType=local:SearchTextBox}}" />
+                    </TextBox.KeyBindings>
+                    <TextBox.Styles>
+                        <Style Selector="TextBox /template/ Border#PART_BorderElement">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                    </TextBox.Styles>
+                </TextBox>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
