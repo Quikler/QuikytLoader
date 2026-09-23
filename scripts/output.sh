@@ -4,4 +4,4 @@
 # use "cd -" to go back to where you were before
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 
-cd "$(dirname "${BASH_SOURCE[0]}")/$STARTUP_PROJ_NAME/bin/Release/$TFM/$RID/publish/"
+cd "$(dirname "${BASH_SOURCE[0]}")/../$STARTUP_PROJ_NAME/bin/Release/$TFM/$RID/publish/"

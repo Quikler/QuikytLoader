@@ -17,7 +17,7 @@ TARGET="/usr/bin/$APP_NAME"
 # But before make sure to run 'make trimmed RID=YOUR_ARCHITECTURE' for trimmed app OR 'make aot RID=YOUR_ARCHITECTURE' for AOT app
 # YOUR_ARCHITECTURE=win-x64,linux-x64 etc
 mkdir -p /opt/$APP_NAME/
-cp "$(dirname "${BASH_SOURCE[0]}")/$STARTUP_PROJ_NAME/bin/Release/$TFM/$RID/publish/"* "$SOURCE_DIR"
+cp "$(dirname "${BASH_SOURCE[0]}")/../$STARTUP_PROJ_NAME/bin/Release/$TFM/$RID/publish/"* "$SOURCE_DIR"
 
 # Only remove if it’s a symlink pointing to our app (safer than --force)
 if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SOURCE" ]; then
