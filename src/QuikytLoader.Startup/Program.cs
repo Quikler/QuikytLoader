@@ -5,6 +5,7 @@ using QuikytLoader.Application.DependencyInjection;
 using QuikytLoader.Infrastructure.DependencyInjection;
 using QuikytLoader.Application;
 using QuikytLoader.Demo.DependencyInjection;
+using QuikytLoader.Application.Interfaces.Temp;
 
 namespace QuikytLoader.Startup;
 
@@ -27,6 +28,10 @@ class Program
             ValidateOnBuild = true,
             ValidateScopes = true,
         });
+
+        // Handle Ctrl+C (SIGINT)
+        Console.CancelKeyPress += (_, _) =>
+            serviceProvider.GetRequiredService<ITempDirectoryService>().Delete();
 
         serviceProvider
             .GetRequiredService<IApplication>()

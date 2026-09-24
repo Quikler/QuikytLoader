@@ -11,4 +11,6 @@ internal sealed class DemoTempDirectoryService
         => Path.Combine(_tempDownloadDirectory, Path.Combine(directoryNames));
 
     public void DeleteSubdirectory(string subdirectoryPath) { }
+
+    public void Delete() { }
 }

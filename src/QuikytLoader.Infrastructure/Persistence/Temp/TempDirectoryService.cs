@@ -26,4 +26,14 @@ public class TempDirectoryService : ITempDirectoryService
             try { Directory.Delete(parentPath); } catch { }
         }
     }
+
+    public void Delete()
+    {
+        try
+        {
+            Directory.Delete(_tempDownloadDirectory, recursive: true);
+            Console.WriteLine($"'{_tempDownloadDirectory}' deleted successfully");
+        }
+        catch { Console.WriteLine($"Failed to delete '{_tempDownloadDirectory}'"); }
+    }
 }

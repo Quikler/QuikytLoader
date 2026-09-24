@@ -1,6 +1,7 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.Application.Interfaces.Temp;
 using QuikytLoader.AvaloniaUI.ViewModels;
 using QuikytLoader.AvaloniaUI.Views;
 using System;
@@ -20,6 +21,10 @@ public partial class App(IServiceProvider serviceProvider) : Avalonia.Applicatio
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // Handle SIGTERM
+            desktop.Exit += (_, _) =>
+                serviceProvider.GetRequiredService<ITempDirectoryService>().Delete();
+
             desktop.MainWindow = MainWindow = new MainWindow
             {
                 DataContext = serviceProvider.GetRequiredService<AppViewModel>()
