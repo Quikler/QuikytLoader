@@ -31,43 +31,38 @@ public class DownloadAndSendUseCase(
         var mediaDirectory =
             tempDirectoryService.CreateSubdirectory(downloadSource.YoutubeVideoId, "media");
 
-        try
-        {
-            // 1. Download video
-            var downloadResult = await youtubeDownloadService.DownloadAudioAsync(
-                mediaDirectory,
-                downloadSource,
-                customTitle,
-                progress,
-                ct);
-            if (!downloadResult.IsSuccess)
-                return downloadResult.Error;
+        // 1. Download video
+        var downloadResult = await youtubeDownloadService.DownloadAudioAsync(
+            mediaDirectory,
+            downloadSource,
+            customTitle,
+            progress,
+            ct);
+        if (!downloadResult.IsSuccess)
+            return downloadResult.Error;
 
-            var downloadResultEntity = downloadResult.Value;
-            Console.WriteLine($"Downloaded: {downloadResultEntity.TempMp3FilePath}, Thumbnail: {downloadResultEntity.TempThumbnailFilePath}");
+        var downloadResultEntity = downloadResult.Value;
+        Console.WriteLine($"Downloaded: {downloadResultEntity.TempMp3FilePath}, Thumbnail: {downloadResultEntity.TempThumbnailFilePath}");
 
-            // 2. Send to Telegram
-            var sendResult = await telegramService.SendAudioAsync(
-                downloadResultEntity.TempMp3FilePath,
-                downloadResultEntity.TempThumbnailFilePath);
-            if (!sendResult.IsSuccess)
-                return sendResult.Error;
+        // 2. Send to Telegram
+        var sendResult = await telegramService.SendAudioAsync(
+            downloadResultEntity.TempMp3FilePath,
+            downloadResultEntity.TempThumbnailFilePath);
+        if (!sendResult.IsSuccess)
+            return sendResult.Error;
 
-            Console.WriteLine($"Audio file sent to Telegram: {Path.GetFileName(downloadResultEntity.TempMp3FilePath)}");
+        Console.WriteLine($"Audio file sent to Telegram: {Path.GetFileName(downloadResultEntity.TempMp3FilePath)}");
 
-            // 3. Save to history
-            await historyRepo.UpsertAsync(
-                new DownloadHistoryEntity(
-                    downloadResultEntity.YoutubeVideoId,
-                    customTitle ?? downloadResultEntity.VideoTitle,
-                    DateTime.UtcNow.ToString("o")));
+        // 3. Save to history
+        await historyRepo.UpsertAsync(
+            new DownloadHistoryEntity(
+                downloadResultEntity.YoutubeVideoId,
+                customTitle ?? downloadResultEntity.VideoTitle,
+                DateTime.UtcNow.ToString("o")));
 
-            return Result.Success();
-        }
-        finally
-        {
-            // 4. Delete created temporary directory that contains files — no longer needed after Telegram send
-            tempDirectoryService.DeleteSubdirectory(mediaDirectory);
-        }
+        // 4. Delete created media temporary directory only if everything succeeded
+        tempDirectoryService.DeleteSubdirectory(mediaDirectory);
+
+        return Result.Success();
     }
 }
