@@ -31,6 +31,7 @@ public sealed class AvaloniaApplication : IApplication
 
     public void Run(string[] args)
     {
+        CleanupOrphanedInstances();
         CreateInstanceLock();
 
         AppBuilder.Configure(() => new App(_services))
@@ -38,6 +39,30 @@ public sealed class AvaloniaApplication : IApplication
             .WithInterFont()
             .LogToTrace()
             .StartWithClassicDesktopLifetime(args);
+    }
+
+    private void CleanupOrphanedInstances()
+    {
+        if (!Directory.Exists(_tempDirectory)) return;
+
+        var instanceDirectories = Directory.GetDirectories(_tempDirectory);
+        foreach (string instanceDirectory in instanceDirectories)
+        {
+            string lockFile = Path.Combine(instanceDirectory, ".lock");
+            Console.WriteLine(lockFile);
+            try
+            {
+                // Try to open lock file exclusively - if it works, it's orphaned
+                File.Open(lockFile, FileMode.Open, FileAccess.Write, FileShare.None).Dispose();
+                Console.WriteLine($"Cleaned up orphaned instance: {Path.GetFileName(instanceDirectory)}");
+                Directory.Delete(instanceDirectory, recursive: true);
+            }
+            catch (IOException)
+            {
+                // Lock file is in use by another instance, skip
+                Console.WriteLine($"Skipped active instance: {Path.GetFileName(instanceDirectory)}");
+            }
+        }
     }
 
     private void CreateInstanceLock()
