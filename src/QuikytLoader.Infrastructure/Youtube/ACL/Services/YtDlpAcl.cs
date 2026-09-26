@@ -79,14 +79,11 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
         Action<string>? onOutputLine,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(fileName))
-            fileName = "%(title)s";
-
         var outputPath = Path.Combine(
             downloadDirectory,
-            fileName);
+            string.IsNullOrWhiteSpace(fileName) ? "%(title)s" : fileName);
 
-        var args = new[]
+        var args = new List<string>
         {
             "--extract-audio",
             "--audio-format", "mp3",
@@ -97,8 +94,16 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
             "--embed-thumbnail",
             "--write-thumbnail",
             "--convert-thumbnails", "jpg",
+        };
 
-            "--parse-metadata", $"{fileName}:%(meta_title)s",
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            args.AddRange(["--replace-in-metadata", "title", "^.*$", fileName]);
+        }
+
+        args.AddRange(
+        [
+            "--parse-metadata", "%(title)s:%(meta_title)s",
             "--parse-metadata", "%(uploader)s:%(meta_artist)s",
             "--parse-metadata", "%(uploader)s:%(meta_album_artist)s",
             "--parse-metadata", "%(channel)s:%(meta_album)s",
@@ -112,7 +117,7 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
 
             "--progress",
             "--", downloadSource.YoutubeVideoId
-        };
+        ]);
 
         return ytDlpProcessClient.RunStreamingAsync(
             args,
