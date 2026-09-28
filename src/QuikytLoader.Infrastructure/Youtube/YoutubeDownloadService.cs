@@ -6,19 +6,19 @@ using QuikytLoader.Infrastructure.Youtube.ACL.Services;
 
 namespace QuikytLoader.Infrastructure.Youtube;
 
-internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailService thumbnailService) : IYoutubeDownloadService
+internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl) : IYoutubeDownloadService
 {
     public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(
         string downloadDirectory,
         DownloadSource downloadSource,
-        string? customTitle = null,
+        string? metadataTitle = null,
         IProgress<double>? progress = null,
         CancellationToken ct = default)
     {
         var downloadAudioResult = await ytDlpAcl.DownloadAudioAsync(
             downloadSource,
             downloadDirectory,
-            SanitizeFileName(customTitle),
+            metadataTitle,
             onOutputLine: line =>
             {
                 var p = ExtractProgress(line);
@@ -32,16 +32,6 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailServ
             : downloadAudioResult.Error;
     }
 
-    private static string? SanitizeFileName(string? customTitle) =>
-        string.IsNullOrWhiteSpace(customTitle)
-            ? null
-            : string.Join(
-                "_",
-                customTitle.Split(
-                    Path.GetInvalidFileNameChars(),
-                    StringSplitOptions.RemoveEmptyEntries))
-                .Trim();
-
     private static double? ExtractProgress(string output)
     {
         // yt-dlp outputs progress like: [download]  45.2% of 3.5MiB at 1.2MiB/s ETA 00:02
@@ -52,9 +42,6 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailServ
 
         return null;
     }
-
-    private static string NormalizeWhitespace(string filename)
-        => string.Join(" ", filename.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
     /// <summary>
     /// Finds downloaded files in temp directory and normalizes filenames
@@ -73,22 +60,10 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailServ
         var tempThumbnailFile = files.Find(f => f.EndsWith(".jpg"));
         if (tempThumbnailFile is null) return Errors.Thumbnail.FileNotFound(downloadDirectory);
 
-        var normalizedMp3Path = Path.Combine(downloadDirectory, NormalizeWhitespace(Path.GetFileName(tempMp3File)));
-        File.Move(tempMp3File, normalizedMp3Path, overwrite: true);
-
-        // Normalize whitespace and convert to .jpeg for Telegram compatibility
-        var normalizedThumbnailPath = Path.Combine(downloadDirectory, $"{NormalizeWhitespace(Path.GetFileNameWithoutExtension(tempThumbnailFile))}.jpeg");
-        File.Move(tempThumbnailFile, normalizedThumbnailPath, overwrite: true);
-
-        var processResult = thumbnailService.ProcessForTelegram(normalizedThumbnailPath);
-        if (!processResult.IsSuccess)
-            return Result<DownloadResultEntity>.Failure(processResult.Error);
-
         return new DownloadResultEntity(
             youtubeVideoId,
-            Path.GetFileNameWithoutExtension(normalizedMp3Path),
-            normalizedMp3Path,
-            normalizedThumbnailPath);
+            tempMp3File,
+            tempThumbnailFile);
     }
 
     [GeneratedRegex(@"\[download\]\s+(\d+\.?\d*)%")]

@@ -6,14 +6,16 @@ using Telegram.Bot.Types;
 
 namespace QuikytLoader.Infrastructure.Telegram;
 
-internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotService
+internal class TelegramBotService(
+    IUserSettings userSettings,
+    IThumbnailService thumbnailService) : ITelegramBotService
 {
     private TelegramBotClient? _botClient;
     private CancellationTokenSource? _cts;
     private string? _currentBotToken;
     private string? _currentChatId;
 
-    public async Task<Result> SendAudioAsync(string mp3FilePath, string thumbnailFilePath)
+    public async Task<Result> SendAudioAsync(string mp3FilePath, string jpegThumbnailFilePath)
     {
         var initResult = await EnsureInitializedAsync();
         if (!initResult.IsSuccess) return initResult;
@@ -22,8 +24,12 @@ internal class TelegramBotService(IUserSettings userSettings) : ITelegramBotServ
 
         try
         {
+            var processResult = thumbnailService.ProcessForTelegram(jpegThumbnailFilePath);
+            if (!processResult.IsSuccess)
+                return Result.Failure(processResult.Error);
+
             await using var mp3FileStream = File.OpenRead(mp3FilePath);
-            await using var thumbnailFileStream = File.OpenRead(thumbnailFilePath);
+            await using var thumbnailFileStream = File.OpenRead(jpegThumbnailFilePath);
 
             await _botClient!.SendAudio(
                 chatId: new ChatId(chatIdValue),

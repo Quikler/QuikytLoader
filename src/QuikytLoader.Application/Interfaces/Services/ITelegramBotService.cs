@@ -7,5 +7,5 @@ namespace QuikytLoader.Application.Interfaces.Services;
 /// </summary>
 public interface ITelegramBotService : IDisposable
 {
-    Task<Result> SendAudioAsync(string mp3FilePath, string thumbnailFilePath);
+    Task<Result> SendAudioAsync(string mp3FilePath, string jpegThumbnailFilePath);
 }
