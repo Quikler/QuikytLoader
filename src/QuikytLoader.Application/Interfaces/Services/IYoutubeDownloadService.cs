@@ -8,11 +8,11 @@ public interface IYoutubeDownloadService
     /// <summary>
     /// Downloads a video from Youtube and converts it to MP3 format.
     /// </summary>
-    /// <param name="customTitle">Optional custom filename (without extension)</param>
+    /// <param name="metadataTitle">Optional custom title for audio file metadata</param>
     Task<Result<DownloadResultEntity>> DownloadAudioAsync(
         string downloadDirectory,
         DownloadSource downloadSource,
-        string? customTitle = null,
+        string? metadataTitle = null,
         IProgress<double>? progress = null,
         CancellationToken cancellationToken = default);
 }

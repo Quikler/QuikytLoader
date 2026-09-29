@@ -6,41 +6,57 @@ using QuikytLoader.Infrastructure.Youtube.ACL.Services;
 
 namespace QuikytLoader.Infrastructure.Youtube;
 
-internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailService thumbnailService) : IYoutubeDownloadService
+internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl) : IYoutubeDownloadService
 {
     public async Task<Result<DownloadResultEntity>> DownloadAudioAsync(
         string downloadDirectory,
         DownloadSource downloadSource,
-        string? customTitle = null,
+        string? metadataTitle = null,
         IProgress<double>? progress = null,
         CancellationToken ct = default)
     {
-        var downloadAudioResult = await ytDlpAcl.DownloadAudioAsync(
-            downloadSource,
-            downloadDirectory,
-            SanitizeFileName(customTitle),
-            onOutputLine: line =>
-            {
-                var p = ExtractProgress(line);
-                if (p.HasValue)
-                    progress?.Report(p.Value);
-            },
-            ct);
+        try
+        {
+            var downloadAudioResult = await ytDlpAcl.DownloadAudioAsync(
+                downloadSource,
+                downloadDirectory,
+                metadataTitle,
+                onOutputLine: line =>
+                {
+                    var p = ExtractProgress(line);
+                    if (p.HasValue)
+                        progress?.Report(p.Value);
+                },
+                ct);
 
-        return downloadAudioResult.IsSuccess
-            ? FindDownloadedFiles(downloadDirectory, downloadSource.YoutubeVideoId)
-            : downloadAudioResult.Error;
+            return downloadAudioResult.IsSuccess
+                ? FindDownloadedFiles(downloadDirectory, downloadSource.YoutubeVideoId)
+                : downloadAudioResult.Error;
+        }
+        // yt-dlp has two stages: downloading and converting (--audio-format "mp3").
+        //
+        // 1) Downloading is resumable: a partial "*.webm.part" can be cancelled and later
+        // resumed from its current position. The completed stage produces "*.webm".
+        //
+        // 2) Converting is not resumable: yt-dlp invokes ffmpeg to produce "*.mp3", but
+        // a partially converted MP3 cannot be resumed. Therefore, on cancellation, the
+        // incomplete "*.mp3" must be removed while the completed "*.webm" is retained.
+        //
+        // If "*.webm" exists, downloading is already complete; remove incomplete
+        // "*.mp3" so conversion can be rerun from the start on the next try
+        catch (OperationCanceledException)
+        {
+            var containsWebm = Directory.EnumerateFiles(downloadDirectory)
+                .Any(f => f.EndsWith(".webm"));
+            if (!containsWebm) throw;
+
+            var notFullyConvertedMp3File = Directory.EnumerateFiles(downloadDirectory)
+                .FirstOrDefault(f => f.EndsWith(".mp3"));
+            if (notFullyConvertedMp3File is not null) File.Delete(notFullyConvertedMp3File);
+
+            throw;
+        }
     }
-
-    private static string? SanitizeFileName(string? customTitle) =>
-        string.IsNullOrWhiteSpace(customTitle)
-            ? null
-            : string.Join(
-                "_",
-                customTitle.Split(
-                    Path.GetInvalidFileNameChars(),
-                    StringSplitOptions.RemoveEmptyEntries))
-                .Trim();
 
     private static double? ExtractProgress(string output)
     {
@@ -52,9 +68,6 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailServ
 
         return null;
     }
-
-    private static string NormalizeWhitespace(string filename)
-        => string.Join(" ", filename.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
     /// <summary>
     /// Finds downloaded files in temp directory and normalizes filenames
@@ -73,22 +86,10 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl, IThumbnailServ
         var tempThumbnailFile = files.Find(f => f.EndsWith(".jpg"));
         if (tempThumbnailFile is null) return Errors.Thumbnail.FileNotFound(downloadDirectory);
 
-        var normalizedMp3Path = Path.Combine(downloadDirectory, NormalizeWhitespace(Path.GetFileName(tempMp3File)));
-        File.Move(tempMp3File, normalizedMp3Path, overwrite: true);
-
-        // Normalize whitespace and convert to .jpeg for Telegram compatibility
-        var normalizedThumbnailPath = Path.Combine(downloadDirectory, $"{NormalizeWhitespace(Path.GetFileNameWithoutExtension(tempThumbnailFile))}.jpeg");
-        File.Move(tempThumbnailFile, normalizedThumbnailPath, overwrite: true);
-
-        var processResult = thumbnailService.ProcessForTelegram(normalizedThumbnailPath);
-        if (!processResult.IsSuccess)
-            return Result<DownloadResultEntity>.Failure(processResult.Error);
-
         return new DownloadResultEntity(
             youtubeVideoId,
-            Path.GetFileNameWithoutExtension(normalizedMp3Path),
-            normalizedMp3Path,
-            normalizedThumbnailPath);
+            tempMp3File,
+            tempThumbnailFile);
     }
 
     [GeneratedRegex(@"\[download\]\s+(\d+\.?\d*)%")]

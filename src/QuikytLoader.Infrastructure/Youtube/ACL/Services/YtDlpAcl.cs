@@ -75,19 +75,24 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
     public Task<Result> DownloadAudioAsync(
         DownloadSource downloadSource,
         string downloadDirectory,
-        string? fileName,
+        string? metadataTitle,
         Action<string>? onOutputLine,
         CancellationToken ct)
     {
-        var outputPath = Path.Combine(
-            downloadDirectory,
-            string.IsNullOrWhiteSpace(fileName) ? "%(title)s" : fileName);
+        // Use the original metadata title, not the user-defined title (CustomTitle),
+        // so yt-dlp can identify the partial download by its original filename and resume
+        var outputPath = Path.Combine(downloadDirectory, "%(original_title)s");
 
         var args = new List<string>
         {
             "--extract-audio",
             "--audio-format", "mp3",
             "--audio-quality", "0",
+
+            // Copy original metadata title to original_title field,
+            // because it will be changed with --replace-in-metadata
+            "--parse-metadata", "%(title)s:%(original_title)s",
+
             "--output", $"{outputPath}.%(ext)s",
             "--no-playlist",
             "--add-metadata",
@@ -96,9 +101,9 @@ internal sealed class YtDlpAcl(IYtDlpProcessClient ytDlpProcessClient) : IYtDlpA
             "--convert-thumbnails", "jpg",
         };
 
-        if (!string.IsNullOrWhiteSpace(fileName))
+        if (!string.IsNullOrWhiteSpace(metadataTitle))
         {
-            args.AddRange(["--replace-in-metadata", "title", "^.*$", fileName]);
+            args.AddRange(["--replace-in-metadata", "title", "^.*$", metadataTitle]);
         }
 
         args.AddRange(

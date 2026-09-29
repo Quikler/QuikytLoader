@@ -16,7 +16,7 @@ internal interface IYtDlpAcl
     Task<Result> DownloadAudioAsync(
         DownloadSource downloadSource,
         string downloadDirectory,
-        string? fileName,
+        string? metadataTitle,
         Action<string>? onOutputLine,
         CancellationToken ct);
 

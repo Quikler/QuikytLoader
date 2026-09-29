@@ -1,14 +1,13 @@
-﻿using QuikytLoader.Application.Interfaces.Temp;
+﻿using QuikytLoader.Application;
+using QuikytLoader.Application.Interfaces.Temp;
 
 namespace QuikytLoader.Infrastructure.Persistence.Temp;
 
-public class TempDirectoryService : ITempDirectoryService
+public class TempDirectoryService(IApplication application) : ITempDirectoryService
 {
-    private static readonly string _tempDownloadDirectory = Path.Combine(Path.GetTempPath(), "QuikytLoader");
-
     public string CreateSubdirectory(params string[] directoryNames)
     {
-        var subdirectoryPath = Path.Combine(_tempDownloadDirectory, Path.Combine(directoryNames));
+        var subdirectoryPath = Path.Combine(application.TempInstanceDirectory, Path.Combine(directoryNames));
         Directory.CreateDirectory(subdirectoryPath);
         return subdirectoryPath;
     }
@@ -24,6 +23,19 @@ public class TempDirectoryService : ITempDirectoryService
         {
             // TOCTOU
             try { Directory.Delete(parentPath); } catch { }
+        }
+    }
+
+    public void Delete()
+    {
+        try
+        {
+            Directory.Delete(application.TempInstanceDirectory, recursive: true);
+            Console.WriteLine($"'{application.TempInstanceDirectory}' deleted successfully");
+        }
+        catch
+        {
+            Console.WriteLine($"Failed to delete '{application.TempInstanceDirectory}'");
         }
     }
 }
