@@ -50,7 +50,6 @@ internal sealed class YtDlpProcessClient : IYtDlpProcessClient
             };
 
             process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
 
             await WaitForProcessExit(process, ct);
 

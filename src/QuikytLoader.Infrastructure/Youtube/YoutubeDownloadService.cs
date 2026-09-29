@@ -15,21 +15,47 @@ internal partial class YoutubeDownloadService(IYtDlpAcl ytDlpAcl) : IYoutubeDown
         IProgress<double>? progress = null,
         CancellationToken ct = default)
     {
-        var downloadAudioResult = await ytDlpAcl.DownloadAudioAsync(
-            downloadSource,
-            downloadDirectory,
-            metadataTitle,
-            onOutputLine: line =>
-            {
-                var p = ExtractProgress(line);
-                if (p.HasValue)
-                    progress?.Report(p.Value);
-            },
-            ct);
+        try
+        {
+            var downloadAudioResult = await ytDlpAcl.DownloadAudioAsync(
+                downloadSource,
+                downloadDirectory,
+                metadataTitle,
+                onOutputLine: line =>
+                {
+                    var p = ExtractProgress(line);
+                    if (p.HasValue)
+                        progress?.Report(p.Value);
+                },
+                ct);
 
-        return downloadAudioResult.IsSuccess
-            ? FindDownloadedFiles(downloadDirectory, downloadSource.YoutubeVideoId)
-            : downloadAudioResult.Error;
+            return downloadAudioResult.IsSuccess
+                ? FindDownloadedFiles(downloadDirectory, downloadSource.YoutubeVideoId)
+                : downloadAudioResult.Error;
+        }
+        // yt-dlp has two stages: downloading and converting (--audio-format "mp3").
+        //
+        // 1) Downloading is resumable: a partial "*.webm.part" can be cancelled and later
+        // resumed from its current position. The completed stage produces "*.webm".
+        //
+        // 2) Converting is not resumable: yt-dlp invokes ffmpeg to produce "*.mp3", but
+        // a partially converted MP3 cannot be resumed. Therefore, on cancellation, the
+        // incomplete "*.mp3" must be removed while the completed "*.webm" is retained.
+        //
+        // If "*.webm" exists, downloading is already complete; remove incomplete
+        // "*.mp3" so conversion can be rerun from the start on the next try
+        catch (OperationCanceledException)
+        {
+            var containsWebm = Directory.EnumerateFiles(downloadDirectory)
+                .Any(f => f.EndsWith(".webm"));
+            if (!containsWebm) throw;
+
+            var notFullyConvertedMp3File = Directory.EnumerateFiles(downloadDirectory)
+                .FirstOrDefault(f => f.EndsWith(".mp3"));
+            if (notFullyConvertedMp3File is not null) File.Delete(notFullyConvertedMp3File);
+
+            throw;
+        }
     }
 
     private static double? ExtractProgress(string output)
