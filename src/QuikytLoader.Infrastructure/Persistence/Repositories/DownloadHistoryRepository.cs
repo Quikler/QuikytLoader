@@ -15,7 +15,7 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
 {
     public async Task UpsertAsync(DownloadHistoryEntity downloadEntity)
     {
-        await using var connection = await dbConnectionFactory.GetConnectionAsync();
+        using var connection = await dbConnectionFactory.GetConnectionAsync();
 
         const string upsertSql = """
             INSERT OR REPLACE INTO DownloadHistory (YoutubeVideoId, VideoTitle, DownloadedAt)
@@ -32,7 +32,7 @@ internal class DownloadHistoryRepository(IDbConnectionFactory dbConnectionFactor
 
     public async Task<DownloadHistoryEntity?> GetByYoutubeVideoIdAsync(string youtubeVideoId)
     {
-        await using var connection = await dbConnectionFactory.GetConnectionAsync();
+        using var connection = await dbConnectionFactory.GetConnectionAsync();
 
         const string query = """
             SELECT YoutubeVideoId, VideoTitle, DownloadedAt

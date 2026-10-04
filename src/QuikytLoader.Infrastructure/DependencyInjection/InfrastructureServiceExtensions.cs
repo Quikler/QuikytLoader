@@ -30,7 +30,8 @@ public static class InfrastructureServiceExtensions
     /// <summary>
     /// Registers all Infrastructure layer services (implementations of Application interfaces)
     /// </summary>
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructureServices(
+        this IServiceCollection services)
     {
         // Language identification
         services.AddSingleton<ILanguageIdentifier, LanguageIdentifier>();
@@ -58,7 +59,13 @@ public static class InfrastructureServiceExtensions
         services.AddSingleton<IDownloadQueueProcessor, DownloadQueueProcessor>();
 
         // Persistence
-        services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
+        services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>(_ =>
+            new DbConnectionFactory(
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".config",
+                    "QuikytLoader"))
+        );
         services.AddSingleton<IDownloadHistoryRepository, DownloadHistoryRepository>();
         services.AddSingleton<IUserSettings, UserSettings>();
         services.AddSingleton<IUserSettingsStore, UserSettingsStore>();
@@ -66,4 +73,9 @@ public static class InfrastructureServiceExtensions
 
         return services;
     }
+
+    public static IServiceCollection AddTestingHistoryDatabase(
+        this IServiceCollection services) =>
+            services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>(_ =>
+                new DbConnectionFactory(Environment.CurrentDirectory));
 }
