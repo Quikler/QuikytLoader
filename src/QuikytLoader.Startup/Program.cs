@@ -21,6 +21,7 @@ class Program
         services.AddAvaloniaUIServices();
 #if DEBUG
         services.AddDemoServices();
+        services.AddTestingHistoryDatabase();
 #endif
 
         using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions

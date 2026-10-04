@@ -1,3 +1,4 @@
+using System.Data;
 using Dapper;
 using Microsoft.Data.Sqlite;
 
@@ -11,15 +12,8 @@ internal class DbConnectionFactory : IDbConnectionFactory
     private readonly string _dbPath;
     private readonly string _connectionString;
 
-    public DbConnectionFactory()
+    public DbConnectionFactory(string configDir)
     {
-        // Store database in XDG config directory alongside settings.json
-        var configDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".config",
-            "QuikytLoader"
-        );
-
         Directory.CreateDirectory(configDir);
         _dbPath = Path.Combine(configDir, "history.db");
         _connectionString = $"Data Source={_dbPath}";
@@ -29,7 +23,7 @@ internal class DbConnectionFactory : IDbConnectionFactory
     /// Gets an open SQLite connection with initialized schema.
     /// SQLite automatically creates the database file on first connection if it doesn't exist.
     /// </summary>
-    public async Task<SqliteConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
+    public async Task<IDbConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
     {
         var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
