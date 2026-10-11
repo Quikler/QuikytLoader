@@ -19,7 +19,8 @@ public class DownloadAndSendUseCase(
     IYoutubeDownloadService youtubeDownloadService,
     ITempDirectoryService tempDirectoryService,
     IDownloadHistoryRepository historyRepo,
-    ITelegramBotService telegramService)
+    ITelegramBotService telegramService,
+    ITelegramMediaService telegramMediaService)
         : IDownloadAndSendUseCase
 {
     public async Task<Result> ExecuteAsync(
@@ -47,63 +48,56 @@ public class DownloadAndSendUseCase(
         Console.WriteLine($"Downloaded: '{downloadResultEntity.TempMp3FilePath}', Thumbnail: '{downloadResultEntity.TempThumbnailFilePath}'");
 
         // 2. Send to Telegram
-        // ========= SETUP =========
-        var sourceMp3 = downloadResultEntity.TempMp3FilePath; // media/title.mp3
-        var sourceThumbnail = downloadResultEntity.TempThumbnailFilePath; // media/title.jpg
-        // Convert to .jpeg for Telegram compatibility
-        var normalizedThumbnailPath = Path.Combine(mediaDirectory, $"{Path.GetFileNameWithoutExtension(sourceThumbnail)}.jpeg");
-        File.Move(sourceThumbnail, normalizedThumbnailPath, overwrite: true);
-        sourceThumbnail = normalizedThumbnailPath;
-
-        // =========================
-        if (!string.IsNullOrWhiteSpace(sanitizedCustomTitle))
+        PreparedMedia preparedMedia;
+        if (string.IsNullOrWhiteSpace(sanitizedCustomTitle))
         {
-            {
-                var destMp3 = Path.Combine(mediaDirectory, sanitizedCustomTitle + Path.GetExtension(sourceMp3));
-                File.Move(sourceMp3, destMp3);
-                sourceMp3 = destMp3; // media/title.mp3 -> media/customTitle.mp3
+            // No custom title - no rollback
+            preparedMedia = telegramMediaService.PrepareMedia(
+                mediaDirectory,
+                downloadResultEntity.TempMp3FilePath,
+                downloadResultEntity.TempThumbnailFilePath);
 
-                var destThumbnail = Path.Combine(mediaDirectory, sanitizedCustomTitle + Path.GetExtension(sourceThumbnail));
-                File.Move(sourceThumbnail, destThumbnail);
-                sourceThumbnail = destThumbnail; // media/title.jpeg -> media/customTitle.jpeg
-            }
+            var sendResult = await telegramService.SendAudioAsync(
+                preparedMedia.FinalMp3Path,
+                preparedMedia.FinalThumbnailPath);
+
+            if (!sendResult.IsSuccess)
+                return sendResult.Error;
+        }
+        else
+        {
+            // Custom title - rollback on failure
+            preparedMedia = telegramMediaService.PrepareMediaWithTitle(
+                mediaDirectory,
+                downloadResultEntity.TempMp3FilePath,
+                downloadResultEntity.TempThumbnailFilePath,
+                sanitizedCustomTitle);
 
             try
             {
                 var sendResult = await telegramService.SendAudioAsync(
-                    sourceMp3,
-                    sourceThumbnail);
-                if (!sendResult.IsSuccess) // Rollback
+                    preparedMedia.FinalMp3Path,
+                    preparedMedia.FinalThumbnailPath);
+
+                if (!sendResult.IsSuccess)
                 {
-                    File.Move(sourceMp3, downloadResultEntity.TempMp3FilePath);
-                    File.Move(sourceThumbnail, normalizedThumbnailPath);
+                    telegramMediaService.Rollback(preparedMedia);
                     return sendResult.Error;
                 }
             }
-            catch (OperationCanceledException) // Rollback
+            catch (OperationCanceledException)
             {
-                File.Move(sourceMp3, downloadResultEntity.TempMp3FilePath);
-                File.Move(sourceThumbnail, normalizedThumbnailPath);
+                telegramMediaService.Rollback(preparedMedia);
                 throw;
             }
-            // P.S. Rollback is needed so if user wants to retry downloading
-            // yt-dlp will identify file by it's original title
         }
-        else
-        {
-            var sendResult = await telegramService.SendAudioAsync(
-                sourceMp3,
-                sourceThumbnail);
-            if (!sendResult.IsSuccess)
-                return sendResult.Error;
-        }
-        Console.WriteLine($"Audio file sent to Telegram: '{Path.GetFileName(sourceMp3)}' with thumbnail '{Path.GetFileName(sourceThumbnail)}'");
+        Console.WriteLine($"Audio file sent to Telegram: '{Path.GetFileName(preparedMedia.FinalMp3Path)}' with thumbnail '{Path.GetFileName(preparedMedia.FinalThumbnailPath)}'");
 
         // 3. Save to history
         await historyRepo.UpsertAsync(
             new DownloadHistoryEntity(
                 downloadResultEntity.YoutubeVideoId,
-                Path.GetFileNameWithoutExtension(sourceMp3),
+                Path.GetFileNameWithoutExtension(preparedMedia.FinalMp3Path),
                 DateTime.UtcNow.ToString("o")));
 
         // 4. Delete created media temporary directory only if everything succeeded
