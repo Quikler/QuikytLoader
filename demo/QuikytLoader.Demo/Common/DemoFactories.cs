@@ -60,8 +60,8 @@ internal static class DemoFactories
         var title = customTitle ?? RandomTitle;
         return new(
             downloadSource.YoutubeVideoId,
-            Path.Combine(downloadDirectory, $"{title}.mp3"),
-            Path.Combine(downloadDirectory, $"{title}.jpeg"));
+            Path.Combine(downloadDirectory, $"{title}.[mp3]"),
+            Path.Combine(downloadDirectory, $"{title}.[jpeg]"));
     }
 
     public static DownloadHistoryEntity CreateDownloadHistoryEntity(
