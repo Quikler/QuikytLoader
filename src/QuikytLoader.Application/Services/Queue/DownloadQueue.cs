@@ -1,9 +1,9 @@
 ﻿using QuikytLoader.Application.Interfaces.Queue;
 using QuikytLoader.Domain.Entities;
 
-namespace QuikytLoader.Infrastructure.Queue;
+namespace QuikytLoader.Application.Services.Queue;
 
-public sealed class DownloadQueue : IDownloadQueue
+internal sealed class DownloadQueue : IDownloadQueue
 {
     private readonly Dictionary<Guid, QueueItem> _itemsById = [];
     private readonly Dictionary<DownloadSource, QueueItem> _itemsBySource = [];

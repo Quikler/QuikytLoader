@@ -4,9 +4,9 @@ using QuikytLoader.Domain.Common;
 using QuikytLoader.Domain.Entities;
 using QuikytLoader.Domain.Enums;
 
-namespace QuikytLoader.Infrastructure.Queue;
+namespace QuikytLoader.Application.Services.Queue;
 
-public sealed class DownloadQueueProcessor(
+internal sealed class DownloadQueueProcessor(
     IDownloadQueue queue,
     IDownloadAndSendUseCase downloadAndSendUseCase) : IDownloadQueueProcessor
 {

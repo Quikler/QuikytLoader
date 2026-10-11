@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using QuikytLoader.Application.Interfaces.Queue;
+using QuikytLoader.Application.Services.Queue;
 using QuikytLoader.Application.UseCases;
 
 namespace QuikytLoader.Application.DependencyInjection;
@@ -13,6 +15,10 @@ public static class ApplicationServiceExtensions
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        // Queue services
+        services.AddSingleton<IDownloadQueue, DownloadQueue>();
+        services.AddSingleton<IDownloadQueueProcessor, DownloadQueueProcessor>();
+
         // Register Use Cases
         services.AddSingleton<IAddToQueueUseCase, AddToQueueUseCase>();
         services.AddSingleton<IDownloadAndSendUseCase, DownloadAndSendUseCase>();
