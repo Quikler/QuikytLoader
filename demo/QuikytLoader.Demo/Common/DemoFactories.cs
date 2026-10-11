@@ -1,4 +1,5 @@
-﻿using QuikytLoader.Domain.Entities;
+﻿using QuikytLoader.Application.Interfaces.Services;
+using QuikytLoader.Domain.Entities;
 
 namespace QuikytLoader.Demo.Common;
 
@@ -68,6 +69,26 @@ internal static class DemoFactories
             => new(youtubeVideoId,
                 RandomTitle,
                 DateTime.UtcNow.ToString("o"));
+
+    public static PreparedMedia CreatePreparedMedia(
+        string tempMp3FilePath,
+        string tempThumbnailFilePath)
+            => new(
+                tempMp3FilePath,
+                tempThumbnailFilePath,
+                tempMp3FilePath,
+                tempThumbnailFilePath);
+
+    public static PreparedMedia CreatePreparedMediaWithTitle(
+        string mediaDirectory,
+        string tempMp3FilePath,
+        string tempThumbnailFilePath,
+        string sanitizedCustomTitle)
+            => new(
+                Path.Combine(mediaDirectory, Path.Combine(sanitizedCustomTitle, Path.GetExtension(tempMp3FilePath))),
+                Path.Combine(mediaDirectory, Path.Combine(sanitizedCustomTitle, Path.GetExtension(tempThumbnailFilePath))),
+                tempMp3FilePath,
+                tempThumbnailFilePath);
 
     private static string RandomVideoId() => Guid.NewGuid().ToString("N")[..11];
 }

@@ -16,6 +16,7 @@ public static class DemoServiceCollectionExtensions
         services.AddSingleton<IYoutubeDownloadService, DemoYoutubeDownloadService>();
         services.AddSingleton<ITempDirectoryService, DemoTempDirectoryService>();
         services.AddSingleton<ITelegramBotService, DemoTelegramBotService>();
+        services.AddSingleton<ITelegramMediaService, DemoTelegramMediaService>();
 
         // services.AddSingleton<IDownloadHistoryRepository, DemoDownloadHistoryRepository>();
         // P.S. Shouldn't mock IDownloadHistoryRepository because testing database is used:
