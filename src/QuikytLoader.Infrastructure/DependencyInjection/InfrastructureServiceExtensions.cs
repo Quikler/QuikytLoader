@@ -53,6 +53,7 @@ public static class InfrastructureServiceExtensions
 
         // Telegram services
         services.AddSingleton<ITelegramBotService, TelegramBotService>();
+        services.AddSingleton<ITelegramMediaService, TelegramMediaService>();
 
         // Queue services
         services.AddSingleton<IDownloadQueue, DownloadQueue>();
